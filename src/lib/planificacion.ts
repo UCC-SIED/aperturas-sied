@@ -18,6 +18,29 @@ function exigir(s: Sesion | null, carreraId: number) {
   return s!
 }
 
+/**
+ * La apertura tiene que pertenecer de verdad a la carrera desde la que se opera:
+ * o la cursa una de sus cohortes, o la asignatura está en su plan de estudios.
+ * Sin este control, alguien podría mandar el id de una apertura ajena junto con
+ * el de su propia carrera — sobre todo una sin cohortes, donde no habría cohorte
+ * de otro que la protegiera.
+ */
+function exigirPertenencia(
+  s: Sesion,
+  carreraId: number,
+  apertura: {
+    cohortes: { cohorte: { carreraId: number } }[]
+    asignatura: { planItems?: { carreraId: number }[] }
+  },
+) {
+  if (s.rol === 'sied') return
+  const enCohortes = apertura.cohortes.some((c) => c.cohorte.carreraId === carreraId)
+  const enPlan = apertura.asignatura.planItems?.some((p) => p.carreraId === carreraId) ?? false
+  if (!enCohortes && !enPlan) {
+    throw new Error('Esa apertura no corresponde a la carrera desde la que estás operando')
+  }
+}
+
 async function anotar(
   db: PrismaClient, usuarioId: number, accion: string,
   detalle: string, asignaturaCodigo: string, carreraId: number,
@@ -83,9 +106,14 @@ export async function quitar(
   const usuario = exigir(s, carreraId)
   const apertura = await db.apertura.findUnique({
     where: { id: aperturaId },
-    include: { asignatura: true, periodo: true, cohortes: { include: { cohorte: true } } },
+    include: {
+      asignatura: { include: { planItems: true } },
+      periodo: true,
+      cohortes: { include: { cohorte: true } },
+    },
   })
   if (!apertura) throw new Error('Apertura inexistente')
+  exigirPertenencia(usuario, carreraId, apertura)
 
   const propias = apertura.cohortes.filter((c) => c.cohorte.carreraId === carreraId)
   const ajenas = apertura.cohortes.filter((c) => c.cohorte.carreraId !== carreraId)
@@ -108,10 +136,15 @@ export async function mover(
   const usuario = exigir(s, carreraId)
   const origen = await db.apertura.findUnique({
     where: { id: aperturaId },
-    include: { asignatura: true, periodo: true, cohortes: { include: { cohorte: true } } },
+    include: {
+      asignatura: { include: { planItems: true } },
+      periodo: true,
+      cohortes: { include: { cohorte: true } },
+    },
   })
   const destino = await db.periodo.findUnique({ where: { id: destinoId } })
   if (!origen || !destino) throw new Error('Apertura o período inexistente')
+  exigirPertenencia(usuario, carreraId, origen)
   if (origen.periodoId === destinoId) return null
 
   const propias = origen.cohortes.filter((c) => c.cohorte.carreraId === carreraId)

@@ -132,6 +132,43 @@ describe('quitar', () => {
   })
 })
 
+describe('no se puede tocar lo ajeno pasando ids de otra carrera', () => {
+  it('quitar una apertura sin cohortes de otra carrera no la borra', async () => {
+    // apertura de la carrera B, sin cohortes asociadas (pasa al migrar filas sin cohorte)
+    await prisma.asignatura.create({ data: { codigo: 'SOLOB', nombre: 'SÓLO DE B', estado: 'construccion' } })
+    await prisma.planItem.create({ data: { carreraId: carreraB, asignaturaCodigo: 'SOLOB', orden: 1 } })
+    const ap = await prisma.apertura.create({
+      data: { asignaturaCodigo: 'SOLOB', periodoId: periodo1, inicioCursado: new Date(2026, 8, 9) },
+    })
+
+    // el director A usa SU carrera pero apunta a una apertura que no le corresponde
+    await expect(quitar(prisma, usuarioA, carreraA, ap.id)).rejects.toThrow(/no corresponde/i)
+    expect(await prisma.apertura.findUnique({ where: { id: ap.id } })).not.toBeNull()
+  })
+
+  it('mover una apertura ajena tampoco se puede', async () => {
+    await prisma.asignatura.create({ data: { codigo: 'SOLOB2', nombre: 'OTRA DE B', estado: 'construccion' } })
+    await prisma.planItem.create({ data: { carreraId: carreraB, asignaturaCodigo: 'SOLOB2', orden: 2 } })
+    const ap = await prisma.apertura.create({
+      data: { asignaturaCodigo: 'SOLOB2', periodoId: periodo1, inicioCursado: new Date(2026, 8, 9) },
+    })
+
+    await expect(mover(prisma, usuarioA, carreraA, ap.id, periodo2)).rejects.toThrow(/no corresponde/i)
+    const sigue = await prisma.apertura.findUnique({ where: { id: ap.id } })
+    expect(sigue!.periodoId).toBe(periodo1)
+  })
+
+  it('el SIED sí puede tocar cualquiera', async () => {
+    await prisma.asignatura.create({ data: { codigo: 'SOLOB3', nombre: 'TERCERA DE B', estado: 'construccion' } })
+    await prisma.planItem.create({ data: { carreraId: carreraB, asignaturaCodigo: 'SOLOB3', orden: 3 } })
+    const ap = await prisma.apertura.create({
+      data: { asignaturaCodigo: 'SOLOB3', periodoId: periodo1, inicioCursado: new Date(2026, 8, 9) },
+    })
+    await quitar(prisma, sied, carreraB, ap.id)
+    expect(await prisma.apertura.findUnique({ where: { id: ap.id } })).toBeNull()
+  })
+})
+
 describe('mover', () => {
   it('lleva la asignatura al otro período con las fechas del destino', async () => {
     await agregar(prisma, usuarioA, carreraA, 'TRANS1', periodo1, cohorteA)

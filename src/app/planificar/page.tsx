@@ -147,7 +147,11 @@ export default async function Planificar({
               ))}
             </ul>
           ) : (
-            <p className="vacio chico">Todo el plan tiene período asignado.</p>
+            <p className="vacio chico">
+              {plan.length
+                ? 'Todo el plan tiene período asignado.'
+                : 'Esta carrera todavía no tiene plan de estudios cargado.'}
+            </p>
           )}
         </section>
 

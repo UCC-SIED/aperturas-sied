@@ -54,9 +54,9 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
       <h2>Producción</h2>
       {editable ? (
         <form className="ficha" action={actualizarAsignatura.bind(null, a.codigo)}>
-          <label>
+          <label htmlFor="estado">
             Estado
-            <select name="estado" defaultValue={a.estado}>
+            <select id="estado" name="estado" defaultValue={a.estado}>
               {ESTADOS.map((e) => (
                 <option key={e} value={e}>{ESTADO_LABELS[e as Estado]}</option>
               ))}
