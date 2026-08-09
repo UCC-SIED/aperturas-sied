@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# base local
+prisma/*.db
+prisma/*.db-journal
+migracion/input/
+migracion/reporte-migracion.md

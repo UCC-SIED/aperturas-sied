@@ -1,0 +1,103 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Unidad {
+  id       String    @id // "posgrado" | "educacion"
+  nombre   String
+  carreras Carrera[]
+  periodos Periodo[]
+}
+
+model Carrera {
+  id        Int        @id @default(autoincrement())
+  nombre    String
+  unidadId  String
+  unidad    Unidad     @relation(fields: [unidadId], references: [id])
+  planItems PlanItem[]
+  cohortes  Cohorte[]
+
+  @@unique([unidadId, nombre])
+}
+
+model Asignatura {
+  codigo       String     @id
+  nombre       String
+  catedra      String?
+  cargaHoraria Int?
+  docente      String?
+  asesor       String?
+  estado       String     @default("sin_novedad")
+  planItems    PlanItem[]
+  aperturas    Apertura[]
+}
+
+model PlanItem {
+  id               Int        @id @default(autoincrement())
+  carreraId        Int
+  carrera          Carrera    @relation(fields: [carreraId], references: [id])
+  asignaturaCodigo String
+  asignatura       Asignatura @relation(fields: [asignaturaCodigo], references: [codigo])
+  orden            Int?
+
+  @@unique([carreraId, asignaturaCodigo])
+}
+
+model Cohorte {
+  id        Int               @id @default(autoincrement())
+  nombre    String
+  carreraId Int
+  carrera   Carrera           @relation(fields: [carreraId], references: [id])
+  aperturas AperturaCohorte[]
+
+  @@unique([carreraId, nombre])
+}
+
+model Periodo {
+  id                  Int        @id @default(autoincrement())
+  nombre              String
+  tipo                String // mensual | bimestral | cuatrimestral
+  unidadId            String
+  unidad              Unidad     @relation(fields: [unidadId], references: [id])
+  inicioCursado       DateTime
+  aperturaInscripcion DateTime?
+  cierreInscripcion   DateTime?
+  aperturas           Apertura[]
+
+  @@unique([unidadId, nombre])
+}
+
+model Apertura {
+  id                  Int               @id @default(autoincrement())
+  asignaturaCodigo    String
+  asignatura          Asignatura        @relation(fields: [asignaturaCodigo], references: [codigo])
+  periodoId           Int
+  periodo             Periodo           @relation(fields: [periodoId], references: [id])
+  inicioCursado       DateTime?
+  aperturaInscripcion DateTime?
+  cierreInscripcion   DateTime?
+  finCursado          DateTime?
+  aperturaAfi         DateTime?
+  cierreAfi           DateTime?
+  cierreAsignatura    DateTime?
+  actas               DateTime?
+  cohortes            AperturaCohorte[]
+
+  @@unique([asignaturaCodigo, periodoId])
+}
+
+model AperturaCohorte {
+  id                  Int      @id @default(autoincrement())
+  aperturaId          Int
+  apertura            Apertura @relation(fields: [aperturaId], references: [id])
+  cohorteId           Int
+  cohorte             Cohorte  @relation(fields: [cohorteId], references: [id])
+  cursaEnEstaApertura Boolean  @default(true)
+
+  @@unique([aperturaId, cohorteId])
+}
