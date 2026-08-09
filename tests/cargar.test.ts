@@ -120,6 +120,31 @@ describe('cargar', () => {
     expect(ap.find((a) => a.asignaturaCodigo === 'EDU101')!.periodo.nombre).toBe('Cuatrimestral A')
   })
 
+  it('carga el plan de estudios completo, con y sin período', async () => {
+    await limpiar()
+    const planes = [
+      { unidad: 'posgrado' as const, carrera: 'CARRERA PLAN', codigo: 'PL001', nombre: 'PRIMERA', orden: 1 },
+      { unidad: 'posgrado' as const, carrera: 'CARRERA PLAN', codigo: 'PL002', nombre: 'SEGUNDA', orden: 2 },
+      { unidad: 'posgrado' as const, carrera: 'CARRERA PLAN', codigo: 'PL003', nombre: 'TERCERA', orden: 3 },
+    ]
+    // sólo una de las tres tiene período asignado
+    const conPeriodo = fila({ carrera: 'CARRERA PLAN', codigo: 'PL002', nombre: 'SEGUNDA', orden: null })
+
+    const r = await cargar([conPeriodo], [], prisma, [], planes)
+
+    const carrera = await prisma.carrera.findFirst({ where: { nombre: 'CARRERA PLAN' } })
+    const plan = await prisma.planItem.findMany({
+      where: { carreraId: carrera!.id }, orderBy: { orden: 'asc' },
+    })
+    expect(plan.map((p) => [p.asignaturaCodigo, p.orden])).toEqual([
+      ['PL001', 1], ['PL002', 2], ['PL003', 3],
+    ])
+    // sólo la que tenía período generó apertura
+    expect(r.aperturas).toBe(1)
+    // las del plan sin período no ensucian el reporte
+    expect(r.sinPeriodo).toEqual([])
+  })
+
   it('educación sin fecha de inicio va al reporte', async () => {
     const r = await cargar(
       [fila({ unidad: 'educacion', carrera: 'ED X', codigo: 'EDU003', nombre: 'SIN FECHA', periodoNombre: null,

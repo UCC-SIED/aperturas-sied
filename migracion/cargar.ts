@@ -6,6 +6,7 @@ import { ESTADOS, type Estado } from '../src/lib/estados'
 import type { FilaAsignatura } from './parsers/tipos'
 import type { FilaTablero } from './parsers/tablero'
 import type { PeriodoCalendario } from './parsers/periodos'
+import type { FilaPlanEstudios } from './parsers/planes'
 
 export type Reporte = {
   asignaturas: number
@@ -30,6 +31,7 @@ export async function cargar(
   tablero: FilaTablero[],
   db: PrismaClient,
   calendarioEducacion: PeriodoCalendario[] = [],
+  planesEstudio: FilaPlanEstudios[] = [],
 ): Promise<Reporte> {
   const reporte: Reporte = {
     asignaturas: 0, aperturas: 0, sinCodigo: [], sinPeriodo: [], nombresEnConflicto: [], fechasIncoherentes: [],
@@ -48,7 +50,22 @@ export async function cargar(
   await db.unidad.upsert({ where: { id: 'posgrado' }, update: {}, create: { id: 'posgrado', nombre: 'Posgrado' } })
   await db.unidad.upsert({ where: { id: 'educacion' }, update: {}, create: { id: 'educacion', nombre: 'Educación' } })
 
-  const conCodigo = filas.filter((f) => {
+  // Los planes de estudio son el catálogo completo de cada carrera: entran como
+  // filas sin período, así el planificador muestra todo el plan aunque una
+  // asignatura todavía no se haya abierto nunca.
+  const desdePlanes: FilaAsignatura[] = planesEstudio.map((p) => ({
+    unidad: p.unidad, carrera: p.carrera, cohorte: null,
+    codigo: p.codigo, nombre: p.nombre, catedra: null, cargaHoraria: null,
+    orden: p.orden, duracion: null, estadoOrigen: '', periodoNombre: null,
+    fechas: {
+      inicioCursado: null, aperturaInscripcion: null, cierreInscripcion: null,
+      finCursado: null, aperturaAfi: null, cierreAfi: null, cierreAsignatura: null, actas: null,
+    },
+  }))
+  // El plan va primero: define el orden. Las filas con período pisan lo demás.
+  const todas = [...desdePlanes, ...filas]
+
+  const conCodigo = todas.filter((f) => {
     if (f.codigo) return true
     reporte.sinCodigo.push(`${f.nombre} (${f.carrera})`)
     return false

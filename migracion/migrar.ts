@@ -4,6 +4,7 @@ import { parsePosgrado } from './parsers/posgrado'
 import { parseEducacion } from './parsers/educacion'
 import { parseTablero } from './parsers/tablero'
 import { parsePeriodosEducacion } from './parsers/periodos'
+import { parsePlanes } from './parsers/planes'
 import { cargar } from './cargar'
 
 async function main() {
@@ -20,12 +21,26 @@ async function main() {
   const calendario = existsSync(`${dir}/periodos-educacion.xlsx`)
     ? parsePeriodosEducacion(readFileSync(`${dir}/periodos-educacion.xlsx`))
     : []
-  if (!filas.length) {
-    console.error('No hay archivos en migracion/input/ — se esperan posgrado.xlsx, educacion.xlsx y opcionalmente tablero.json')
+  // Planes de estudio completos: el catálogo de cada carrera, con o sin período
+  const planes = existsSync(`${dir}/planes.xlsx`)
+    ? parsePlanes(readFileSync(`${dir}/planes.xlsx`))
+    : []
+  if (!filas.length && !planes.length) {
+    console.error(
+      'No hay archivos en migracion/input/. Se esperan (todos opcionales, pero al menos uno):\n' +
+      '  planes.xlsx              planes de estudio de todas las carreras\n' +
+      '  posgrado.xlsx            planilla de aperturas de Posgrado\n' +
+      '  educacion.xlsx           planilla de aperturas de Educación\n' +
+      '  periodos-educacion.xlsx  calendario de períodos de Educación\n' +
+      '  tablero.json             respaldo del tablero de contratación',
+    )
     process.exit(1)
   }
-  console.log(`Filas leídas: ${filas.length} · Entradas del tablero: ${tablero.length} · Períodos de Educación: ${calendario.length}`)
-  const r = await cargar(filas, tablero, prisma, calendario)
+  console.log(
+    `Aperturas leídas: ${filas.length} · Plan de estudios: ${planes.length} · ` +
+    `Tablero: ${tablero.length} · Períodos de Educación: ${calendario.length}`,
+  )
+  const r = await cargar(filas, tablero, prisma, calendario, planes)
   const md = [
     `# Reporte de migración — ${new Date().toLocaleString('es-AR')}`,
     '',
