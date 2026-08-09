@@ -373,6 +373,19 @@ td.num { font-variant-numeric: tabular-nums; text-align: right; }
   color: var(--texto-suave);
 }
 
+/* En la columna del plan: distinguir lo que ya tiene período de lo que no */
+.columna.pendientes .tarjeta.asignada { opacity: .72; }
+.columna.pendientes .tarjeta.libre { border-left: 3px solid var(--amarillo); }
+
+.tarjeta .ubicacion {
+  margin: 0 0 var(--e2);
+  font-size: 11px;
+  color: var(--verde);
+  background: var(--verde-fondo);
+  border-radius: 4px;
+  padding: 2px var(--e2);
+}
+
 .tarjeta .transversal {
   margin: 0 0 var(--e2);
   font-size: 11px;

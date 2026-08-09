@@ -3,6 +3,7 @@
 // Pasa por el mismo cargador que la migración real: npx tsx migracion/demo.ts
 import { prisma } from '../src/lib/db'
 import { cargar } from './cargar'
+import { PLANES_POSGRADO } from './planes-posgrado'
 import type { FilaAsignatura } from './parsers/tipos'
 import type { FilaTablero } from './parsers/tablero'
 
@@ -20,13 +21,14 @@ const mas = (base: Date, dias: number) => new Date(base.getTime() + dias * 86_40
 
 function pos(
   carrera: string, codigo: string, nombre: string, cohorte: string,
-  periodo: keyof typeof PERIODOS, estadoOrigen: string, orden: number,
+  periodo: keyof typeof PERIODOS, estadoOrigen: string, _orden: number,
 ): FilaAsignatura {
   const p = PERIODOS[periodo]
   const cursado = d(p.cursado)
   return {
+    // el orden en el plan lo define PLANES_POSGRADO, no esta fila
     unidad: 'posgrado', carrera, cohorte, codigo, nombre, catedra: 'DA',
-    cargaHoraria: 21, orden, duracion: null, estadoOrigen, periodoNombre: p.nombre,
+    cargaHoraria: 21, orden: null, duracion: null, estadoOrigen, periodoNombre: p.nombre,
     fechas: {
       inicioCursado: cursado, aperturaInscripcion: d(p.insc), cierreInscripcion: mas(d(p.insc), 7),
       finCursado: mas(cursado, 31), aperturaAfi: mas(cursado, 32), cierreAfi: mas(cursado, 53),
@@ -52,11 +54,13 @@ function edu(
   }
 }
 
-const DE = 'DIRECCION DE EMPRESAS'
-const AG = 'NT - ALTA GERENCIA'
-const CY = 'NT - CYBERSEGURIDAD'
-const CI = 'COOPERACION INTERNACIONAL'
-const DP = 'DIR. ESTRAT. PROYECTOS'
+// Los nombres son los del tablero de contratación, que es de donde salen los
+// planes de estudio completos.
+const DE = 'Dirección de Empresas'
+const AG = 'Nuevas Tecnologías'
+const CY = 'Nuevas Tecnologías'
+const CI = 'Cooperación Internacional'
+const DP = 'Dirección Estratégica de Proyectos'
 
 const filas: FilaAsignatura[] = [
   // ---- Agosto 2026 (la inscripción ya abrió: lo que no esté listo está en rojo)
@@ -154,18 +158,58 @@ const tablero: FilaTablero[] = [
   { codigo: 'EP02040', carrera: CY, docente: 'Sandra Aronica', asesor: 'Victoria Coria', estado: 'maquetacion' },
 ]
 
+/**
+ * El plan de estudios completo, sin período: son todas las asignaturas de la
+ * carrera, incluidas las que el director todavía tiene que ubicar. Las que ya
+ * tienen período lo reciben por `filas`; acá se define el orden en el plan.
+ */
+function filasDelPlan(): FilaAsignatura[] {
+  const sinFechas = {
+    inicioCursado: null, aperturaInscripcion: null, cierreInscripcion: null,
+    finCursado: null, aperturaAfi: null, cierreAfi: null, cierreAsignatura: null, actas: null,
+  }
+  return PLANES_POSGRADO
+    .map(([carrera, codigo, nombre, orden, estado, docente, asesor]) => ({
+      unidad: 'posgrado' as const,
+      carrera, cohorte: null, codigo, nombre,
+      catedra: 'DA', cargaHoraria: null, orden, duracion: null,
+      estadoOrigen: estado, periodoNombre: null,
+      fechas: { ...sinFechas },
+      _docente: docente, _asesor: asesor,
+    })) as FilaAsignatura[]
+}
+
 async function main() {
   // Base limpia para que el demo sea reproducible
+  await prisma.cambio.deleteMany({})
   await prisma.aperturaCohorte.deleteMany({})
   await prisma.apertura.deleteMany({})
   await prisma.planItem.deleteMany({})
   await prisma.cohorte.deleteMany({})
   await prisma.periodo.deleteMany({})
+  await prisma.usuarioCarrera.deleteMany({})
   await prisma.asignatura.deleteMany({})
   await prisma.carrera.deleteMany({})
 
-  const r = await cargar(filas, tablero, prisma)
+  // Docentes y asesores de los planes, para no perderlos al cargar el catálogo
+  const delPlan: FilaTablero[] = PLANES_POSGRADO
+    .filter(([, , , , , docente, asesor]) => docente || asesor)
+    .map(([carrera, codigo, , , estado, docente, asesor]) => ({
+      codigo, carrera,
+      docente: docente || null,
+      asesor: asesor || null,
+      estado: 'sin_novedad' as const, // el estado real ya viene en estadoOrigen
+    }))
+
+  // primero el plan (define el orden), después las que ya tienen período
+  const r = await cargar([...filasDelPlan(), ...filas], [...delPlan, ...tablero], prisma)
   console.log('Demo cargada:', r)
+  const porCarrera = await prisma.carrera.findMany({
+    include: { _count: { select: { planItems: true } } },
+    orderBy: { nombre: 'asc' },
+  })
+  console.log('\nPlan de estudios por carrera:')
+  for (const c of porCarrera) console.log(`  ${c.nombre.padEnd(36)} ${c._count.planItems} asignaturas`)
   await prisma.$disconnect()
 }
 

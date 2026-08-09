@@ -69,9 +69,17 @@ export default async function Planificar({
     orderBy: { nombre: 'asc' },
   })
 
-  // Lo que todavía no tiene apertura en ningún período futuro
-  const planificados = new Set(futuros.flatMap((p) => p.aperturas.map((a) => a.asignaturaCodigo)))
-  const pendientes = plan.filter((p) => !planificados.has(p.asignaturaCodigo))
+  // El plan entero queda siempre a la vista: cada asignatura muestra en qué
+  // períodos ya está y se puede sumar a otro (una misma materia se abre en
+  // varios períodos para distintas cohortes).
+  const dondeEsta = new Map<string, string[]>()
+  for (const p of periodos) {
+    for (const ap of p.aperturas) {
+      dondeEsta.set(ap.asignaturaCodigo, [...(dondeEsta.get(ap.asignaturaCodigo) ?? []), p.nombre])
+    }
+  }
+  const enFuturos = new Set(futuros.flatMap((p) => p.aperturas.map((a) => a.asignaturaCodigo)))
+  const sinFechaProxima = plan.filter((p) => !enFuturos.has(p.asignaturaCodigo)).length
 
   const cambios = await prisma.cambio.findMany({
     where: { carreraId: carrera.id },
@@ -106,52 +114,63 @@ export default async function Planificar({
       <div className="tablero">
         <section className="columna pendientes">
           <header>
-            <h2>Sin planificar</h2>
-            <span className="cuenta">{pendientes.length}</span>
+            <h2>Plan de estudios</h2>
+            <span className="cuenta">{plan.length}</span>
           </header>
-          <p className="nota">Asignaturas del plan que todavía no tienen período asignado.</p>
-          {pendientes.length ? (
+          <p className="nota">
+            {plan.length
+              ? <>Todas las asignaturas de la carrera. {sinFechaProxima > 0
+                  ? <><strong>{sinFechaProxima}</strong> sin período próximo.</>
+                  : 'Todas tienen período próximo.'}</>
+              : 'Sin plan de estudios cargado.'}
+          </p>
+          {plan.length ? (
             <ul className="tarjetas">
-              {pendientes.map((p) => (
-                <li key={p.id} className="tarjeta">
-                  <div className="titulo">
-                    {p.orden != null && <span className="orden">{p.orden}</span>}
-                    <Link href={`/asignaturas/${encodeURIComponent(p.asignaturaCodigo)}`}>
-                      {p.asignatura.nombre}
-                    </Link>
-                  </div>
-                  <div className="meta">
-                    <span className="codigo">{p.asignaturaCodigo}</span>
-                    <span>{ESTADO_LABELS[p.asignatura.estado as Estado]}</span>
-                  </div>
-                  {editable && futuros.length > 0 && (
-                    <form action={agregarApertura.bind(null, carrera.id)} className="acciones">
-                      <input type="hidden" name="codigo" value={p.asignaturaCodigo} />
-                      <select name="periodoId" defaultValue="" aria-label="Período">
-                        <option value="" disabled>Abrir en...</option>
-                        {futuros.map((f) => (
-                          <option key={f.id} value={f.id}>{f.nombre}</option>
-                        ))}
-                      </select>
-                      {cohortes.length > 0 && (
-                        <select name="cohorteId" defaultValue={String(cohortes[0].id)} aria-label="Cohorte">
-                          {cohortes.map((c) => (
-                            <option key={c.id} value={c.id}>{c.nombre}</option>
+              {plan.map((p) => {
+                const periodosDeEsta = dondeEsta.get(p.asignaturaCodigo) ?? []
+                const yaTieneProximo = enFuturos.has(p.asignaturaCodigo)
+                return (
+                  <li key={p.id} className={`tarjeta ${yaTieneProximo ? 'asignada' : 'libre'}`}>
+                    <div className="titulo">
+                      {p.orden != null && <span className="orden">{p.orden}</span>}
+                      <Link href={`/asignaturas/${encodeURIComponent(p.asignaturaCodigo)}`}>
+                        {p.asignatura.nombre}
+                      </Link>
+                    </div>
+                    <div className="meta">
+                      <span className="codigo">{p.asignaturaCodigo}</span>
+                      <span>{ESTADO_LABELS[p.asignatura.estado as Estado]}</span>
+                    </div>
+                    {periodosDeEsta.length > 0 && (
+                      <p className="ubicacion">Abre en {periodosDeEsta.join(', ')}</p>
+                    )}
+                    {editable && futuros.length > 0 && (
+                      <form action={agregarApertura.bind(null, carrera.id)} className="acciones">
+                        <input type="hidden" name="codigo" value={p.asignaturaCodigo} />
+                        <select name="periodoId" defaultValue="" aria-label={`Período para ${p.asignatura.nombre}`}>
+                          <option value="" disabled>
+                            {periodosDeEsta.length ? 'Abrir también en...' : 'Abrir en...'}
+                          </option>
+                          {futuros.map((f) => (
+                            <option key={f.id} value={f.id}>{f.nombre}</option>
                           ))}
                         </select>
-                      )}
-                      <button type="submit">Agregar</button>
-                    </form>
-                  )}
-                </li>
-              ))}
+                        {cohortes.length > 0 && (
+                          <select name="cohorteId" defaultValue={String(cohortes[0].id)} aria-label="Cohorte">
+                            {cohortes.map((c) => (
+                              <option key={c.id} value={c.id}>{c.nombre}</option>
+                            ))}
+                          </select>
+                        )}
+                        <button type="submit">Agregar</button>
+                      </form>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           ) : (
-            <p className="vacio chico">
-              {plan.length
-                ? 'Todo el plan tiene período asignado.'
-                : 'Esta carrera todavía no tiene plan de estudios cargado.'}
-            </p>
+            <p className="vacio chico">Esta carrera todavía no tiene plan de estudios cargado.</p>
           )}
         </section>
 

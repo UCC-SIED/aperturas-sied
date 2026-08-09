@@ -7,10 +7,13 @@ import { prisma } from '../src/lib/db'
 const USUARIOS: { email: string; nombre: string; rol: string; carreras?: string[] }[] = [
   { email: 'tecnologia.sied@ucc.edu.ar', nombre: 'Tecnología Educativa SIED', rol: 'sied' },
   { email: 'direccion.sied@ucc.edu.ar', nombre: 'Dirección SIED', rol: 'consulta' },
-  { email: 'direccion.empresas@ucc.edu.ar', nombre: 'Dirección de Empresas', rol: 'director', carreras: ['DIRECCION DE EMPRESAS'] },
-  { email: 'direccion.nt@ucc.edu.ar', nombre: 'Dirección Nuevas Tecnologías', rol: 'director', carreras: ['NT - ALTA GERENCIA', 'NT - CYBERSEGURIDAD'] },
-  { email: 'direccion.cooperacion@ucc.edu.ar', nombre: 'Dirección Cooperación Internacional', rol: 'director', carreras: ['COOPERACION INTERNACIONAL'] },
-  { email: 'direccion.proyectos@ucc.edu.ar', nombre: 'Dirección Estratégica de Proyectos', rol: 'director', carreras: ['DIR. ESTRAT. PROYECTOS'] },
+  { email: 'direccion.empresas@ucc.edu.ar', nombre: 'Dirección de Empresas', rol: 'director', carreras: ['Dirección de Empresas'] },
+  { email: 'direccion.nt@ucc.edu.ar', nombre: 'Dirección Nuevas Tecnologías', rol: 'director', carreras: ['Nuevas Tecnologías'] },
+  { email: 'direccion.cooperacion@ucc.edu.ar', nombre: 'Dirección Cooperación Internacional', rol: 'director', carreras: ['Cooperación Internacional'] },
+  { email: 'direccion.proyectos@ucc.edu.ar', nombre: 'Dirección Estratégica de Proyectos', rol: 'director', carreras: ['Dirección Estratégica de Proyectos'] },
+  { email: 'direccion.liderazgo@ucc.edu.ar', nombre: 'Dirección y Liderazgo', rol: 'director', carreras: ['Dirección y Liderazgo'] },
+  { email: 'direccion.innovacion@ucc.edu.ar', nombre: 'Dirección Innovación de Negocios', rol: 'director', carreras: ['Innovación de Negocios'] },
+  { email: 'direccion.operaciones@ucc.edu.ar', nombre: 'Dirección Operaciones y Cadena de Valor', rol: 'director', carreras: ['Operaciones y Cadena de Valor'] },
   { email: 'direccion.educacion@ucc.edu.ar', nombre: 'Dirección Educación', rol: 'director', carreras: ['Educación Inicial', 'Ciencias de la Educación'] },
 ]
 
