@@ -6,6 +6,6 @@ export const dynamic = 'force-dynamic'
 export default async function Home() {
   const s = await sesionActual()
   if (!s) redirect('/ingresar')
-  // El SIED arranca en la foto general; los directores, en su planificador.
-  redirect(s.rol === 'sied' ? '/periodos' : '/planificar')
+  // Los directores entran directo a lo que tienen que decidir; el resto, a la foto general.
+  redirect(s.rol === 'director' ? '/planificar' : '/panel')
 }

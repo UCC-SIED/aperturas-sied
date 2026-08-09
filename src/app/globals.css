@@ -529,6 +529,44 @@ form.buscador button:hover { background: #eaf0fb; }
   font-size: 13px;
 }
 
+.boton-descarga {
+  border: 1px solid var(--azul);
+  background: #fff;
+  color: var(--azul);
+  border-radius: var(--radio-chico);
+  padding: var(--e2) var(--e4);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: background var(--transicion);
+}
+.boton-descarga:hover { background: #eaf0fb; text-decoration: none; }
+
+/* barra de avance del panel */
+.barra {
+  position: relative;
+  height: 16px;
+  min-width: 110px;
+  background: var(--neutro-fondo);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.barra .relleno {
+  height: 100%;
+  background: var(--azul-claro);
+  transition: width var(--transicion);
+}
+.barra span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--texto);
+  font-variant-numeric: tabular-nums;
+}
+
 .grupo-estado { margin-bottom: var(--e5); }
 .contador { color: var(--texto-suave); font-weight: 400; }
 

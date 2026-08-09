@@ -5,13 +5,27 @@ Sistema de gestión de aperturas de aulas en Canvas LMS para el SIED (UCC). Reem
 - **Diseño (objetivo, alcances y límites):** [docs/2026-08-08-gestion-aperturas-design.md](docs/2026-08-08-gestion-aperturas-design.md)
 - **Plan de implementación Fase 1:** [docs/2026-08-08-aperturas-f1.md](docs/2026-08-08-aperturas-f1.md)
 
-## Qué hace hoy (Fase 1)
+## Qué hace hoy
 
-- **Períodos** (`/periodos`): calendario de períodos por unidad, con cuántas aperturas tiene cada uno.
-- **Tablero del período** (`/periodos/[id]`): qué asignaturas abren, agrupadas por carrera, con semáforo de producción, docente, asesor, fechas y cohortes. Las transversales aparecen bajo cada carrera que las comparte.
-- **Ficha de asignatura** (`/asignaturas/[codigo]`): edición de estado, docente y asesor; planes donde figura y todas sus aperturas. Avisa cuando es transversal.
-- **Catálogo** (`/asignaturas`): búsqueda por nombre o código.
-- **Producción** (`/produccion`): pipeline agrupado por estado, con la próxima apertura de cada asignatura.
+**Planificar** (`/planificar`) — la pantalla principal. Un tablero por carrera: a la izquierda las asignaturas del plan de estudios que todavía no tienen período, y después una columna por período próximo. Cada dirección elige qué abre en cada período, y mueve o quita cuando la producción no llega. Cada tarjeta muestra el semáforo, así la decisión se toma viendo si el aula está lista. Abajo queda el registro de los últimos movimientos.
+
+**Períodos** (`/periodos` y `/periodos/[id]`) — el calendario completo y, dentro de cada período, qué abre agrupado por carrera con semáforo, docente, asesor y cohortes.
+
+**Asignaturas** (`/asignaturas` y `/asignaturas/[codigo]`) — catálogo con búsqueda y la ficha de cada una: estado de producción, planes donde figura con su orden, todas sus aperturas con el ciclo de fechas, e historial de cambios.
+
+**Producción** (`/produccion`) — el pipeline agrupado por estado con la próxima apertura de cada asignatura. Sólo para el equipo SIED.
+
+### Quién ve qué
+
+| Rol | Puede |
+|---|---|
+| **Equipo SIED** | Todo: planificar cualquier carrera, editar estados de producción, docentes y asesores |
+| **Dirección de carrera** | Planificar sus carreras (agregar, mover, quitar aperturas). Ve el estado de producción pero no lo edita. No ve otras carreras |
+| **Consulta** | Sólo lectura |
+
+El ingreso hoy es eligiendo usuario en `/ingresar`; cuando se conecte Google el paso desaparece y se entra con la cuenta institucional. Los usuarios se cargan con `npx tsx migracion/usuarios.ts` (editar la lista en ese archivo).
+
+### Semáforo
 
 ### Semáforo
 
@@ -30,7 +44,9 @@ npx prisma migrate dev
 npm run dev
 ```
 
-Datos de prueba: `npx tsx migracion/demo.ts`. Tests: `npm test`.
+Datos de prueba: `npx tsx migracion/demo.ts` seguido de `npx tsx migracion/usuarios.ts`. Tests: `npm test`.
+
+Las transversales son el caso delicado del sistema (una asignatura, un código, varias carreras, una sola apertura). Esa lógica vive en `src/lib/planificacion.ts` y está cubierta por `tests/planificacion.test.ts` — conviene correr los tests antes de tocarla.
 
 ## Migración de las planillas
 

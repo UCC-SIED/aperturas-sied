@@ -26,7 +26,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <span className="marca">Aperturas SIED</span>
           {s && (
             <nav>
-              <Link href="/planificar">Planificar</Link>
+              <Link href="/panel">Panel</Link>
+              {s.rol !== 'consulta' && <Link href="/planificar">Planificar</Link>}
               <Link href="/periodos">Períodos</Link>
               <Link href="/asignaturas">Asignaturas</Link>
               {s.rol === 'sied' && <Link href="/produccion">Producción</Link>}
