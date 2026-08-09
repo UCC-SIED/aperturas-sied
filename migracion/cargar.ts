@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client'
 import { mapEstado } from '../src/lib/normalizar'
 import { inferirPeriodo } from '../src/lib/inferir-periodo'
+import { validarFechas } from '../src/lib/validar'
 import { ESTADOS, type Estado } from '../src/lib/estados'
 import type { FilaAsignatura } from './parsers/tipos'
 import type { FilaTablero } from './parsers/tablero'
@@ -11,10 +12,16 @@ export type Reporte = {
   sinCodigo: string[]
   sinPeriodo: string[]
   nombresEnConflicto: string[]
+  fechasIncoherentes: string[]
 }
 
 function ordenEstado(e: Estado): number {
   return ESTADOS.indexOf(e)
+}
+
+/** Duración declarada en la planilla; si falta, se asume bimestral (lo más común). */
+function tipoDePeriodo(f: FilaAsignatura): string {
+  return (f.duracion ?? '').toLowerCase().includes('cuatrim') ? 'cuatrimestral' : 'bimestral'
 }
 
 export async function cargar(
@@ -22,7 +29,18 @@ export async function cargar(
   tablero: FilaTablero[],
   db: PrismaClient,
 ): Promise<Reporte> {
-  const reporte: Reporte = { asignaturas: 0, aperturas: 0, sinCodigo: [], sinPeriodo: [], nombresEnConflicto: [] }
+  const reporte: Reporte = {
+    asignaturas: 0, aperturas: 0, sinCodigo: [], sinPeriodo: [], nombresEnConflicto: [], fechasIncoherentes: [],
+  }
+
+  // Las planillas traen errores de carga, sobre todo en los períodos más nuevos:
+  // se cargan igual, pero quedan listados para revisar.
+  for (const f of filas) {
+    const problemas = validarFechas(f.fechas)
+    if (problemas.length) {
+      reporte.fechasIncoherentes.push(`${f.nombre} (${f.carrera}${f.cohorte ? `, ${f.cohorte}` : ''}): ${problemas.join('; ')}`)
+    }
+  }
 
   // 1. Unidades y carreras
   await db.unidad.upsert({ where: { id: 'posgrado' }, update: {}, create: { id: 'posgrado', nombre: 'Posgrado' } })
@@ -107,34 +125,41 @@ export async function cargar(
     }
   }
 
-  // 4b. Períodos de educación (generados agrupando fechas de inicio)
-  const filasEdu = conCodigo.filter((x) => x.unidad === 'educacion')
-  const fechasInicio = [...new Set(filasEdu.filter((x) => x.fechas.inicioCursado).map((x) => x.fechas.inicioCursado!.getTime()))]
-    .sort((a, b) => a - b)
-    .map((t) => new Date(t))
-  for (const fecha of fechasInicio) {
-    const existentes = (await db.periodo.findMany({ where: { unidadId: 'educacion' } }))
-      .map((p) => ({ id: p.id, inicioCursado: p.inicioCursado }))
-    if (inferirPeriodo(fecha, existentes) !== null) continue
-    const filasDelGrupo = filasEdu.filter((x) => x.fechas.inicioCursado && Math.abs(x.fechas.inicioCursado.getTime() - fecha.getTime()) / 86_400_000 <= 10)
-    const duraciones = filasDelGrupo.map((x) => (x.duracion ?? '').toLowerCase())
-    const tipo = duraciones.filter((d) => d.includes('cuatrim')).length > duraciones.filter((d) => d.includes('bimes')).length
-      ? 'cuatrimestral' : 'bimestral'
-    const nombre = `${tipo === 'bimestral' ? 'Bimestre' : 'Cuatrimestre'} ${fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
-    const ref = filasDelGrupo[0]
-    await db.periodo.create({
-      data: {
-        unidadId: 'educacion', nombre, tipo, inicioCursado: fecha,
-        aperturaInscripcion: ref?.fechas.aperturaInscripcion ?? null,
-        cierreInscripcion: ref?.fechas.cierreInscripcion ?? null,
-      },
-    })
+  // 4b. Períodos de educación: la planilla no los tiene, se generan desde las fechas.
+  // Se agrupa por fecha de inicio Y duración — un bimestral y un cuatrimestral que
+  // arrancan el mismo día son períodos distintos: cierran y rinden AFI en fechas distintas.
+  const filasEdu = conCodigo.filter((x) => x.unidad === 'educacion' && x.fechas.inicioCursado)
+  const porTipo = new Map<string, FilaAsignatura[]>()
+  for (const f of filasEdu) {
+    const t = tipoDePeriodo(f)
+    porTipo.set(t, [...(porTipo.get(t) ?? []), f])
+  }
+  for (const [tipo, filasTipo] of porTipo) {
+    const fechas = [...new Set(filasTipo.map((x) => x.fechas.inicioCursado!.getTime()))]
+      .sort((a, b) => a - b)
+      .map((t) => new Date(t))
+    for (const fecha of fechas) {
+      const existentes = (await db.periodo.findMany({ where: { unidadId: 'educacion', tipo } }))
+        .map((p) => ({ id: p.id, inicioCursado: p.inicioCursado }))
+      if (inferirPeriodo(fecha, existentes) !== null) continue
+      const ref = filasTipo.find((x) => Math.abs(x.fechas.inicioCursado!.getTime() - fecha.getTime()) / 86_400_000 <= 10)
+      const etiqueta = tipo === 'bimestral' ? 'Bimestre' : 'Cuatrimestre'
+      await db.periodo.create({
+        data: {
+          unidadId: 'educacion',
+          nombre: `${etiqueta} ${fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`,
+          tipo,
+          inicioCursado: fecha,
+          aperturaInscripcion: ref?.fechas.aperturaInscripcion ?? null,
+          cierreInscripcion: ref?.fechas.cierreInscripcion ?? null,
+        },
+      })
+    }
   }
 
   // 5. Aperturas (única por código+período) y sus cohortes
   const periodosPos = (await db.periodo.findMany({ where: { unidadId: 'posgrado' } }))
-  const periodosEdu = (await db.periodo.findMany({ where: { unidadId: 'educacion' } }))
-    .map((p) => ({ id: p.id, inicioCursado: p.inicioCursado }))
+  const periodosEdu = await db.periodo.findMany({ where: { unidadId: 'educacion' } })
 
   for (const f of conCodigo) {
     let periodoId: number | null = null
@@ -146,7 +171,11 @@ export async function cargar(
         periodoId = inferirPeriodo(f.fechas.inicioCursado, periodosPos.map((p) => ({ id: p.id, inicioCursado: p.inicioCursado })))
       }
     } else {
-      periodoId = f.fechas.inicioCursado ? inferirPeriodo(f.fechas.inicioCursado, periodosEdu) : null
+      // sólo se compara contra los períodos de la misma duración que la asignatura
+      const candidatos = periodosEdu
+        .filter((p) => p.tipo === tipoDePeriodo(f))
+        .map((p) => ({ id: p.id, inicioCursado: p.inicioCursado }))
+      periodoId = f.fechas.inicioCursado ? inferirPeriodo(f.fechas.inicioCursado, candidatos) : null
     }
     if (!periodoId) {
       if (f.periodoNombre || f.fechas.inicioCursado || f.unidad === 'educacion') {

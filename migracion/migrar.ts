@@ -34,9 +34,14 @@ async function main() {
     '',
     `## Códigos con nombres en conflicto (${r.nombresEnConflicto.length})`,
     ...r.nombresEnConflicto.map((s) => `- ${s}`),
+    '',
+    `## Fechas incoherentes — se cargaron igual, pero hay que revisarlas (${r.fechasIncoherentes.length})`,
+    ...r.fechasIncoherentes.map((s) => `- ${s}`),
   ].join('\n')
   writeFileSync('migracion/reporte-migracion.md', md)
-  console.log(md)
+  console.log(`\nAsignaturas: ${r.asignaturas} · Aperturas: ${r.aperturas}`)
+  console.log(`A revisar → sin código: ${r.sinCodigo.length} · sin período: ${r.sinPeriodo.length} · nombres en conflicto: ${r.nombresEnConflicto.length} · fechas incoherentes: ${r.fechasIncoherentes.length}`)
+  console.log('\nDetalle completo en migracion/reporte-migracion.md')
   await prisma.$disconnect()
 }
 

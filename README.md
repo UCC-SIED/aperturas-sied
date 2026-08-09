@@ -42,9 +42,22 @@ Datos de prueba: `npx tsx migracion/demo.ts`. Tests: `npm test`.
 npm run migrar
 ```
 
-Deja `migracion/reporte-migracion.md` con lo que no pudo mapear: filas sin código, asignaturas sin período asignable y códigos cuyo nombre difiere entre planillas. Esos casos se revisan a mano — nada se inventa.
+Deja `migracion/reporte-migracion.md` con todo lo que hay que mirar a ojo:
 
-La migración es idempotente: correrla dos veces no duplica datos.
+| Sección | Qué junta |
+|---|---|
+| Filas sin código | No se cargan: sin código no hay clave de asignatura |
+| Sin período asignable | Se cargó la asignatura pero su fecha no cae en ningún período |
+| Nombres en conflicto | Un mismo código con nombres distintos entre planillas (gana el más largo) |
+| Fechas incoherentes | **Se cargan igual**, pero el orden del ciclo es imposible |
+
+Las planillas vienen con errores de carga, sobre todo en los períodos más recientes. La migración no los corrige sola ni los descarta: los carga y los deja listados con el problema concreto (por ejemplo "la inscripción abre después de empezar el cursado", "el AFI vence antes de abrir", "hay fechas con años imposibles"). Corregirlos es una decisión tuya, no del script.
+
+La migración es idempotente: correrla dos veces no duplica datos, así que se puede corregir la planilla y volver a correrla.
+
+### Períodos de Educación
+
+La planilla de Educación no tiene columna de período, solo fechas por fila. La migración los genera agrupando por fecha de inicio **y duración**: un bimestral y un cuatrimestral que arrancan el mismo día son dos períodos distintos, porque cierran y rinden AFI en fechas diferentes.
 
 ## Despliegue (Supabase + Vercel)
 

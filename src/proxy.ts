@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-export function middleware(req: NextRequest) {
+export default function proxy(req: NextRequest) {
   const user = process.env.ACCESO_USUARIO
   const pass = process.env.ACCESO_CLAVE
   // Sin credenciales configuradas (desarrollo local) no bloquea.

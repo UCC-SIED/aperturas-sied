@@ -64,6 +64,27 @@ describe('cargar', () => {
     expect(periodosEdu[0].tipo).toBe('bimestral')
   })
 
+  it('educación: bimestral y cuatrimestral que arrancan el mismo día son períodos distintos', async () => {
+    const base = fila({}).fechas
+    const bim = fila({ unidad: 'educacion', carrera: 'ED CS', codigo: 'EDU010', nombre: 'PEDAGOGÍA: TEORÍA Y PRÁCTICA',
+      periodoNombre: null, duracion: 'Bimestral',
+      fechas: { ...base, inicioCursado: new Date(2026, 7, 6) } })
+    const cua = fila({ unidad: 'educacion', carrera: 'ED CS', codigo: 'EDU011', nombre: 'GESTIÓN CURRICULAR I',
+      periodoNombre: null, duracion: 'Cuatrimestral',
+      fechas: { ...base, inicioCursado: new Date(2026, 7, 6) } })
+    await cargar([bim, cua], [], prisma)
+    const periodos = await prisma.periodo.findMany({
+      where: { unidadId: 'educacion', inicioCursado: new Date(2026, 7, 6) },
+      include: { aperturas: true },
+    })
+    expect(periodos).toHaveLength(2)
+    expect(periodos.map((p) => p.tipo).sort()).toEqual(['bimestral', 'cuatrimestral'])
+    const dePeriodo = (tipo: string) =>
+      periodos.find((p) => p.tipo === tipo)!.aperturas.map((a) => a.asignaturaCodigo)
+    expect(dePeriodo('bimestral')).toEqual(['EDU010'])
+    expect(dePeriodo('cuatrimestral')).toEqual(['EDU011'])
+  })
+
   it('educación sin fecha de inicio va al reporte', async () => {
     const r = await cargar(
       [fila({ unidad: 'educacion', carrera: 'ED X', codigo: 'EDU003', nombre: 'SIN FECHA', periodoNombre: null,
@@ -71,6 +92,22 @@ describe('cargar', () => {
       [], prisma,
     )
     expect(r.sinPeriodo).toEqual(['SIN FECHA (ED X)'])
+  })
+
+  it('reporta fechas incoherentes pero carga la fila igual', async () => {
+    const r = await cargar(
+      [fila({ codigo: 'TST020', nombre: 'CON FECHAS MAL',
+        fechas: { ...fila({}).fechas,
+          inicioCursado: new Date(2026, 7, 5),
+          aperturaInscripcion: new Date(2026, 7, 20), // abre después de empezar
+        } })],
+      [], prisma,
+    )
+    expect(r.fechasIncoherentes).toHaveLength(1)
+    expect(r.fechasIncoherentes[0]).toContain('CON FECHAS MAL')
+    expect(r.fechasIncoherentes[0]).toContain('la inscripción abre después de empezar el cursado')
+    // se cargó igual: el sistema no descarta datos, los marca
+    expect(await prisma.asignatura.findUnique({ where: { codigo: 'TST020' } })).not.toBeNull()
   })
 
   it('nombres en conflicto: gana el más largo y queda reportado', async () => {
