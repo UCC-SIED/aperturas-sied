@@ -8,7 +8,7 @@ const USUARIOS: { email: string; nombre: string; rol: string; carreras?: string[
   { email: 'tecnologia.sied@ucc.edu.ar', nombre: 'Tecnología Educativa SIED', rol: 'sied' },
   { email: 'direccion.sied@ucc.edu.ar', nombre: 'Dirección SIED', rol: 'consulta' },
   { email: 'direccion.empresas@ucc.edu.ar', nombre: 'Dirección de Empresas', rol: 'director', carreras: ['Dirección de Empresas'] },
-  { email: 'direccion.nt@ucc.edu.ar', nombre: 'Dirección Nuevas Tecnologías', rol: 'director', carreras: ['Nuevas Tecnologías'] },
+  { email: 'direccion.nt@ucc.edu.ar', nombre: 'Dirección Nuevas Tecnologías', rol: 'director', carreras: ['NT - Alta Gerencia', 'NT - Cyberseguridad', 'NT - Finanzas Tecnológicas'] },
   { email: 'direccion.cooperacion@ucc.edu.ar', nombre: 'Dirección Cooperación Internacional', rol: 'director', carreras: ['Cooperación Internacional'] },
   { email: 'direccion.proyectos@ucc.edu.ar', nombre: 'Dirección Estratégica de Proyectos', rol: 'director', carreras: ['Dirección Estratégica de Proyectos'] },
   { email: 'direccion.liderazgo@ucc.edu.ar', nombre: 'Dirección y Liderazgo', rol: 'director', carreras: ['Dirección y Liderazgo'] },

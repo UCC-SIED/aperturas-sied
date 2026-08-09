@@ -4,6 +4,7 @@
 import { prisma } from '../src/lib/db'
 import { cargar } from './cargar'
 import { PLANES_POSGRADO } from './planes-posgrado'
+import { CARRERAS_NT, NT_ALTA_GERENCIA, NT_CYBERSEGURIDAD, planDe } from './planes-nt'
 import type { FilaAsignatura } from './parsers/tipos'
 import type { FilaTablero } from './parsers/tablero'
 
@@ -55,10 +56,11 @@ function edu(
 }
 
 // Los nombres son los del tablero de contratación, que es de donde salen los
-// planes de estudio completos.
+// planes de estudio completos. Nuevas Tecnologías es la excepción: el tablero
+// fusiona tres maestrías en una, y acá van separadas (ver planes-nt.ts).
 const DE = 'Dirección de Empresas'
-const AG = 'Nuevas Tecnologías'
-const CY = 'Nuevas Tecnologías'
+const AG = NT_ALTA_GERENCIA
+const CY = NT_CYBERSEGURIDAD
 const CI = 'Cooperación Internacional'
 const DP = 'Dirección Estratégica de Proyectos'
 
@@ -163,20 +165,40 @@ const tablero: FilaTablero[] = [
  * carrera, incluidas las que el director todavía tiene que ubicar. Las que ya
  * tienen período lo reciben por `filas`; acá se define el orden en el plan.
  */
-function filasDelPlan(): FilaAsignatura[] {
-  const sinFechas = {
-    inicioCursado: null, aperturaInscripcion: null, cierreInscripcion: null,
-    finCursado: null, aperturaAfi: null, cierreAfi: null, cierreAsignatura: null, actas: null,
+const SIN_FECHAS = {
+  inicioCursado: null, aperturaInscripcion: null, cierreInscripcion: null,
+  finCursado: null, aperturaAfi: null, cierreAfi: null, cierreAsignatura: null, actas: null,
+}
+
+function filaPlan(carrera: string, codigo: string, nombre: string, orden: number, estado: string): FilaAsignatura {
+  return {
+    unidad: 'posgrado', carrera, cohorte: null, codigo, nombre,
+    catedra: 'DA', cargaHoraria: null, orden, duracion: null,
+    estadoOrigen: estado, periodoNombre: null, fechas: { ...SIN_FECHAS },
   }
-  return PLANES_POSGRADO
-    .map(([carrera, codigo, nombre, orden, estado, docente, asesor]) => ({
-      unidad: 'posgrado' as const,
-      carrera, cohorte: null, codigo, nombre,
-      catedra: 'DA', cargaHoraria: null, orden, duracion: null,
-      estadoOrigen: estado, periodoNombre: null,
-      fechas: { ...sinFechas },
-      _docente: docente, _asesor: asesor,
-    })) as FilaAsignatura[]
+}
+
+function filasDelPlan(): FilaAsignatura[] {
+  // Las carreras que en el tablero vienen tal cual
+  const directas = PLANES_POSGRADO
+    .filter(([carrera]) => carrera !== 'Nuevas Tecnologías')
+    .map(([carrera, codigo, nombre, orden, estado]) => filaPlan(carrera, codigo, nombre, orden, estado))
+
+  // Nuevas Tecnologías: el tablero fusiona las tres maestrías, acá se separan.
+  // Los nombres y estados salen del plan fusionado; el orden, de cada plan propio.
+  const datosNT = new Map(
+    PLANES_POSGRADO
+      .filter(([carrera]) => carrera === 'Nuevas Tecnologías')
+      .map(([, codigo, nombre, , estado]) => [codigo, { nombre, estado }]),
+  )
+  const nt = CARRERAS_NT.flatMap((carrera) =>
+    planDe(carrera).map(({ codigo, orden }) => {
+      const d = datosNT.get(codigo)
+      return filaPlan(carrera, codigo, d?.nombre ?? codigo, orden, d?.estado ?? '')
+    }),
+  )
+
+  return [...directas, ...nt]
 }
 
 async function main() {
@@ -194,7 +216,7 @@ async function main() {
   // Docentes y asesores de los planes, para no perderlos al cargar el catálogo
   const delPlan: FilaTablero[] = PLANES_POSGRADO
     .filter(([, , , , , docente, asesor]) => docente || asesor)
-    .map(([carrera, codigo, , , estado, docente, asesor]) => ({
+    .map(([carrera, codigo, , , , docente, asesor]) => ({
       codigo, carrera,
       docente: docente || null,
       asesor: asesor || null,
