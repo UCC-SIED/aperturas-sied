@@ -2,18 +2,39 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
-import { ESTADOS } from '@/lib/estados'
+import { sesionActual } from '@/lib/sesion'
+import { puedeEditarProduccion } from '@/lib/permisos'
+import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
 
 export async function actualizarAsignatura(codigo: string, formData: FormData) {
+  const s = await sesionActual()
+  if (!puedeEditarProduccion(s)) {
+    throw new Error('Sólo el equipo SIED edita el estado de producción')
+  }
+
   const estado = String(formData.get('estado') ?? '')
   if (!(ESTADOS as readonly string[]).includes(estado)) throw new Error('Estado inválido')
+
+  const previa = await prisma.asignatura.findUnique({ where: { codigo } })
+  if (!previa) throw new Error('Asignatura inexistente')
+
+  const docente = String(formData.get('docente') ?? '').trim() || null
+  const asesor = String(formData.get('asesor') ?? '').trim() || null
+
   await prisma.asignatura.update({
     where: { codigo },
-    data: {
-      estado,
-      docente: String(formData.get('docente') ?? '').trim() || null,
-      asesor: String(formData.get('asesor') ?? '').trim() || null,
-    },
+    data: { estado, docente, asesor },
   })
+
+  if (previa.estado !== estado) {
+    await prisma.cambio.create({
+      data: {
+        usuarioId: s!.id,
+        accion: 'cambio_estado',
+        detalle: `${previa.nombre}: ${ESTADO_LABELS[previa.estado as Estado]} → ${ESTADO_LABELS[estado as Estado]}`,
+        asignaturaCodigo: codigo,
+      },
+    })
+  }
   revalidatePath('/', 'layout')
 }

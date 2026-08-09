@@ -15,14 +15,49 @@ model Unidad {
 }
 
 model Carrera {
-  id        Int        @id @default(autoincrement())
+  id        Int              @id @default(autoincrement())
   nombre    String
   unidadId  String
-  unidad    Unidad     @relation(fields: [unidadId], references: [id])
+  unidad    Unidad           @relation(fields: [unidadId], references: [id])
   planItems PlanItem[]
   cohortes  Cohorte[]
+  usuarios  UsuarioCarrera[]
 
   @@unique([unidadId, nombre])
+}
+
+/// Quién entra al sistema. El rol define qué puede hacer:
+/// sied = todo · director = planifica sus carreras · consulta = sólo mira.
+model Usuario {
+  id       Int              @id @default(autoincrement())
+  email    String           @unique
+  nombre   String
+  rol      String           @default("consulta")
+  activo   Boolean          @default(true)
+  carreras UsuarioCarrera[]
+  cambios  Cambio[]
+}
+
+model UsuarioCarrera {
+  id        Int     @id @default(autoincrement())
+  usuarioId Int
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  carreraId Int
+  carrera   Carrera @relation(fields: [carreraId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, carreraId])
+}
+
+/// Bitácora: el orden de apertura cambia seguido y hay que poder reconstruir quién pidió qué.
+model Cambio {
+  id          Int      @id @default(autoincrement())
+  fecha       DateTime @default(now())
+  usuarioId   Int?
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+  accion      String // agrego_apertura | quito_apertura | movio_apertura | cambio_estado
+  detalle     String
+  asignaturaCodigo String?
+  carreraId   Int?
 }
 
 model Asignatura {

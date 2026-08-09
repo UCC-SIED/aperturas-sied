@@ -1,5 +1,8 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
+import { sesionActual } from '@/lib/sesion'
+import { puedeEditarProduccion } from '@/lib/permisos'
 import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { semaforo } from '@/lib/semaforo'
 import { fmtFecha } from '@/lib/formato'
@@ -8,6 +11,11 @@ import { SemaforoBadge } from '@/components/SemaforoBadge'
 export const dynamic = 'force-dynamic'
 
 export default async function Produccion() {
+  const s = await sesionActual()
+  if (!s) redirect('/ingresar')
+  // El pipeline de producción lo maneja el equipo SIED
+  if (!puedeEditarProduccion(s)) redirect('/planificar')
+
   const asignaturas = await prisma.asignatura.findMany({
     include: {
       planItems: { include: { carrera: true } },
