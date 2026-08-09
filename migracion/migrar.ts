@@ -1,0 +1,43 @@
+import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { prisma } from '../src/lib/db'
+import { parsePosgrado } from './parsers/posgrado'
+import { parseEducacion } from './parsers/educacion'
+import { parseTablero } from './parsers/tablero'
+import { cargar } from './cargar'
+
+async function main() {
+  const dir = 'migracion/input'
+  const filas = [
+    ...(existsSync(`${dir}/posgrado.xlsx`) ? parsePosgrado(readFileSync(`${dir}/posgrado.xlsx`)) : []),
+    ...(existsSync(`${dir}/educacion.xlsx`) ? parseEducacion(readFileSync(`${dir}/educacion.xlsx`)) : []),
+  ]
+  const tablero = existsSync(`${dir}/tablero.json`)
+    ? parseTablero(readFileSync(`${dir}/tablero.json`, 'utf8'))
+    : []
+  if (!filas.length) {
+    console.error('No hay archivos en migracion/input/ — se esperan posgrado.xlsx, educacion.xlsx y opcionalmente tablero.json')
+    process.exit(1)
+  }
+  console.log(`Filas leídas: ${filas.length} · Entradas del tablero: ${tablero.length}`)
+  const r = await cargar(filas, tablero, prisma)
+  const md = [
+    `# Reporte de migración — ${new Date().toLocaleString('es-AR')}`,
+    '',
+    `- Asignaturas cargadas: ${r.asignaturas}`,
+    `- Aperturas cargadas: ${r.aperturas}`,
+    '',
+    `## Filas sin código (no cargadas: ${r.sinCodigo.length})`,
+    ...r.sinCodigo.map((s) => `- ${s}`),
+    '',
+    `## Sin período asignable (revisar a mano: ${r.sinPeriodo.length})`,
+    ...r.sinPeriodo.map((s) => `- ${s}`),
+    '',
+    `## Códigos con nombres en conflicto (${r.nombresEnConflicto.length})`,
+    ...r.nombresEnConflicto.map((s) => `- ${s}`),
+  ].join('\n')
+  writeFileSync('migracion/reporte-migracion.md', md)
+  console.log(md)
+  await prisma.$disconnect()
+}
+
+main()
