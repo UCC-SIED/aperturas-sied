@@ -1,49 +1,114 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --azul: #003087;
+  --azul-oscuro: #001e5c;
+  --fondo: #f4f6fb;
+  --tarjeta: #ffffff;
+  --texto: #1c2333;
+  --texto-suave: #6b7280;
+  --borde: #e3e7f0;
+  --verde: #1fa971;
+  --amarillo: #fcb815;
+  --rojo: #d9534f;
+  --gris: #9aa3b5;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
+* { box-sizing: border-box; }
 
 body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+  font-size: 14px;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+.topbar {
+  background: linear-gradient(135deg, var(--azul) 0%, var(--azul-oscuro) 100%);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+.topbar .marca { font-weight: 700; font-size: 16px; letter-spacing: 0.3px; }
+.topbar nav { display: flex; gap: 18px; }
+.topbar nav a { color: #c9d4ee; text-decoration: none; font-weight: 500; }
+.topbar nav a:hover { color: #fff; }
+
+.contenido { max-width: 1280px; margin: 0 auto; padding: 20px 24px 60px; }
+
+h1 { font-size: 22px; margin: 12px 0 16px; }
+h1 small { color: var(--texto-suave); font-weight: 400; font-size: 14px; }
+h2 { font-size: 16px; color: var(--azul); margin: 22px 0 8px; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--tarjeta);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
+
+thead th {
+  background: #eef1fa;
+  color: var(--azul);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 9px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--borde);
+}
+
+tbody td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--borde);
+  vertical-align: middle;
+}
+
+tbody tr:hover { background: #f8faff; }
+
+td small { color: var(--texto-suave); }
+
+a { color: var(--azul); }
+
+.sem-verde, .sem-amarillo, .sem-rojo, .sem-gris {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.sem-verde { background: var(--verde); }
+.sem-amarillo { background: var(--amarillo); color: #3a2c00; }
+.sem-rojo { background: var(--rojo); }
+.sem-gris { background: var(--gris); }
+
+form.ficha { display: grid; gap: 12px; max-width: 460px; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 10px; padding: 16px; margin: 12px 0 8px; }
+form.ficha label { display: grid; gap: 4px; font-weight: 600; font-size: 12.5px; color: var(--texto-suave); }
+form.ficha input, form.ficha select {
+  padding: 8px 10px; border: 1px solid var(--borde); border-radius: 8px; font-size: 13.5px; background: #fff; color: var(--texto);
+}
+form.ficha button {
+  justify-self: start; padding: 9px 18px; background: var(--azul); color: #fff; border: none; border-radius: 8px;
+  font-weight: 600; cursor: pointer; font-size: 13.5px;
+}
+form.ficha button:hover { background: var(--azul-oscuro); }
+
+form.buscador { display: flex; gap: 8px; margin: 0 0 14px; }
+form.buscador input { flex: 1; max-width: 420px; padding: 9px 12px; border: 1px solid var(--borde); border-radius: 8px; font-size: 13.5px; }
+form.buscador button { padding: 9px 16px; border: 1px solid var(--azul); background: #fff; color: var(--azul); border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+.aviso {
+  background: #fff8e6; border: 1px solid #f0dfa8; color: #6b5400;
+  padding: 10px 14px; border-radius: 8px; margin: 8px 0;
+}
+
+.grupo-estado { margin-bottom: 26px; }
+.contador { color: var(--texto-suave); font-weight: 400; }
+.vacio { color: var(--texto-suave); padding: 30px; text-align: center; background: var(--tarjeta); border-radius: 10px; }
