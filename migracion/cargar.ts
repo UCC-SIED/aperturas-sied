@@ -217,7 +217,10 @@ export async function cargar(
       periodoId = f.fechas.inicioCursado ? inferirPeriodo(f.fechas.inicioCursado, candidatos) : null
     }
     if (!periodoId) {
-      if (f.periodoNombre || f.fechas.inicioCursado || f.unidad === 'educacion') {
+      // Sin período NI fecha es una asignatura del plan que todavía no se abrió:
+      // es lo normal, no un problema. Sólo se reporta cuando la fila decía tener
+      // período o fecha y no se pudo ubicar.
+      if (f.periodoNombre || f.fechas.inicioCursado) {
         reporte.sinPeriodo.push(`${f.nombre} (${f.carrera})`)
       }
       continue

@@ -145,13 +145,28 @@ describe('cargar', () => {
     expect(r.sinPeriodo).toEqual([])
   })
 
-  it('educación sin fecha de inicio va al reporte', async () => {
+  it('una asignatura del plan sin período no es un problema: no va al reporte', async () => {
     const r = await cargar(
       [fila({ unidad: 'educacion', carrera: 'ED X', codigo: 'EDU003', nombre: 'SIN FECHA', periodoNombre: null,
         fechas: { ...fila({}).fechas, inicioCursado: null } })],
       [], prisma,
     )
-    expect(r.sinPeriodo).toEqual(['SIN FECHA (ED X)'])
+    expect(r.sinPeriodo).toEqual([])
+  })
+
+  it('en cambio, una de posgrado con fecha lejos de todo período sí se reporta', async () => {
+    await limpiar()
+    const r = await cargar(
+      [
+        // define el único período: agosto 2026
+        fila({ carrera: 'POS Z', codigo: 'POS001', nombre: 'LA DEL PERÍODO' }),
+        // ésta dice cursar en 2030: no cae en ninguno
+        fila({ carrera: 'POS Z', codigo: 'POS002', nombre: 'HUÉRFANA', periodoNombre: null,
+          fechas: { ...fila({}).fechas, inicioCursado: new Date(2030, 2, 1) } }),
+      ],
+      [], prisma,
+    )
+    expect(r.sinPeriodo).toEqual(['HUÉRFANA (POS Z)'])
   })
 
   it('reporta fechas incoherentes pero carga la fila igual', async () => {

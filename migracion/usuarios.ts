@@ -7,14 +7,22 @@ import { prisma } from '../src/lib/db'
 const USUARIOS: { email: string; nombre: string; rol: string; carreras?: string[] }[] = [
   { email: 'tecnologia.sied@ucc.edu.ar', nombre: 'Tecnología Educativa SIED', rol: 'sied' },
   { email: 'direccion.sied@ucc.edu.ar', nombre: 'Dirección SIED', rol: 'consulta' },
+
+  // Posgrado
   { email: 'direccion.empresas@ucc.edu.ar', nombre: 'Dirección de Empresas', rol: 'director', carreras: ['Dirección de Empresas'] },
-  { email: 'direccion.nt@ucc.edu.ar', nombre: 'Dirección Nuevas Tecnologías', rol: 'director', carreras: ['NT - Alta Gerencia', 'NT - Cyberseguridad', 'NT - Finanzas Tecnológicas'] },
+  { email: 'direccion.nt@ucc.edu.ar', nombre: 'Dirección Nuevas Tecnologías', rol: 'director', carreras: ['NT - Alta Gerencia', 'NT - Ciberseguridad', 'NT - Finanzas y Seguros'] },
   { email: 'direccion.cooperacion@ucc.edu.ar', nombre: 'Dirección Cooperación Internacional', rol: 'director', carreras: ['Cooperación Internacional'] },
   { email: 'direccion.proyectos@ucc.edu.ar', nombre: 'Dirección Estratégica de Proyectos', rol: 'director', carreras: ['Dirección Estratégica de Proyectos'] },
-  { email: 'direccion.liderazgo@ucc.edu.ar', nombre: 'Dirección y Liderazgo', rol: 'director', carreras: ['Dirección y Liderazgo'] },
+  { email: 'direccion.liderazgo@ucc.edu.ar', nombre: 'Dirección y Liderazgo de Personas', rol: 'director', carreras: ['Dirección y Liderazgo de Personas'] },
   { email: 'direccion.innovacion@ucc.edu.ar', nombre: 'Dirección Innovación de Negocios', rol: 'director', carreras: ['Innovación de Negocios'] },
   { email: 'direccion.operaciones@ucc.edu.ar', nombre: 'Dirección Operaciones y Cadena de Valor', rol: 'director', carreras: ['Operaciones y Cadena de Valor'] },
-  { email: 'direccion.educacion@ucc.edu.ar', nombre: 'Dirección Educación', rol: 'director', carreras: ['Educación Inicial', 'Ciencias de la Educación'] },
+
+  // Educación
+  { email: 'direccion.inicial@ucc.edu.ar', nombre: 'Dirección Educación Inicial', rol: 'director', carreras: ['Educación Inicial'] },
+  { email: 'direccion.cseducacion@ucc.edu.ar', nombre: 'Dirección Ciencias de la Educación', rol: 'director', carreras: ['Ciencias de la Educación'] },
+  { email: 'direccion.gestioneducativa@ucc.edu.ar', nombre: 'Dirección Gestión Educativa', rol: 'director', carreras: ['Gestión Educativa'] },
+  { email: 'direccion.especial@ucc.edu.ar', nombre: 'Dirección Gestión de la Educación Especial', rol: 'director', carreras: ['Gestión de la Educación Especial'] },
+  { email: 'direccion.profesorado@ucc.edu.ar', nombre: 'Dirección Profesorado Universitario', rol: 'director', carreras: ['Profesorado Universitario'] },
 ]
 
 async function main() {
