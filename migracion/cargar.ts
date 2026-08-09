@@ -5,6 +5,7 @@ import { validarFechas } from '../src/lib/validar'
 import { ESTADOS, type Estado } from '../src/lib/estados'
 import type { FilaAsignatura } from './parsers/tipos'
 import type { FilaTablero } from './parsers/tablero'
+import type { PeriodoCalendario } from './parsers/periodos'
 
 export type Reporte = {
   asignaturas: number
@@ -28,6 +29,7 @@ export async function cargar(
   filas: FilaAsignatura[],
   tablero: FilaTablero[],
   db: PrismaClient,
+  calendarioEducacion: PeriodoCalendario[] = [],
 ): Promise<Reporte> {
   const reporte: Reporte = {
     asignaturas: 0, aperturas: 0, sinCodigo: [], sinPeriodo: [], nombresEnConflicto: [], fechasIncoherentes: [],
@@ -125,9 +127,29 @@ export async function cargar(
     }
   }
 
-  // 4b. Períodos de educación: la planilla no los tiene, se generan desde las fechas.
-  // Se agrupa por fecha de inicio Y duración — un bimestral y un cuatrimestral que
-  // arrancan el mismo día son períodos distintos: cierran y rinden AFI en fechas distintas.
+  // 4b-i. Calendario oficial de Educación (hoja de períodos: Bimestre A, Cuatrimestral A, ...).
+  // Es la fuente de verdad: trae el ciclo completo de cada período.
+  for (const p of calendarioEducacion) {
+    await db.periodo.upsert({
+      where: { unidadId_nombre: { unidadId: 'educacion', nombre: p.nombre } },
+      update: {
+        tipo: p.tipo, mes: p.mes, inicioCursado: p.inicioCursado,
+        aperturaInscripcion: p.aperturaInscripcion, cierreInscripcion: p.cierreInscripcion,
+        finCursado: p.finCursado, aperturaAfi: p.aperturaAfi, cierreAfi: p.cierreAfi,
+        cierreAsignatura: p.cierreAsignatura, actas: p.actas,
+      },
+      create: {
+        unidadId: 'educacion', nombre: p.nombre, tipo: p.tipo, mes: p.mes,
+        inicioCursado: p.inicioCursado,
+        aperturaInscripcion: p.aperturaInscripcion, cierreInscripcion: p.cierreInscripcion,
+        finCursado: p.finCursado, aperturaAfi: p.aperturaAfi, cierreAfi: p.cierreAfi,
+        cierreAsignatura: p.cierreAsignatura, actas: p.actas,
+      },
+    })
+  }
+
+  // 4b-ii. Para lo que no cubra el calendario, se generan períodos desde las fechas,
+  // agrupando por fecha de inicio Y duración.
   const filasEdu = conCodigo.filter((x) => x.unidad === 'educacion' && x.fechas.inicioCursado)
   const porTipo = new Map<string, FilaAsignatura[]>()
   for (const f of filasEdu) {

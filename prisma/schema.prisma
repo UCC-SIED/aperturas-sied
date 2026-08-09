@@ -58,15 +58,24 @@ model Cohorte {
   @@unique([carreraId, nombre])
 }
 
+/// Calendario del período. En Educación sale de la hoja de períodos
+/// (Bimestre A, Cuatrimestral A, ...); en Posgrado, de la columna PERIODO.
+/// Las aperturas heredan estas fechas salvo excepción propia.
 model Periodo {
   id                  Int        @id @default(autoincrement())
   nombre              String
   tipo                String // mensual | bimestral | cuatrimestral
   unidadId            String
   unidad              Unidad     @relation(fields: [unidadId], references: [id])
+  mes                 String?
   inicioCursado       DateTime
   aperturaInscripcion DateTime?
   cierreInscripcion   DateTime?
+  finCursado          DateTime?
+  aperturaAfi         DateTime?
+  cierreAfi           DateTime?
+  cierreAsignatura    DateTime?
+  actas               DateTime?
   aperturas           Apertura[]
 
   @@unique([unidadId, nombre])

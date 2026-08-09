@@ -85,6 +85,41 @@ describe('cargar', () => {
     expect(dePeriodo('cuatrimestral')).toEqual(['EDU011'])
   })
 
+  it('usa el calendario oficial de Educación en vez de inventar períodos', async () => {
+    await limpiar() // este test verifica el set completo de períodos
+    const calendario = [
+      { nombre: 'Bimestre A', tipo: 'bimestral' as const, mes: 'Marzo',
+        inicioCursado: new Date(2026, 2, 4), aperturaInscripcion: new Date(2026, 1, 23),
+        cierreInscripcion: new Date(2026, 2, 1), finCursado: new Date(2026, 3, 25),
+        aperturaAfi: new Date(2026, 3, 9), cierreAfi: new Date(2026, 3, 23),
+        cierreAsignatura: new Date(2026, 3, 29), actas: new Date(2026, 4, 2) },
+      { nombre: 'Cuatrimestral A', tipo: 'cuatrimestral' as const, mes: 'Marzo',
+        inicioCursado: new Date(2026, 2, 4), aperturaInscripcion: new Date(2026, 1, 23),
+        cierreInscripcion: new Date(2026, 2, 1), finCursado: new Date(2026, 5, 13),
+        aperturaAfi: new Date(2026, 4, 28), cierreAfi: new Date(2026, 5, 11),
+        cierreAsignatura: new Date(2026, 5, 17), actas: new Date(2026, 5, 20) },
+    ]
+    const base = fila({}).fechas
+    const b = fila({ unidad: 'educacion', carrera: 'ED CAL', codigo: 'EDU100', nombre: 'UNA BIMESTRAL',
+      periodoNombre: null, duracion: 'Bimestral', fechas: { ...base, inicioCursado: new Date(2026, 2, 4) } })
+    const c = fila({ unidad: 'educacion', carrera: 'ED CAL', codigo: 'EDU101', nombre: 'UNA CUATRIMESTRAL',
+      periodoNombre: null, duracion: 'Cuatrimestral', fechas: { ...base, inicioCursado: new Date(2026, 2, 4) } })
+
+    await cargar([b, c], [], prisma, calendario)
+
+    const periodos = await prisma.periodo.findMany({ where: { unidadId: 'educacion' } })
+    // sólo los dos del calendario: no se inventó ninguno
+    expect(periodos.map((p) => p.nombre).sort()).toEqual(['Bimestre A', 'Cuatrimestral A'])
+    // el período trae su ciclo completo, base para calcular las fechas de cada aula
+    const bimA = periodos.find((p) => p.nombre === 'Bimestre A')!
+    expect(bimA.aperturaAfi).toEqual(new Date(2026, 3, 9))
+    expect(bimA.actas).toEqual(new Date(2026, 4, 2))
+    // cada asignatura cayó en el período de su duración
+    const ap = await prisma.apertura.findMany({ include: { periodo: true } })
+    expect(ap.find((a) => a.asignaturaCodigo === 'EDU100')!.periodo.nombre).toBe('Bimestre A')
+    expect(ap.find((a) => a.asignaturaCodigo === 'EDU101')!.periodo.nombre).toBe('Cuatrimestral A')
+  })
+
   it('educación sin fecha de inicio va al reporte', async () => {
     const r = await cargar(
       [fila({ unidad: 'educacion', carrera: 'ED X', codigo: 'EDU003', nombre: 'SIN FECHA', periodoNombre: null,
