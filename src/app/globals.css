@@ -746,6 +746,74 @@ form.buscador button:hover { background: #eaf0fb; }
 }
 .boton-descarga:hover { background: #eaf0fb; text-decoration: none; }
 
+/* ------------------------------------------------------- aulas a preparar */
+
+.urgencia {
+  display: inline-block;
+  padding: 2px var(--e2);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.urg-montar-ya { background: var(--rojo-fondo); color: var(--rojo); border-color: #f0c5c0; }
+.urg-preparar { background: var(--verde-fondo); color: var(--verde); border-color: #bfe0d0; }
+.urg-esperando-contenido { background: var(--ambar-fondo); color: var(--ambar); border-color: #f2dfae; }
+.urg-sin-fecha { background: var(--neutro-fondo); color: var(--neutro); border-color: var(--borde-fuerte); }
+
+.chip-estado.urg-montar-ya .n { color: var(--rojo); }
+.chip-estado.urg-preparar .n { color: var(--verde); }
+.chip-estado.urg-esperando-contenido .n { color: var(--ambar); }
+
+.una-sola-vez {
+  display: flex;
+  align-items: center;
+  gap: var(--e1);
+  margin: var(--e1) 0 0;
+  font-size: 11px;
+  color: var(--ambar);
+}
+.una-sola-vez .icono { flex: 0 0 auto; }
+
+td small.apremia { color: var(--rojo); font-weight: 600; }
+td small { display: block; }
+
+/* ------------------------------------------------------------ alta de período */
+
+.alta-periodo {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: var(--e3);
+  margin-bottom: var(--e4);
+}
+.alta-periodo > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--azul);
+}
+.alta-periodo[open] > summary { margin-bottom: var(--e4); }
+
+form.form-periodo {
+  max-width: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  gap: var(--e4);
+}
+.fila-campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--e3);
+}
+.fila-campos.fechas { grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); }
+.fila-campos label { display: grid; gap: var(--e1); font-size: 11.5px; font-weight: 600; color: var(--texto-suave); }
+.fila-campos .opcional { font-weight: 400; text-transform: none; }
+.fila-campos .requerido { color: var(--rojo); }
+
 /* ------------------------------------------------- seguimiento de producción */
 
 .filtros-seguimiento {

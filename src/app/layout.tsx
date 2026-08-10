@@ -34,7 +34,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {s.rol !== 'consulta' && <Link href="/planificar">Planificar</Link>}
               <Link href="/periodos">Períodos</Link>
               <Link href="/asignaturas">Asignaturas</Link>
-              {(s.rol === 'sied' || s.rol === 'admin') && <Link href="/produccion">Producción</Link>}
+              {(s.rol === 'sied' || s.rol === 'admin') && (
+                <>
+                  <Link href="/produccion">Producción</Link>
+                  <Link href="/preparar">Aulas a preparar</Link>
+                </>
+              )}
               {puedeAdministrar(s) && <Link href="/admin">Administración</Link>}
             </nav>
           )}
