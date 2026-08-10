@@ -884,7 +884,8 @@ a.chip-estado:hover { border-color: var(--azul); background: var(--superficie-2)
 
 .tabla-scroll { overflow-x: auto; }
 
-table.tabla-seguimiento { min-width: 1100px; table-layout: fixed; }
+table.tabla-seguimiento { min-width: 1240px; table-layout: fixed; }
+table.tabla-seguimiento th.col-catedra { width: 110px; }
 table.tabla-seguimiento th.col-orden, table.tabla-seguimiento td.col-orden {
   width: 42px;
   text-align: right;

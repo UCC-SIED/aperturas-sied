@@ -9,6 +9,7 @@ import { semaforo } from '@/lib/semaforo'
 import { fmtFecha } from '@/lib/formato'
 import { SemaforoBadge } from '@/components/SemaforoBadge'
 import { Boton } from '@/components/Boton'
+import { IconoDescarga } from '@/components/iconos'
 import { guardarSeguimiento } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -79,6 +80,10 @@ export default async function Produccion({
             cuando planifican sus períodos.
           </p>
         </div>
+        <a className="boton-descarga" href="/exportar" download>
+          <IconoDescarga />
+          Descargar planilla
+        </a>
       </div>
 
       <form className="filtros-seguimiento">
@@ -136,6 +141,7 @@ export default async function Produccion({
                 <th className="col-orden">#</th>
                 <th>Asignatura</th>
                 <th className="col-estado">Estado</th>
+                <th className="col-catedra">Cátedra</th>
                 <th>Docente</th>
                 <th>Asesor</th>
                 <th>Observaciones</th>
@@ -169,6 +175,14 @@ export default async function Produccion({
                           <option key={e} value={e}>{ESTADO_LABELS[e]}</option>
                         ))}
                       </select>
+                    </td>
+                    <td>
+                      <input
+                        name={`catedra_${a.codigo}`}
+                        defaultValue={a.catedra ?? ''}
+                        placeholder="—"
+                        aria-label={`Cátedra de ${a.nombre}`}
+                      />
                     </td>
                     <td>
                       <input

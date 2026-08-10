@@ -25,6 +25,7 @@ export async function guardarSeguimiento(carreraId: number, formData: FormData) 
     items.map((i) => ({
       codigo: i.asignatura.codigo,
       estado: i.asignatura.estado,
+      catedra: i.asignatura.catedra,
       docente: i.asignatura.docente,
       asesor: i.asignatura.asesor,
       observaciones: i.asignatura.observaciones,

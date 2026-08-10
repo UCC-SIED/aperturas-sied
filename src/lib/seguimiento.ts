@@ -3,6 +3,7 @@ import { ESTADOS, ESTADO_LABELS, type Estado } from './estados'
 export type FilaSeguimiento = {
   codigo: string
   estado: string
+  catedra: string | null
   docente: string | null
   asesor: string | null
   observaciones: string | null
@@ -10,7 +11,13 @@ export type FilaSeguimiento = {
 
 export type CambioSeguimiento = {
   codigo: string
-  campos: { estado?: string; docente?: string | null; asesor?: string | null; observaciones?: string | null }
+  campos: {
+    estado?: string
+    catedra?: string | null
+    docente?: string | null
+    asesor?: string | null
+    observaciones?: string | null
+  }
   /** Descripción legible para el historial; vacía si sólo cambiaron datos menores. */
   detalle: string
 }
@@ -40,6 +47,7 @@ export function calcularCambios(
 
   for (const a of actuales) {
     const estado = String(form.get(`estado_${a.codigo}`) ?? a.estado)
+    const catedra = leer(form.get(`catedra_${a.codigo}`))
     const docente = leer(form.get(`docente_${a.codigo}`))
     const asesor = leer(form.get(`asesor_${a.codigo}`))
     const observaciones = leer(form.get(`observaciones_${a.codigo}`))
@@ -56,6 +64,10 @@ export function calcularCambios(
       partes.push(
         `${ESTADO_LABELS[a.estado as Estado] ?? a.estado} → ${ESTADO_LABELS[estado as Estado] ?? estado}`,
       )
+    }
+    if (catedra !== undefined && catedra !== a.catedra) {
+      campos.catedra = catedra
+      partes.push(catedra ? `cátedra: ${catedra}` : 'se quitó la cátedra')
     }
     if (docente !== undefined && docente !== a.docente) {
       campos.docente = docente
