@@ -49,3 +49,6 @@ prisma/test.db
 
 # el ejemplo sí se versiona (no tiene credenciales)
 !.env.example
+
+# impeccable: consentimiento y config local del hook
+.impeccable/config.local.json

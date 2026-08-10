@@ -325,12 +325,13 @@ table.grilla tbody tr:hover td { background: var(--superficie); }
 
 .celda-item {
   border: 1px solid var(--borde);
-  border-left: 3px solid var(--azul-claro);
   border-radius: var(--radio-chico);
   padding: var(--e2);
   margin-bottom: var(--e2);
   background: var(--superficie-2);
+  transition: border-color var(--transicion);
 }
+.celda-item:hover { border-color: var(--borde-fuerte); }
 
 .celda-item > a { font-size: 12.5px; font-weight: 600; color: var(--texto); line-height: 1.3; display: block; }
 .celda-item > a:hover { color: var(--azul); }
@@ -558,10 +559,6 @@ table.grilla tbody tr:hover td { background: var(--superficie); }
   color: var(--texto-suave);
 }
 
-/* En la columna del plan: distinguir lo que ya tiene período de lo que no */
-.columna.pendientes .tarjeta.asignada { opacity: .72; }
-.columna.pendientes .tarjeta.libre { border-left: 3px solid var(--amarillo); }
-
 .tarjeta .ubicacion {
   margin: 0 0 var(--e2);
   font-size: 11px;
@@ -717,17 +714,25 @@ form.buscador button:hover { background: #eaf0fb; }
 /* --------------------------------------------------------------- varios */
 
 .aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e3);
   background: var(--ambar-fondo);
-  border: 1px solid #f2dfae;
-  border-left: 3px solid var(--amarillo);
+  border: 1px solid #e8d5a3;
   color: #6b4e00;
   padding: var(--e3) var(--e4);
   border-radius: var(--radio-chico);
   margin: var(--e3) 0;
   font-size: 13px;
+  line-height: 1.5;
 }
+.aviso p { margin: 0; }
+.aviso .icono { flex: 0 0 auto; margin-top: 2px; color: var(--ambar); }
 
 .boton-descarga {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
   border: 1px solid var(--azul);
   background: #fff;
   color: var(--azul);
@@ -740,6 +745,55 @@ form.buscador button:hover { background: #eaf0fb; }
 }
 .boton-descarga:hover { background: #eaf0fb; text-decoration: none; }
 
+/* ---------------------------------------------------- estados de los controles */
+
+button[disabled],
+button[aria-busy='true'] {
+  opacity: .55;
+  cursor: progress;
+}
+
+.alta-celda button[aria-busy='true'],
+.celda-acciones button[aria-busy='true'] { background: var(--neutro-fondo); }
+
+/* Pantalla de error: la acción falló y hay que poder seguir trabajando */
+.pantalla-error {
+  max-width: 560px;
+  margin: var(--e6) auto;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: var(--e5);
+  box-shadow: var(--sombra);
+}
+.pantalla-error h1 { margin-bottom: var(--e3); }
+.pantalla-error .mensaje {
+  background: var(--rojo-fondo);
+  border: 1px solid #f0c5c0;
+  color: var(--rojo);
+  padding: var(--e3);
+  border-radius: var(--radio-chico);
+  margin: 0 0 var(--e4);
+  font-size: 13.5px;
+}
+.acciones-error { display: flex; gap: var(--e3); align-items: center; }
+.acciones-error button {
+  padding: var(--e2) var(--e4);
+  background: var(--azul);
+  color: #fff;
+  border: none;
+  border-radius: var(--radio-chico);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.acciones-error button:hover { background: var(--azul-oscuro); }
+.pantalla-error .referencia {
+  margin: var(--e4) 0 0;
+  font-size: 11.5px;
+  color: var(--texto-suave);
+  font-family: ui-monospace, Consolas, monospace;
+}
+
 /* barra de avance del panel */
 .barra {
   position: relative;
@@ -749,10 +803,14 @@ form.buscador button:hover { background: #eaf0fb; }
   border-radius: 3px;
   overflow: hidden;
 }
+/* Se escala en X en vez de animar el ancho: animar width fuerza recalcular
+   el layout en cada cuadro y la barra salta. */
 .barra .relleno {
   height: 100%;
+  width: 100%;
   background: var(--azul-claro);
-  transition: width var(--transicion);
+  transform-origin: left center;
+  transition: transform var(--transicion);
 }
 .barra span {
   position: absolute;

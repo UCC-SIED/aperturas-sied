@@ -8,6 +8,7 @@ import { semaforo } from '@/lib/semaforo'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
 import { ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { SemaforoBadge } from '@/components/SemaforoBadge'
+import { Boton } from '@/components/Boton'
 import { agregarApertura, quitarApertura, moverApertura, crearCohorte } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -107,16 +108,23 @@ export default async function Planificar({
 
       {!cohortes.length ? (
         <div className="vacio">
-          <p>Esta carrera todavía no tiene cohortes cargadas.</p>
+          <p>
+            Esta carrera todavía no tiene cohortes. Una cohorte es una camada de alumnos que
+            avanza junta por el plan; el planificador arma una fila por cada una.
+          </p>
           {editable && (
             <form action={crearCohorte.bind(null, carrera.id)} className="alta-cohorte">
               <input name="nombre" placeholder="Nombre de la cohorte, por ejemplo COHORTE 2026" required />
-              <button type="submit">Crear cohorte</button>
+              <Boton enCurso="Creando">Crear la primera cohorte</Boton>
             </form>
           )}
         </div>
       ) : !periodos.length ? (
-        <p className="vacio">No hay períodos próximos cargados para {carrera.unidad.nombre}.</p>
+        <p className="vacio">
+          No hay períodos próximos cargados para {carrera.unidad.nombre}. Los períodos definen
+          las fechas del ciclo (inscripción, cursado, AFI, cierre) y los carga el equipo SIED
+          una vez por año; sin ellos no hay dónde ubicar las asignaturas.
+        </p>
       ) : (
         <>
           <p className="ayuda-grilla">
@@ -174,13 +182,13 @@ export default async function Planificar({
                                         <option key={x.id} value={x.id}>{x.nombre}</option>
                                       ))}
                                     </select>
-                                    <button type="submit">Mover</button>
+                                    <Boton enCurso="Moviendo">Mover</Boton>
                                   </form>
                                   <form action={quitarApertura.bind(null, carrera.id)}>
                                     <input type="hidden" name="aperturaId" value={ap.id} />
-                                    <button type="submit" className="quitar" aria-label={`Quitar ${ap.asignatura.nombre}`}>
+                                    <Boton className="quitar" enCurso="Quitando" aria-label={`Quitar ${ap.asignatura.nombre}`}>
                                       Quitar
-                                    </button>
+                                    </Boton>
                                   </form>
                                 </div>
                               )}
@@ -204,7 +212,7 @@ export default async function Planificar({
                                   )
                                 })}
                               </select>
-                              <button type="submit">Agregar</button>
+                              <Boton enCurso="Agregando">Agregar</Boton>
                             </form>
                           ) : (
                             !enCelda.length && <span className="celda-vacia">—</span>
@@ -221,7 +229,7 @@ export default async function Planificar({
           {editable && (
             <form action={crearCohorte.bind(null, carrera.id)} className="alta-cohorte">
               <input name="nombre" placeholder="Agregar otra cohorte, por ejemplo COHORTE 2027" required />
-              <button type="submit">Crear cohorte</button>
+              <Boton enCurso="Creando">Crear cohorte</Boton>
             </form>
           )}
         </>

@@ -8,6 +8,7 @@ import { semaforo } from '@/lib/semaforo'
 import { fmtFecha } from '@/lib/formato'
 import { ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { SemaforoBadge } from '@/components/SemaforoBadge'
+import { IconoDescarga } from '@/components/iconos'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,7 +69,10 @@ export default async function Panel() {
             {visibles ? ' en tus carreras' : ' en total'}.
           </p>
         </div>
-        <a className="boton-descarga" href="/exportar" download>Descargar planilla</a>
+        <a className="boton-descarga" href="/exportar" download>
+          <IconoDescarga />
+          Descargar planilla
+        </a>
       </div>
 
       <h2>Avance por carrera</h2>
@@ -96,8 +100,15 @@ export default async function Panel() {
                 <td className="num">{a.porEstado.contratacion}</td>
                 <td className="num">{a.porEstado.sin_novedad}</td>
                 <td>
-                  <div className="barra" title={`${a.porcentaje}%`}>
-                    <div className="relleno" style={{ width: `${a.porcentaje}%` }} />
+                  <div
+                    className="barra"
+                    role="progressbar"
+                    aria-valuenow={a.porcentaje}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`Avance de ${c.nombre}`}
+                  >
+                    <div className="relleno" style={{ transform: `scaleX(${a.porcentaje / 100})` }} />
                     <span>{a.porcentaje}%</span>
                   </div>
                 </td>
@@ -153,7 +164,11 @@ export default async function Panel() {
           </tbody>
         </table>
       ) : (
-        <p className="vacio">Ninguna asignatura próxima está en riesgo. Todo lo que abre está listo.</p>
+        <p className="vacio">
+          Ninguna de las asignaturas que abren en los próximos períodos está en riesgo: todas
+          llegan terminadas a su fecha de inscripción. Acá van a aparecer las que estén en
+          construcción o maquetación cuando falten menos de 30 días para abrir.
+        </p>
       )}
     </main>
   )

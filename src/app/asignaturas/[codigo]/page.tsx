@@ -7,6 +7,7 @@ import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
 import { semaforo } from '@/lib/semaforo'
 import { SemaforoBadge } from '@/components/SemaforoBadge'
+import { IconoCompartida } from '@/components/iconos'
 import { actualizarAsignatura } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -44,11 +45,14 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
       </p>
 
       {a.planItems.length > 1 && (
-        <p className="aviso">
-          <strong>Transversal.</strong> La comparten {a.planItems.map((p) => p.carrera.nombre).join(', ')}.
-          Como todas usan el mismo código, al abrirla queda disponible para las {a.planItems.length} a la vez;
-          cada dirección decide si su cohorte la cursa en ese momento o más adelante.
-        </p>
+        <div className="aviso" role="note">
+          <IconoCompartida />
+          <p>
+            <strong>Transversal.</strong> La comparten {a.planItems.map((p) => p.carrera.nombre).join(', ')}.
+            Como todas usan el mismo código, al abrirla queda disponible para las {a.planItems.length} a la vez;
+            cada dirección decide si su cohorte la cursa en ese momento o más adelante.
+          </p>
+        </div>
       )}
 
       <h2>Producción</h2>
