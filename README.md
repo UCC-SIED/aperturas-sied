@@ -7,7 +7,11 @@ Sistema de gestión de aperturas de aulas en Canvas LMS para el SIED (UCC). Reem
 
 ## Qué hace hoy
 
-**Planificar** (`/planificar`) — la pantalla principal. Un tablero por carrera: a la izquierda las asignaturas del plan de estudios que todavía no tienen período, y después una columna por período próximo. Cada dirección elige qué abre en cada período, y mueve o quita cuando la producción no llega. Cada tarjeta muestra el semáforo, así la decisión se toma viendo si el aula está lista. Abajo queda el registro de los últimos movimientos.
+**Planificar** (`/planificar`) — la pantalla principal, una grilla por carrera: **una fila por cohorte y una columna por período**. En cada celda va lo que le toca cursar a esa camada en ese momento.
+
+Está armada así porque la decisión que toma una dirección no es "esta asignatura, ¿cuándo abre?", sino "en septiembre, ¿qué cursa cada cohorte?". Cada camada avanza por el plan a su propio ritmo: la 2025 puede ir por la asignatura 18 mientras la 2026 recién empieza la 7.
+
+En cada celda se elige la asignatura de un desplegable con el plan completo, numerado en su orden. Las que esa cohorte ya cursó aparecen marcadas ("— ya en Mensual_Agosto_2026") pero se pueden agregar igual, por si hay una reapertura. Cada tarjeta muestra el semáforo, así se decide viendo si el aula está lista, y se puede mover a otro período o quitar. Si falta una cohorte, se crea desde la misma pantalla.
 
 **Períodos** (`/periodos` y `/periodos/[id]`) — el calendario completo y, dentro de cada período, qué abre agrupado por carrera con semáforo, docente, asesor y cohortes.
 
@@ -90,6 +94,8 @@ El esquema es **uno solo** (`prisma/schema.prisma`); lo único que cambia es el 
 npm run db:local   # SQLite, para trabajar acá
 npm run db:nube    # PostgreSQL, para publicar
 ```
+
+Cada motor tiene su archivo de variables: `.env` apunta al archivo local y `.env.produccion` guarda las credenciales de Supabase. Los dos están fuera del repositorio. Para correr algo contra la nube, `npm run db:nube` y copiar el contenido de `.env.produccion` al `.env` (o pasar las variables en la línea de comandos); al terminar, `npm run db:local`.
 
 Hace falta porque Vercel borra los archivos del servidor en cada despliegue: si la base fuera un archivo, se perdería todo. Las migraciones versionadas en `prisma/migrations/` están escritas para PostgreSQL; en local y en los tests la estructura se arma con `prisma db push`, que da el mismo resultado.
 
