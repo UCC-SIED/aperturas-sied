@@ -4,63 +4,232 @@ import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
+import { resumirAvance } from '@/lib/avance'
 import { semaforo } from '@/lib/semaforo'
 import { fmtFecha } from '@/lib/formato'
 import { SemaforoBadge } from '@/components/SemaforoBadge'
+import { Boton } from '@/components/Boton'
+import { guardarSeguimiento } from './actions'
 
 export const dynamic = 'force-dynamic'
 
-export default async function Produccion() {
+export default async function Produccion({
+  searchParams,
+}: {
+  searchParams: Promise<{ carrera?: string; q?: string; estado?: string }>
+}) {
   const s = await sesionActual()
   if (!s) redirect('/ingresar')
-  // El pipeline de producción lo maneja el equipo SIED
-  if (!puedeEditarProduccion(s)) redirect('/planificar')
+  if (!puedeEditarProduccion(s)) redirect('/panel')
 
-  const asignaturas = await prisma.asignatura.findMany({
+  const { carrera: carreraParam, q = '', estado: filtroEstado = '' } = await searchParams
+
+  const carreras = await prisma.carrera.findMany({
+    include: { unidad: true, _count: { select: { planItems: true } } },
+    orderBy: [{ unidadId: 'asc' }, { nombre: 'asc' }],
+  })
+  if (!carreras.length) {
+    return (
+      <main>
+        <h1>Seguimiento de producción</h1>
+        <p className="vacio">
+          Todavía no hay carreras cargadas. Corré la migración para traer los planes de estudio.
+        </p>
+      </main>
+    )
+  }
+
+  const carrera = carreras.find((c) => String(c.id) === carreraParam) ?? carreras[0]
+
+  const plan = await prisma.planItem.findMany({
+    where: { carreraId: carrera.id },
     include: {
-      planItems: { include: { carrera: true } },
-      aperturas: { include: { periodo: true } },
+      asignatura: {
+        include: {
+          planItems: true,
+          aperturas: { include: { periodo: true } },
+        },
+      },
     },
-    orderBy: { nombre: 'asc' },
+    orderBy: [{ orden: 'asc' }, { asignaturaCodigo: 'asc' }],
   })
+
+  const avance = resumirAvance(plan.map((p) => p.asignatura))
   const hoy = new Date()
-  const conProxima = asignaturas.map((a) => {
-    const futuras = a.aperturas
-      .filter((ap) => ap.aperturaInscripcion && ap.aperturaInscripcion >= hoy)
-      .sort((x, y) => x.aperturaInscripcion!.getTime() - y.aperturaInscripcion!.getTime())
-    return { ...a, proxima: futuras[0] ?? null }
+
+  const busqueda = q.trim().toLowerCase()
+  const visibles = plan.filter((p) => {
+    const coincide =
+      !busqueda ||
+      p.asignatura.nombre.toLowerCase().includes(busqueda) ||
+      p.asignatura.codigo.toLowerCase().includes(busqueda) ||
+      (p.asignatura.docente ?? '').toLowerCase().includes(busqueda) ||
+      (p.asignatura.asesor ?? '').toLowerCase().includes(busqueda)
+    const delEstado = !filtroEstado || p.asignatura.estado === filtroEstado
+    return coincide && delEstado
   })
+
   return (
-    <main>
-      <h1>Producción</h1>
-      {ESTADOS.map((estado) => {
-        const grupo = conProxima.filter((a) => a.estado === estado)
-        if (!grupo.length) return null
-        return (
-          <section key={estado} className="grupo-estado">
-            <h2>{ESTADO_LABELS[estado as Estado]} <span className="contador">({grupo.length})</span></h2>
-            <table>
-              <thead>
-                <tr><th>Semáforo</th><th>Asignatura</th><th>Docente</th><th>Asesor</th><th>Próxima apertura</th><th>Inscripción</th><th>Carreras</th></tr>
-              </thead>
-              <tbody>
-                {grupo.map((a) => (
-                  <tr key={a.codigo}>
-                    <td><SemaforoBadge valor={semaforo(a.estado as Estado, a.proxima?.aperturaInscripcion ?? null, hoy)} /></td>
-                    <td><Link href={`/asignaturas/${encodeURIComponent(a.codigo)}`}>{a.nombre}</Link> <small>{a.codigo}</small></td>
-                    <td>{a.docente ?? '—'}</td>
-                    <td>{a.asesor ?? '—'}</td>
-                    <td>{a.proxima ? <Link href={`/periodos/${a.proxima.periodoId}`}>{a.proxima.periodo.nombre}</Link> : '—'}</td>
-                    <td>{fmtFecha(a.proxima?.aperturaInscripcion)}</td>
-                    <td>{a.planItems.map((p) => p.carrera.nombre).join(', ') || '—'}</td>
+    <main className="seguimiento">
+      <div className="encabezado-plan">
+        <div>
+          <h1>Seguimiento de producción</h1>
+          <p className="sub">
+            En qué anda cada asignatura. Lo que se carga acá es lo que ven las direcciones
+            cuando planifican sus períodos.
+          </p>
+        </div>
+      </div>
+
+      <form className="filtros-seguimiento">
+        <label htmlFor="carrera">
+          Carrera
+          <select id="carrera" name="carrera" defaultValue={String(carrera.id)}>
+            {carreras.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre} ({c._count.planItems})
+              </option>
+            ))}
+          </select>
+        </label>
+        <label htmlFor="estado">
+          Estado
+          <select id="estado" name="estado" defaultValue={filtroEstado}>
+            <option value="">Todos</option>
+            {ESTADOS.map((e) => (
+              <option key={e} value={e}>{ESTADO_LABELS[e]}</option>
+            ))}
+          </select>
+        </label>
+        <label htmlFor="q">
+          Buscar
+          <input id="q" name="q" defaultValue={q} placeholder="Asignatura, código, docente o asesor" />
+        </label>
+        <button type="submit">Filtrar</button>
+      </form>
+
+      <div className="resumen-estados">
+        {ESTADOS.map((e) => {
+          const n = avance.porEstado[e]
+          return (
+            <Link
+              key={e}
+              href={`/produccion?carrera=${carrera.id}&estado=${e}`}
+              className={`chip-estado ${filtroEstado === e ? 'activo' : ''} ${n === 0 ? 'en-cero' : ''}`}
+            >
+              <span className="n">{n}</span>
+              <span className="l">{ESTADO_LABELS[e]}</span>
+            </Link>
+          )
+        })}
+        <div className="chip-estado total">
+          <span className="n">{avance.porcentaje}%</span>
+          <span className="l">terminado</span>
+        </div>
+      </div>
+
+      <form action={guardarSeguimiento.bind(null, carrera.id)}>
+        <div className="tabla-scroll">
+          <table className="tabla-seguimiento">
+            <thead>
+              <tr>
+                <th className="col-orden">#</th>
+                <th>Asignatura</th>
+                <th className="col-estado">Estado</th>
+                <th>Docente</th>
+                <th>Asesor</th>
+                <th>Observaciones</th>
+                <th>Próxima apertura</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibles.map((p) => {
+                const a = p.asignatura
+                const proxima = a.aperturas
+                  .filter((ap) => ap.aperturaInscripcion && ap.aperturaInscripcion >= hoy)
+                  .sort((x, y) => x.aperturaInscripcion!.getTime() - y.aperturaInscripcion!.getTime())[0]
+                return (
+                  <tr key={p.id}>
+                    <td className="col-orden">{p.orden ?? '—'}</td>
+                    <td className="col-asignatura">
+                      <Link href={`/asignaturas/${encodeURIComponent(a.codigo)}`}>{a.nombre}</Link>
+                      <small>
+                        {a.codigo}
+                        {a.planItems.length > 1 && ` · en ${a.planItems.length} carreras`}
+                      </small>
+                    </td>
+                    <td>
+                      <select
+                        name={`estado_${a.codigo}`}
+                        defaultValue={a.estado}
+                        className={`select-estado est-${a.estado}`}
+                        aria-label={`Estado de ${a.nombre}`}
+                      >
+                        {ESTADOS.map((e) => (
+                          <option key={e} value={e}>{ESTADO_LABELS[e]}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        name={`docente_${a.codigo}`}
+                        defaultValue={a.docente ?? ''}
+                        placeholder="—"
+                        aria-label={`Docente de ${a.nombre}`}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        name={`asesor_${a.codigo}`}
+                        defaultValue={a.asesor ?? ''}
+                        placeholder="—"
+                        aria-label={`Asesor de ${a.nombre}`}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        name={`observaciones_${a.codigo}`}
+                        defaultValue={a.observaciones ?? ''}
+                        placeholder="Qué falta, con quién se habló…"
+                        aria-label={`Observaciones de ${a.nombre}`}
+                      />
+                    </td>
+                    <td className="col-apertura">
+                      {proxima ? (
+                        <>
+                          <SemaforoBadge
+                            valor={semaforo(a.estado as Estado, proxima.aperturaInscripcion, hoy)}
+                          />
+                          <small>
+                            <Link href={`/periodos/${proxima.periodoId}`}>{proxima.periodo.nombre}</Link>
+                            {' · insc. '}{fmtFecha(proxima.aperturaInscripcion)}
+                          </small>
+                        </>
+                      ) : (
+                        <small className="sin-apertura">sin período próximo</small>
+                      )}
+                    </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-        )
-      })}
-      {!asignaturas.length && <p className="vacio">Todavía no hay asignaturas cargadas.</p>}
+                )
+              })}
+              {!visibles.length && (
+                <tr>
+                  <td colSpan={7} className="celda-vacia">
+                    Ninguna asignatura de {carrera.nombre} coincide con el filtro.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="barra-guardar">
+          <Boton enCurso="Guardando cambios">Guardar cambios</Boton>
+          <span className="nota">
+            Se guardan todas las filas de {carrera.nombre} que hayas modificado.
+          </span>
+        </div>
+      </form>
     </main>
   )
 }

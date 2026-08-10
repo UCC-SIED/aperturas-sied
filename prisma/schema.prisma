@@ -61,15 +61,19 @@ model Cambio {
 }
 
 model Asignatura {
-  codigo       String     @id
-  nombre       String
-  catedra      String?
-  cargaHoraria Int?
-  docente      String?
-  asesor       String?
-  estado       String     @default("sin_novedad")
-  planItems    PlanItem[]
-  aperturas    Apertura[]
+  codigo        String     @id
+  nombre        String
+  catedra       String?
+  cargaHoraria  Int?
+  docente       String?
+  asesor        String?
+  estado        String     @default("sin_novedad")
+  /// Notas del seguimiento: por qué está trabada, qué falta, con quién se habló.
+  observaciones String?
+  /// Cuándo se tocó el estado por última vez, para detectar seguimientos viejos.
+  estadoDesde   DateTime?
+  planItems     PlanItem[]
+  aperturas     Apertura[]
 }
 
 model PlanItem {
