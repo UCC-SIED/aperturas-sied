@@ -23,11 +23,51 @@ En cada celda se elige la asignatura de un desplegable con el plan completo, num
 
 | Rol | Puede |
 |---|---|
-| **Equipo SIED** | Todo: planificar cualquier carrera, editar estados de producción, docentes y asesores |
+| **Administración** | Todo lo del equipo SIED, y además da de alta usuarios, cambia roles y asigna carreras desde `/admin` |
+| **Equipo SIED** | Planificar cualquier carrera, editar estados de producción, docentes y asesores |
 | **Dirección de carrera** | Planificar sus carreras (agregar, mover, quitar aperturas). Ve el estado de producción pero no lo edita. No ve otras carreras |
 | **Consulta** | Sólo lectura |
 
-El ingreso hoy es eligiendo usuario en `/ingresar`; cuando se conecte Google el paso desaparece y se entra con la cuenta institucional. Los usuarios se cargan con `npx tsx migracion/usuarios.ts` (editar la lista en ese archivo).
+Los permisos se gestionan desde **`/admin`**, sin tocar código. `npm run usuarios` sólo sirve para la carga inicial.
+
+## Ingreso con Google
+
+Se entra con la cuenta institucional. Hay dos puertas: el correo tiene que ser del dominio de la universidad **y** la persona tiene que estar dada de alta en `/admin`. Tener una cuenta `@ucc.edu.ar` no alcanza.
+
+Mientras no esté configurado, el sistema cae en un selector de usuarios para poder trabajar; los permisos funcionan igual en los dos modos.
+
+### Configurarlo
+
+En [console.cloud.google.com](https://console.cloud.google.com), con la cuenta institucional:
+
+1. Crear un proyecto (o usar uno existente).
+2. **APIs y servicios → Pantalla de consentimiento OAuth**: tipo **Interno** (así sólo entra gente de la organización), nombre de la app "Aperturas SIED", correo de soporte.
+3. **Credenciales → Crear credenciales → ID de cliente de OAuth**, tipo *Aplicación web*. Ahí van:
+
+   **Orígenes autorizados de JavaScript**
+   ```
+   http://localhost:3000
+   https://aperturas-sied.vercel.app
+   ```
+
+   **URIs de redireccionamiento autorizados**
+   ```
+   http://localhost:3000/api/auth/callback/google
+   https://aperturas-sied.vercel.app/api/auth/callback/google
+   ```
+
+4. Copiar el **ID de cliente** y el **secreto** a las variables de entorno:
+
+```
+AUTH_GOOGLE_ID="...apps.googleusercontent.com"
+AUTH_GOOGLE_SECRET="..."
+AUTH_SECRET="una-cadena-larga-al-azar"
+AUTH_URL="https://aperturas-sied.vercel.app"
+```
+
+`AUTH_SECRET` se genera con `npx auth secret`. En Vercel van las cuatro en Settings → Environment Variables; en local, en el `.env`.
+
+Con esas variables presentes, el sistema usa Google solo: no hace falta cambiar nada más.
 
 ### Semáforo
 

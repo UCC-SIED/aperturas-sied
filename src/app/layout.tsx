@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { sesionActual } from '@/lib/sesion'
-import { cerrarSesion } from '@/lib/sesion'
-import { ROL_LABELS } from '@/lib/permisos'
+import { sesionActual, cerrarSesion, googleActivo } from '@/lib/sesion'
+import { signOut } from '@/auth'
+import { ROL_LABELS, puedeAdministrar } from '@/lib/permisos'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -13,6 +13,10 @@ export const metadata: Metadata = {
 
 async function salir() {
   'use server'
+  if (googleActivo()) {
+    await signOut({ redirectTo: '/ingresar' })
+    return
+  }
   await cerrarSesion()
   redirect('/ingresar')
 }
@@ -30,7 +34,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {s.rol !== 'consulta' && <Link href="/planificar">Planificar</Link>}
               <Link href="/periodos">Períodos</Link>
               <Link href="/asignaturas">Asignaturas</Link>
-              {s.rol === 'sied' && <Link href="/produccion">Producción</Link>}
+              {(s.rol === 'sied' || s.rol === 'admin') && <Link href="/produccion">Producción</Link>}
+              {puedeAdministrar(s) && <Link href="/admin">Administración</Link>}
             </nav>
           )}
           {s ? (

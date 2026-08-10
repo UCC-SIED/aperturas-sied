@@ -14,7 +14,8 @@ type Usuario = {
 }
 
 const USUARIOS: Usuario[] = [
-  { email: 'tecnologia.sied@ucc.edu.ar', nombre: 'Tecnología Educativa SIED', rol: 'sied' },
+  // Administración: además de trabajar como el equipo SIED, gestiona usuarios y permisos
+  { email: 'tecnologia.sied@ucc.edu.ar', nombre: 'Tecnología Educativa SIED', rol: 'admin' },
   { email: 'direccion.sied@ucc.edu.ar', nombre: 'Dirección SIED', rol: 'consulta' },
 
   // Posgrado — correos institucionales confirmados
