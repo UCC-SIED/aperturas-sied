@@ -75,23 +75,43 @@ La migración es idempotente: correrla dos veces no duplica datos, así que se p
 
 La planilla de Educación no tiene columna de período, solo fechas por fila. La migración los genera agrupando por fecha de inicio **y duración**: un bimestral y un cuatrimestral que arrancan el mismo día son dos períodos distintos, porque cierran y rinden AFI en fechas diferentes.
 
-## Despliegue (Supabase + Vercel)
+## Las dos bases de datos
 
-1. **Base de datos**: crear un proyecto gratuito en [supabase.com](https://supabase.com). En Project Settings → Database copiar la cadena de conexión con pooling (puerto 6543) para `DATABASE_URL` y la directa (puerto 5432) para `DIRECT_URL`.
-2. **Cambiar el motor** en `prisma/schema.prisma`:
+No hay ningún motor que instalar.
 
-```prisma
-datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-}
+| Dónde | Motor | Qué es |
+|---|---|---|
+| Tu máquina | SQLite | El archivo `prisma/dev.db`. Sin servidor ni servicio |
+| Publicado | PostgreSQL | Una base en la nube (Supabase). Tampoco se instala: se copia una cadena de conexión |
+
+El esquema es **uno solo** (`prisma/schema.prisma`); lo único que cambia es el motor:
+
+```bash
+npm run db:local   # SQLite, para trabajar acá
+npm run db:nube    # PostgreSQL, para publicar
 ```
 
-Borrar `prisma/migrations/` (son de SQLite) y correr `npx prisma migrate dev --name init` apuntando a Supabase.
+Hace falta porque Vercel borra los archivos del servidor en cada despliegue: si la base fuera un archivo, se perdería todo. Las migraciones versionadas en `prisma/migrations/` están escritas para PostgreSQL; en local y en los tests la estructura se arma con `prisma db push`, que da el mismo resultado.
 
-3. **Poblar**: `npm run migrar` con los archivos en `migracion/input/`.
-4. **Publicar**: subir el repo a GitHub, importarlo en [vercel.com](https://vercel.com) y cargar las variables de entorno `DATABASE_URL`, `DIRECT_URL`, `ACCESO_USUARIO` y `ACCESO_CLAVE`. Deploy.
+Para mirar los datos con una interfaz gráfica: `npx prisma studio`.
+
+## Despliegue (Supabase + Vercel)
+
+Las dos cuentas son gratuitas y se entra con GitHub.
+
+**1. Crear la base.** En [supabase.com](https://supabase.com), nuevo proyecto, región São Paulo. En Project Settings → Database hay dos cadenas de conexión: la de *pooling* (puerto 6543) va en `DATABASE_URL` y la *directa* (puerto 5432) en `DIRECT_URL`. Ponelas en tu `.env` (ver `.env.example`).
+
+**2. Armar y poblar la base:**
+
+```bash
+npm run db:nube && npx prisma migrate deploy
+```
+
+Después, los datos: `npm run migrar` si tenés las planillas en `migracion/input/`, o `npm run demo` para cargar los planes de estudio oficiales y los usuarios.
+
+**3. Publicar.** Importar el repositorio en [vercel.com](https://vercel.com) y cargar cuatro variables de entorno: `DATABASE_URL`, `DIRECT_URL`, `ACCESO_USUARIO` y `ACCESO_CLAVE` (las dos últimas son la clave de acceso al sitio mientras no esté el ingreso con Google).
+
+**4. Volver a local:** `npm run db:local`, y seguís trabajando con el archivo como siempre.
 5. Compartir la URL con el equipo SIED.
 
 ### Acceso
