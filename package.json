@@ -4,10 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "test": "vitest run",
-    "migrar": "tsx migracion/migrar.ts"
+    "migrar": "tsx migracion/migrar.ts",
+    "demo": "tsx migracion/demo.ts && tsx migracion/usuarios.ts",
+    "usuarios": "tsx migracion/usuarios.ts",
+    "db:local": "node prisma/provider.mjs sqlite",
+    "db:nube": "node prisma/provider.mjs postgresql",
+    "db:migrar": "prisma migrate deploy",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
