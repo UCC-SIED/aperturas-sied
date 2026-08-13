@@ -4,19 +4,19 @@ import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { puedeEditarCarrera, carrerasVisibles } from '@/lib/permisos'
 import { armarGrilla, type AperturaGrilla } from '@/lib/grilla'
-import { semaforo } from '@/lib/semaforo'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
-import { ESTADO_LABELS, type Estado } from '@/lib/estados'
-import { SemaforoBadge } from '@/components/SemaforoBadge'
 import { Boton } from '@/components/Boton'
 import { agregarApertura, quitarApertura, moverApertura, crearCohorte } from './actions'
 
 export const dynamic = 'force-dynamic'
 
+/** Cuántos períodos se muestran por defecto en la grilla, para no llenarla de columnas. */
+const PERIODOS_VISIBLES = 3
+
 export default async function Planificar({
   searchParams,
 }: {
-  searchParams: Promise<{ carrera?: string }>
+  searchParams: Promise<{ carrera?: string; todos?: string }>
 }) {
   const s = await sesionActual()
   if (!s) redirect('/ingresar')
@@ -36,9 +36,10 @@ export default async function Planificar({
     )
   }
 
-  const { carrera: carreraParam } = await searchParams
+  const { carrera: carreraParam, todos: todosParam } = await searchParams
   const carrera = carreras.find((c) => String(c.id) === carreraParam) ?? carreras[0]
   const editable = puedeEditarCarrera(s, carrera.id)
+  const mostrarTodos = todosParam === '1'
   const hoy = new Date()
 
   const [plan, cohortes, periodosTodos] = await Promise.all([
@@ -54,8 +55,16 @@ export default async function Planificar({
     }),
   ])
 
-  const periodos = periodosTodos.filter((p) => p.inicioCursado >= hoy)
-  const pasados = periodosTodos.filter((p) => p.inicioCursado < hoy)
+  // Por defecto sólo se ven los períodos más cercanos a hoy, para que precargar
+  // el calendario a futuro no llene la grilla de columnas. El resto sigue
+  // existiendo y se puede planificar (o ver todo con el link de abajo).
+  const cercanos = [...periodosTodos]
+    .sort((a, b) => Math.abs(a.inicioCursado.getTime() - hoy.getTime()) - Math.abs(b.inicioCursado.getTime() - hoy.getTime()))
+    .slice(0, PERIODOS_VISIBLES)
+    .sort((a, b) => a.inicioCursado.getTime() - b.inicioCursado.getTime())
+  const periodos = mostrarTodos ? periodosTodos : cercanos
+  const hayOcultos = periodosTodos.length > periodos.length
+
   const codigos = plan.map((p) => p.asignaturaCodigo)
 
   // Todas las aperturas de esta carrera, para saber qué cursó cada cohorte
@@ -76,6 +85,7 @@ export default async function Planificar({
   }))
 
   const grilla = armarGrilla(cohortes, periodosTodos, aperturas)
+  const ordenPorCodigo = new Map(plan.map((item) => [item.asignaturaCodigo, item.orden]))
   const cambios = await prisma.cambio.findMany({
     where: { carreraId: carrera.id },
     include: { usuario: true },
@@ -115,21 +125,34 @@ export default async function Planificar({
           {editable && (
             <form action={crearCohorte.bind(null, carrera.id)} className="alta-cohorte">
               <input name="nombre" placeholder="Nombre de la cohorte, por ejemplo COHORTE 2026" required />
-              <Boton enCurso="Creando">Crear la primera cohorte</Boton>
+              <Boton enCurso="Creando">Crear cohorte</Boton>
             </form>
           )}
         </div>
-      ) : !periodos.length ? (
+      ) : !periodosTodos.length ? (
         <p className="vacio">
-          No hay períodos próximos cargados para {carrera.unidad.nombre}. Los períodos definen
-          las fechas del ciclo (inscripción, cursado, AFI, cierre) y los carga el equipo SIED
-          una vez por año; sin ellos no hay dónde ubicar las asignaturas.
+          No hay períodos cargados para {carrera.unidad.nombre}. Los períodos definen
+          las fechas del ciclo (inscripción, cursado, AFI, cierre) y los carga el equipo SIED;
+          sin ellos no hay dónde ubicar las asignaturas.
         </p>
       ) : (
         <>
           <p className="ayuda-grilla">
             Cada fila es una cohorte y cada columna un período. En cada celda va lo que le toca cursar
             a esa camada en ese momento.
+            {hayOcultos && (
+              <>
+                {' '}Se muestran los {PERIODOS_VISIBLES} más cercanos a hoy.{' '}
+                <Link href={`/planificar?carrera=${carrera.id}&todos=1`}>
+                  Ver los {periodosTodos.length - periodos.length} períodos restantes
+                </Link>
+              </>
+            )}
+            {mostrarTodos && periodosTodos.length > PERIODOS_VISIBLES && (
+              <>
+                {' '}<Link href={`/planificar?carrera=${carrera.id}`}>Mostrar sólo los más cercanos</Link>
+              </>
+            )}
           </p>
 
           <div className="grilla-scroll">
@@ -146,11 +169,26 @@ export default async function Planificar({
                 </tr>
               </thead>
               <tbody>
-                {cohortes.map((co) => (
+                {cohortes.map((co) => {
+                  const sinAbrir = plan.filter((item) => !grilla.yaCursa(co.id, item.asignaturaCodigo).length)
+                  return (
                   <tr key={co.id}>
                     <th scope="row" className="col-cohorte">
                       {co.nombre}
                       <small>{grilla.totalDe(co.id)} planificadas</small>
+                      {sinAbrir.length > 0 && (
+                        <details className="sin-abrir">
+                          <summary>{sinAbrir.length} sin abrir todavía</summary>
+                          <ul>
+                            {sinAbrir.map((item) => (
+                              <li key={item.id}>
+                                {item.orden != null ? `${item.orden}. ` : ''}
+                                {item.asignatura.nombre}
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      )}
                     </th>
                     {periodos.map((p) => {
                       const enCelda = grilla.celda(co.id, p.id)
@@ -159,14 +197,11 @@ export default async function Planificar({
                           {enCelda.map((ap) => (
                             <div key={ap.id} className="celda-item">
                               <Link href={`/asignaturas/${encodeURIComponent(ap.asignaturaCodigo)}`}>
+                                {ordenPorCodigo.get(ap.asignaturaCodigo) != null
+                                  ? `${ordenPorCodigo.get(ap.asignaturaCodigo)}. `
+                                  : ''}
                                 {ap.asignatura.nombre}
                               </Link>
-                              <div className="celda-meta">
-                                <SemaforoBadge
-                                  valor={semaforo(ap.asignatura.estado as Estado, ap.aperturaInscripcion, hoy)}
-                                />
-                                <span>{ESTADO_LABELS[ap.asignatura.estado as Estado]}</span>
-                              </div>
                               {ap.cohorteIds.length > 1 && (
                                 <p className="compartida">
                                   También la cursan otras {ap.cohorteIds.length - 1} cohorte(s)
@@ -178,7 +213,7 @@ export default async function Planificar({
                                     <input type="hidden" name="aperturaId" value={ap.id} />
                                     <select name="destinoId" defaultValue="" aria-label={`Mover ${ap.asignatura.nombre}`}>
                                       <option value="" disabled>Mover a...</option>
-                                      {periodos.filter((x) => x.id !== p.id).map((x) => (
+                                      {periodosTodos.filter((x) => x.id !== p.id).map((x) => (
                                         <option key={x.id} value={x.id}>{x.nombre}</option>
                                       ))}
                                     </select>
@@ -221,7 +256,8 @@ export default async function Planificar({
                       )
                     })}
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -246,23 +282,6 @@ export default async function Planificar({
                   <td><small>{fmtFechaHora(c.fecha)}</small></td>
                   <td>{c.usuario?.nombre ?? 'Sistema'}</td>
                   <td>{c.detalle}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </details>
-      )}
-
-      {pasados.length > 0 && (
-        <details className="historicos">
-          <summary>Períodos anteriores ({pasados.length})</summary>
-          <table>
-            <thead><tr><th>Período</th><th>Inicio de cursado</th></tr></thead>
-            <tbody>
-              {pasados.map((p) => (
-                <tr key={p.id}>
-                  <td><Link href={`/periodos/${p.id}`}>{p.nombre}</Link></td>
-                  <td>{fmtFecha(p.inicioCursado)}</td>
                 </tr>
               ))}
             </tbody>

@@ -4,10 +4,7 @@ import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { carrerasVisibles } from '@/lib/permisos'
 import { resumirAvance } from '@/lib/avance'
-import { semaforo } from '@/lib/semaforo'
 import { fmtFecha } from '@/lib/formato'
-import { ESTADO_LABELS, type Estado } from '@/lib/estados'
-import { SemaforoBadge } from '@/components/SemaforoBadge'
 import { IconoDescarga } from '@/components/iconos'
 
 export const dynamic = 'force-dynamic'
@@ -46,13 +43,6 @@ export default async function Panel() {
   const proximos = [...new Set(periodos.map((p) => p.unidadId))]
     .map((u) => periodos.find((p) => p.unidadId === u)!)
     .filter(Boolean)
-
-  const enRiesgo = periodos
-    .flatMap((p) => p.aperturas.map((a) => ({ periodo: p, ap: a })))
-    .map((x) => ({ ...x, sem: semaforo(x.ap.asignatura.estado as Estado, x.ap.aperturaInscripcion, hoy) }))
-    .filter((x) => x.sem === 'rojo' || x.sem === 'amarillo')
-    .filter((x) => !visibles || x.ap.cohortes.some((c) => visibles.includes(c.cohorte.carreraId)))
-    .sort((a, b) => (a.ap.aperturaInscripcion?.getTime() ?? 0) - (b.ap.aperturaInscripcion?.getTime() ?? 0))
 
   const global = resumirAvance(
     carreras.flatMap((c) => c.planItems.map((p) => p.asignatura))
@@ -140,36 +130,6 @@ export default async function Panel() {
           </tbody>
         </table>
       ) : <p className="vacio">No hay períodos próximos cargados.</p>}
-
-      <h2>Requieren atención ({enRiesgo.length})</h2>
-      {enRiesgo.length ? (
-        <table>
-          <thead>
-            <tr><th>Estado de aula</th><th>Asignatura</th><th>Producción</th><th>Período</th><th>Inscripción</th></tr>
-          </thead>
-          <tbody>
-            {enRiesgo.slice(0, 30).map(({ ap, periodo, sem }) => (
-              <tr key={ap.id}>
-                <td><SemaforoBadge valor={sem} /></td>
-                <td>
-                  <Link href={`/asignaturas/${encodeURIComponent(ap.asignaturaCodigo)}`}>
-                    {ap.asignatura.nombre}
-                  </Link> <small>{ap.asignaturaCodigo}</small>
-                </td>
-                <td>{ESTADO_LABELS[ap.asignatura.estado as Estado]}</td>
-                <td><Link href={`/periodos/${periodo.id}`}>{periodo.nombre}</Link></td>
-                <td>{fmtFecha(ap.aperturaInscripcion)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p className="vacio">
-          Ninguna de las asignaturas que abren en los próximos períodos está en riesgo: todas
-          llegan terminadas a su fecha de inscripción. Acá van a aparecer las que estén en
-          construcción o maquetación cuando falten menos de 30 días para abrir.
-        </p>
-      )}
     </main>
   )
 }

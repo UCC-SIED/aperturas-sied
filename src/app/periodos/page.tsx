@@ -4,8 +4,12 @@ import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { carrerasVisibles, puedeEditarProduccion } from '@/lib/permisos'
 import { fmtFecha } from '@/lib/formato'
+import { estadoPeriodo } from '@/lib/estado-periodo'
 import { Boton } from '@/components/Boton'
+import { SelectorUnidadTipo } from '@/components/SelectorUnidadTipo'
 import { crearPeriodo, borrarPeriodo } from './actions'
+
+const ESTADO_LABEL = { proximo: 'Próximo', en_curso: 'En curso', cerrado: 'cerrado' } as const
 
 export const dynamic = 'force-dynamic'
 
@@ -56,28 +60,9 @@ export default async function Periodos() {
             <div className="fila-campos">
               <label htmlFor="nombre">
                 Nombre
-                <input id="nombre" name="nombre" placeholder="Mensual_Marzo_2027 · Bimestre A" required />
+                <input id="nombre" name="nombre" placeholder="Mensual_Marzo_2027 · Bimestral_Agosto_2026" required />
               </label>
-              <label htmlFor="unidadId">
-                Unidad
-                <select id="unidadId" name="unidadId" defaultValue={unidades[0]?.id}>
-                  {unidades.map((u) => (
-                    <option key={u.id} value={u.id}>{u.nombre}</option>
-                  ))}
-                </select>
-              </label>
-              <label htmlFor="tipo">
-                Tipo
-                <select id="tipo" name="tipo" defaultValue="mensual">
-                  <option value="mensual">Mensual</option>
-                  <option value="bimestral">Bimestral</option>
-                  <option value="cuatrimestral">Cuatrimestral</option>
-                </select>
-              </label>
-              <label htmlFor="mes">
-                Mes <span className="opcional">opcional</span>
-                <input id="mes" name="mes" placeholder="Marzo" />
-              </label>
+              <SelectorUnidadTipo unidades={unidades} />
             </div>
 
             <div className="fila-campos fechas">
@@ -123,7 +108,6 @@ export default async function Periodos() {
                   <tr key={p.id}>
                     <td>
                       <Link href={`/periodos/${p.id}`}>{p.nombre}</Link>
-                      {p.mes && <small> · {p.mes}</small>}
                     </td>
                     <td>{p.tipo}</td>
                     <td>{fmtFecha(p.aperturaInscripcion)}</td>
@@ -132,11 +116,15 @@ export default async function Periodos() {
                     <td>{fmtFecha(p.cierreAsignatura)}</td>
                     <td className="num">{p._count.aperturas}</td>
                     <td>
-                      {p.inicioCursado >= hoy ? (
-                        <span className="sem-verde">Próximo</span>
-                      ) : (
-                        <small>cerrado</small>
-                      )}
+                      {(() => {
+                        const estado = estadoPeriodo(p.inicioCursado, p.cierreAsignatura, hoy)
+                        if (estado === 'cerrado') return <small>{ESTADO_LABEL.cerrado}</small>
+                        return (
+                          <span className={estado === 'proximo' ? 'sem-verde' : 'sem-amarillo'}>
+                            {ESTADO_LABEL[estado]}
+                          </span>
+                        )
+                      })()}
                       {editable && p._count.aperturas === 0 && (
                         <form action={borrarPeriodo.bind(null, p.id)} className="en-linea">
                           <Boton className="quitar" enCurso="…">Borrar</Boton>

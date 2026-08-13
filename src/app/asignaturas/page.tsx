@@ -38,30 +38,32 @@ export default async function Asignaturas({ searchParams }: { searchParams: Prom
         <button type="submit">Buscar</button>
       </form>
       {asignaturas.length ? (
-        <table>
-          <thead>
-            <tr>
-              <th>Código</th><th>Asignatura</th><th>Producción</th>
-              <th>Docente</th><th>Asesor</th><th>Carreras</th><th className="num">Aperturas</th>
-            </tr>
-          </thead>
-          <tbody>
-            {asignaturas.map((a) => (
-              <tr key={a.codigo}>
-                <td><small>{a.codigo}</small></td>
-                <td>
-                  <Link href={`/asignaturas/${encodeURIComponent(a.codigo)}`}>{a.nombre}</Link>
-                  {a.planItems.length > 1 && <small> · transversal</small>}
-                </td>
-                <td>{ESTADO_LABELS[a.estado as Estado]}</td>
-                <td>{a.docente ?? '—'}</td>
-                <td>{a.asesor ?? '—'}</td>
-                <td><small>{a.planItems.map((p) => p.carrera.nombre).join(' · ') || '—'}</small></td>
-                <td className="num">{a.aperturas.length}</td>
+        <div className="tabla-scroll">
+          <table className="tabla-asignaturas">
+            <thead>
+              <tr>
+                <th className="col-codigo">Código</th><th className="col-asignatura">Asignatura</th><th>Producción</th>
+                <th>Docente</th><th>Asesor</th><th className="col-carreras">Carreras</th><th className="num">Aperturas</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {asignaturas.map((a) => (
+                <tr key={a.codigo}>
+                  <td><small>{a.codigo}</small></td>
+                  <td>
+                    <Link href={`/asignaturas/${encodeURIComponent(a.codigo)}`}>{a.nombre}</Link>
+                    {a.planItems.length > 1 && <small> · transversal</small>}
+                  </td>
+                  <td>{ESTADO_LABELS[a.estado as Estado]}</td>
+                  <td>{a.docente ?? '—'}</td>
+                  <td>{a.asesor ?? '—'}</td>
+                  <td><small>{a.planItems.map((p) => p.carrera.nombre).join(' · ') || '—'}</small></td>
+                  <td className="num">{a.aperturas.length}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <p className="vacio">{q ? `Sin resultados para “${q}”.` : 'Todavía no hay asignaturas cargadas.'}</p>
       )}

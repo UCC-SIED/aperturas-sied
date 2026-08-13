@@ -2,13 +2,24 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
-import { carrerasVisibles } from '@/lib/permisos'
-import { semaforo } from '@/lib/semaforo'
-import { fmtFecha } from '@/lib/formato'
+import { carrerasVisibles, puedeEditarProduccion } from '@/lib/permisos'
+import { fmtFecha, fmtFechaISO } from '@/lib/formato'
 import { ESTADO_LABELS, type Estado } from '@/lib/estados'
-import { SemaforoBadge } from '@/components/SemaforoBadge'
+import { Boton } from '@/components/Boton'
+import { editarFechasApertura } from './actions'
 
 export const dynamic = 'force-dynamic'
+
+const CAMPOS_FECHA = [
+  ['aperturaInscripcion', 'Apertura de inscripción'],
+  ['cierreInscripcion', 'Cierre de inscripción'],
+  ['inicioCursado', 'Inicio de cursado'],
+  ['finCursado', 'Límite de entregas'],
+  ['aperturaAfi', 'Apertura del AFI'],
+  ['cierreAfi', 'Vencimiento del AFI'],
+  ['cierreAsignatura', 'Cierre de asignatura'],
+  ['actas', 'Actas'],
+] as const
 
 export default async function Periodo({ params }: { params: Promise<{ id: string }> }) {
   const s = await sesionActual()
@@ -29,7 +40,7 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
   if (!periodo) notFound()
 
   const visibles = carrerasVisibles(s)
-  const hoy = new Date()
+  const editable = puedeEditarProduccion(s)
   type Ap = (typeof periodo.aperturas)[number]
 
   // Cada apertura se muestra bajo las carreras que la cursan; una transversal
@@ -77,8 +88,9 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
           <table>
             <thead>
               <tr>
-                <th>Estado de aula</th><th>Asignatura</th><th>Producción</th>
+                <th>Asignatura</th><th>Producción</th>
                 <th>Docente</th><th>Asesor</th><th>Cohortes</th>
+                {editable && <th>Fechas</th>}
               </tr>
             </thead>
             <tbody>
@@ -88,7 +100,6 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                 )]
                 return (
                   <tr key={ap.id}>
-                    <td><SemaforoBadge valor={semaforo(ap.asignatura.estado as Estado, ap.aperturaInscripcion, hoy)} /></td>
                     <td>
                       <Link href={`/asignaturas/${encodeURIComponent(ap.asignatura.codigo)}`}>
                         {ap.asignatura.nombre}
@@ -100,6 +111,33 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                     <td>{ap.asignatura.docente ?? '—'}</td>
                     <td>{ap.asignatura.asesor ?? '—'}</td>
                     <td>{cohortesDeEsta.join(', ') || '—'}</td>
+                    {editable && (
+                      <td>
+                        <details className="editar-fechas-apertura">
+                          <summary>Editar</summary>
+                          <form action={editarFechasApertura.bind(null, ap.id)} className="fila-campos fechas">
+                            {CAMPOS_FECHA.map(([campo, etiqueta]) => (
+                              <label key={campo} htmlFor={`${campo}_${ap.id}`}>
+                                {etiqueta}
+                                {campo === 'inicioCursado' && <span className="requerido"> *</span>}
+                                <input
+                                  id={`${campo}_${ap.id}`}
+                                  name={campo}
+                                  type="date"
+                                  defaultValue={fmtFechaISO(ap[campo])}
+                                  required={campo === 'inicioCursado'}
+                                />
+                              </label>
+                            ))}
+                            <Boton enCurso="Guardando">Guardar fechas</Boton>
+                          </form>
+                          <p className="nota-excepcion">
+                            Corrige sólo esta apertura, no el período — para cuando la producción
+                            se atrasa y arranca unos días después que el resto.
+                          </p>
+                        </details>
+                      </td>
+                    )}
                   </tr>
                 )
               })}

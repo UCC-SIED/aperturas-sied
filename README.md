@@ -4,6 +4,8 @@ Sistema de gestión de aperturas de aulas en Canvas LMS para el SIED (UCC). Reem
 
 - **Diseño (objetivo, alcances y límites):** [docs/2026-08-08-gestion-aperturas-design.md](docs/2026-08-08-gestion-aperturas-design.md)
 - **Plan de implementación Fase 1:** [docs/2026-08-08-aperturas-f1.md](docs/2026-08-08-aperturas-f1.md)
+- **Cómo están organizados los datos (para no técnicos):** [docs/2026-08-13-estructura-de-datos.md](docs/2026-08-13-estructura-de-datos.md)
+- **Cambios del 13/08/2026 (planificador, períodos, producción):** [docs/2026-08-13-cambios.md](docs/2026-08-13-cambios.md)
 
 ## Qué hace hoy
 

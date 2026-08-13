@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { validarFechas } from '@/lib/validar'
+import { validarFechas, tipoValidoParaUnidad } from '@/lib/validar'
 
 const ok = {
   inicioCursado: new Date(2026, 7, 5),
@@ -63,5 +63,23 @@ describe('validarFechas', () => {
       finCursado: new Date(2026, 6, 1),
     })
     expect(p.length).toBeGreaterThanOrEqual(2)
+  })
+})
+
+describe('tipoValidoParaUnidad', () => {
+  it('posgrado sólo abre mensuales', () => {
+    expect(tipoValidoParaUnidad('posgrado', 'mensual')).toBe(true)
+    expect(tipoValidoParaUnidad('posgrado', 'bimestral')).toBe(false)
+    expect(tipoValidoParaUnidad('posgrado', 'cuatrimestral')).toBe(false)
+  })
+
+  it('educación sólo abre bimestrales o cuatrimestrales', () => {
+    expect(tipoValidoParaUnidad('educacion', 'bimestral')).toBe(true)
+    expect(tipoValidoParaUnidad('educacion', 'cuatrimestral')).toBe(true)
+    expect(tipoValidoParaUnidad('educacion', 'mensual')).toBe(false)
+  })
+
+  it('una unidad inexistente no valida ningún tipo', () => {
+    expect(tipoValidoParaUnidad('otra', 'mensual')).toBe(false)
   })
 })

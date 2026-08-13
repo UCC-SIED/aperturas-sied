@@ -5,8 +5,6 @@ import { sesionActual } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
-import { semaforo } from '@/lib/semaforo'
-import { SemaforoBadge } from '@/components/SemaforoBadge'
 import { IconoCompartida } from '@/components/iconos'
 import { actualizarAsignatura } from './actions'
 
@@ -27,7 +25,6 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
   if (!a) notFound()
 
   const editable = puedeEditarProduccion(s)
-  const hoy = new Date()
   const cambios = await prisma.cambio.findMany({
     where: { asignaturaCodigo: a.codigo },
     include: { usuario: true },
@@ -101,14 +98,13 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
         <table>
           <thead>
             <tr>
-              <th>Estado</th><th>Período</th><th>Inscripción</th><th>Cursado</th>
+              <th>Período</th><th>Inscripción</th><th>Cursado</th>
               <th>AFI</th><th>Cierre</th><th>Cohortes</th>
             </tr>
           </thead>
           <tbody>
             {a.aperturas.map((ap) => (
               <tr key={ap.id}>
-                <td><SemaforoBadge valor={semaforo(a.estado as Estado, ap.aperturaInscripcion, hoy)} /></td>
                 <td><Link href={`/periodos/${ap.periodoId}`}>{ap.periodo.nombre}</Link></td>
                 <td>{fmtFecha(ap.aperturaInscripcion)}</td>
                 <td>{fmtFecha(ap.inicioCursado)} – {fmtFecha(ap.finCursado)}</td>

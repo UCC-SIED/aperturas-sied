@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
-import { validarFechas } from '@/lib/validar'
+import { validarFechas, tipoValidoParaUnidad } from '@/lib/validar'
 
 const TIPOS = ['mensual', 'bimestral', 'cuatrimestral'] as const
 
@@ -31,7 +31,6 @@ export async function crearPeriodo(formData: FormData) {
   const nombre = String(formData.get('nombre') ?? '').trim()
   const unidadId = String(formData.get('unidadId') ?? '')
   const tipo = String(formData.get('tipo') ?? '')
-  const mes = String(formData.get('mes') ?? '').trim() || null
   const inicioCursado = fecha(formData, 'inicioCursado')
 
   if (!nombre) throw new Error('Poné un nombre para el período')
@@ -40,6 +39,9 @@ export async function crearPeriodo(formData: FormData) {
 
   const unidad = await prisma.unidad.findUnique({ where: { id: unidadId } })
   if (!unidad) throw new Error('Unidad inexistente')
+  if (!tipoValidoParaUnidad(unidadId, tipo)) {
+    throw new Error(`${unidad.nombre} no abre períodos de tipo "${tipo}"`)
+  }
 
   const yaExiste = await prisma.periodo.findUnique({
     where: { unidadId_nombre: { unidadId, nombre } },
@@ -62,7 +64,7 @@ export async function crearPeriodo(formData: FormData) {
     throw new Error(`Revisá las fechas: ${problemas.join('; ')}`)
   }
 
-  await prisma.periodo.create({ data: { nombre, unidadId, tipo, mes, ...fechas } })
+  await prisma.periodo.create({ data: { nombre, unidadId, tipo, ...fechas } })
   await prisma.cambio.create({
     data: {
       usuarioId: s.id,

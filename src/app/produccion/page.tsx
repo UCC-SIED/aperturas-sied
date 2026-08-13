@@ -3,12 +3,13 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
-import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
+import { ESTADOS, ESTADO_LABELS } from '@/lib/estados'
 import { resumirAvance } from '@/lib/avance'
-import { semaforo } from '@/lib/semaforo'
 import { fmtFecha } from '@/lib/formato'
-import { SemaforoBadge } from '@/components/SemaforoBadge'
+import { normalizarBusqueda } from '@/lib/texto'
 import { Boton } from '@/components/Boton'
+import { SelectAutoSubmit } from '@/components/SelectAutoSubmit'
+import { BuscadorAutoLimpia } from '@/components/BuscadorAutoLimpia'
 import { IconoDescarga } from '@/components/iconos'
 import { guardarSeguimiento } from './actions'
 
@@ -58,14 +59,14 @@ export default async function Produccion({
   const avance = resumirAvance(plan.map((p) => p.asignatura))
   const hoy = new Date()
 
-  const busqueda = q.trim().toLowerCase()
+  const busqueda = normalizarBusqueda(q)
   const visibles = plan.filter((p) => {
     const coincide =
       !busqueda ||
-      p.asignatura.nombre.toLowerCase().includes(busqueda) ||
-      p.asignatura.codigo.toLowerCase().includes(busqueda) ||
-      (p.asignatura.docente ?? '').toLowerCase().includes(busqueda) ||
-      (p.asignatura.asesor ?? '').toLowerCase().includes(busqueda)
+      normalizarBusqueda(p.asignatura.nombre).includes(busqueda) ||
+      normalizarBusqueda(p.asignatura.codigo).includes(busqueda) ||
+      normalizarBusqueda(p.asignatura.docente ?? '').includes(busqueda) ||
+      normalizarBusqueda(p.asignatura.asesor ?? '').includes(busqueda)
     const delEstado = !filtroEstado || p.asignatura.estado === filtroEstado
     return coincide && delEstado
   })
@@ -89,28 +90,27 @@ export default async function Produccion({
       <form className="filtros-seguimiento">
         <label htmlFor="carrera">
           Carrera
-          <select id="carrera" name="carrera" defaultValue={String(carrera.id)}>
+          <SelectAutoSubmit id="carrera" name="carrera" defaultValue={String(carrera.id)}>
             {carreras.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.nombre} ({c._count.planItems})
               </option>
             ))}
-          </select>
+          </SelectAutoSubmit>
         </label>
         <label htmlFor="estado">
           Estado
-          <select id="estado" name="estado" defaultValue={filtroEstado}>
+          <SelectAutoSubmit id="estado" name="estado" defaultValue={filtroEstado}>
             <option value="">Todos</option>
             {ESTADOS.map((e) => (
               <option key={e} value={e}>{ESTADO_LABELS[e]}</option>
             ))}
-          </select>
+          </SelectAutoSubmit>
         </label>
         <label htmlFor="q">
           Buscar
-          <input id="q" name="q" defaultValue={q} placeholder="Asignatura, código, docente o asesor" />
+          <BuscadorAutoLimpia id="q" name="q" defaultValue={q} placeholder="Asignatura, código, docente o asesor" />
         </label>
-        <button type="submit">Filtrar</button>
       </form>
 
       <div className="resumen-estados">
@@ -141,7 +141,6 @@ export default async function Produccion({
                 <th className="col-orden">#</th>
                 <th>Asignatura</th>
                 <th className="col-estado">Estado</th>
-                <th className="col-catedra">Cátedra</th>
                 <th>Docente</th>
                 <th>Asesor</th>
                 <th>Observaciones</th>
@@ -178,14 +177,6 @@ export default async function Produccion({
                     </td>
                     <td>
                       <input
-                        name={`catedra_${a.codigo}`}
-                        defaultValue={a.catedra ?? ''}
-                        placeholder="—"
-                        aria-label={`Cátedra de ${a.nombre}`}
-                      />
-                    </td>
-                    <td>
-                      <input
                         name={`docente_${a.codigo}`}
                         defaultValue={a.docente ?? ''}
                         placeholder="—"
@@ -211,9 +202,6 @@ export default async function Produccion({
                     <td className="col-apertura">
                       {proxima ? (
                         <>
-                          <SemaforoBadge
-                            valor={semaforo(a.estado as Estado, proxima.aperturaInscripcion, hoy)}
-                          />
                           <small>
                             <Link href={`/periodos/${proxima.periodoId}`}>{proxima.periodo.nombre}</Link>
                             {' · insc. '}{fmtFecha(proxima.aperturaInscripcion)}

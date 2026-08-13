@@ -48,3 +48,16 @@ export function validarFechas(f: CicloFechas): string[] {
 
   return problemas
 }
+
+/**
+ * Posgrado sólo abre en mensuales; Educación sólo en bimestrales o cuatrimestrales.
+ * Son calendarios distintos y no se mezclan.
+ */
+export const TIPOS_POR_UNIDAD: Record<string, string[]> = {
+  posgrado: ['mensual'],
+  educacion: ['bimestral', 'cuatrimestral'],
+}
+
+export function tipoValidoParaUnidad(unidadId: string, tipo: string): boolean {
+  return TIPOS_POR_UNIDAD[unidadId]?.includes(tipo) ?? false
+}

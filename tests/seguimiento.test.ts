@@ -4,7 +4,6 @@ import { calcularCambios, type FilaSeguimiento } from '@/lib/seguimiento'
 const fila = (extra: Partial<FilaSeguimiento> = {}): FilaSeguimiento => ({
   codigo: 'EP001',
   estado: 'construccion',
-  catedra: 'DA',
   docente: 'Juan Pérez',
   asesor: 'Ana López',
   observaciones: null,
@@ -86,18 +85,6 @@ describe('calcularCambios', () => {
     // el navegador no manda inputs deshabilitados; no debe interpretarse como borrado
     const cambios = calcularCambios([fila()], form({ estado_EP001: 'construccion' }))
     expect(cambios).toEqual([])
-  })
-
-  it('la cátedra también se puede corregir desde la tabla', () => {
-    const cambios = calcularCambios([fila()], form({
-      estado_EP001: 'construccion',
-      catedra_EP001: 'DA - Distancia',
-      docente_EP001: 'Juan Pérez',
-      asesor_EP001: 'Ana López',
-      observaciones_EP001: '',
-    }))
-    expect(cambios[0].campos).toEqual({ catedra: 'DA - Distancia' })
-    expect(cambios[0].detalle).toBe('cátedra: DA - Distancia')
   })
 
   it('rechaza un estado que no existe', () => {
