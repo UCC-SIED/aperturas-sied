@@ -7,8 +7,8 @@ import { ROL_LABELS, puedeAdministrar } from '@/lib/permisos'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Aperturas SIED',
-  description: 'Gestión de aperturas de aulas en Canvas — SIED UCC',
+  title: 'Gestión de Asignaturas SIED',
+  description: 'Aperturas de aulas y seguimiento de producción en Canvas — SIED UCC',
 }
 
 async function salir() {
@@ -27,7 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="es">
       <body>
         <header className="topbar">
-          <span className="marca">Aperturas SIED</span>
+          <span className="marca">Gestión SIED</span>
           {s && (
             <nav>
               <Link href="/panel">Panel</Link>

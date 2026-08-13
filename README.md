@@ -1,6 +1,8 @@
-# Aperturas SIED
+# Gestión de Asignaturas SIED
 
-Sistema de gestión de aperturas de aulas en Canvas LMS para el SIED (UCC). Reemplaza como fuente única a las planillas de Posgrado y Educación y al tablero de contratación.
+Sistema de gestión de aperturas de aulas y seguimiento de producción en Canvas LMS para el SIED (UCC). Reemplaza como fuente única a las planillas de Posgrado y Educación y al tablero de contratación.
+
+> Se llamó "Aperturas SIED" hasta el 13/08/2026 — el nombre quedó corto una vez que la pantalla de seguimiento de producción pasó a ser tan central como la de aperturas.
 
 - **Diseño (objetivo, alcances y límites):** [docs/2026-08-08-gestion-aperturas-design.md](docs/2026-08-08-gestion-aperturas-design.md)
 - **Plan de implementación Fase 1:** [docs/2026-08-08-aperturas-f1.md](docs/2026-08-08-aperturas-f1.md)
@@ -43,7 +45,7 @@ Mientras no esté configurado, el sistema cae en un selector de usuarios para po
 En [console.cloud.google.com](https://console.cloud.google.com), con la cuenta institucional:
 
 1. Crear un proyecto (o usar uno existente).
-2. **APIs y servicios → Pantalla de consentimiento OAuth**: tipo **Interno** (así sólo entra gente de la organización), nombre de la app "Aperturas SIED", correo de soporte.
+2. **APIs y servicios → Pantalla de consentimiento OAuth**: tipo **Interno** (así sólo entra gente de la organización), nombre de la app "Gestión de Asignaturas SIED", correo de soporte.
 3. **Credenciales → Crear credenciales → ID de cliente de OAuth**, tipo *Aplicación web*. Ahí van:
 
    **Orígenes autorizados de JavaScript**

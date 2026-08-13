@@ -39,8 +39,8 @@ export default async function Ingresar({
 
   return (
     <main className="ingreso">
-      <h1>Aperturas SIED</h1>
-      <p className="ayuda">Gestión de aperturas de aulas en Canvas.</p>
+      <h1>Gestión de Asignaturas SIED</h1>
+      <p className="ayuda">Aperturas de aulas y seguimiento de producción en Canvas.</p>
 
       {error && <p className="mensaje-error">{MENSAJES[error] ?? MENSAJES.AccessDenied}</p>}
 

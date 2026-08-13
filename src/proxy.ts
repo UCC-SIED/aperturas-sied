@@ -13,7 +13,7 @@ export default function proxy(req: NextRequest) {
   }
   return new NextResponse('Acceso restringido', {
     status: 401,
-    headers: { 'WWW-Authenticate': 'Basic realm="Aperturas SIED"' },
+    headers: { 'WWW-Authenticate': 'Basic realm="Gestión SIED"' },
   })
 }
 
