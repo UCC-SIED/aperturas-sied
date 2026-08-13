@@ -1184,6 +1184,68 @@ code {
   font-size: 12.5px;
 }
 
+/* --------------------------------------------------------------- docentes */
+
+.editor-docentes { display: flex; flex-direction: column; gap: 4px; min-width: 160px; }
+
+.chips-docentes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.chips-docentes li {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--superficie-2);
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  padding: 1px 3px 1px 8px;
+  font-size: 11.5px;
+  color: var(--texto);
+  line-height: 1.6;
+}
+.chips-docentes button {
+  border: none;
+  background: none;
+  color: var(--texto-suave);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 50%;
+}
+.chips-docentes button:hover { background: var(--rojo-fondo); color: var(--rojo); }
+
+.agregar-docente { display: flex; gap: 3px; }
+.agregar-docente input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radio-chico);
+  padding: 3px var(--e2);
+  font-size: 12px;
+  background: transparent;
+  color: var(--texto);
+}
+.agregar-docente input:hover { border-color: var(--borde); background: #fff; }
+.agregar-docente input:focus { border-color: var(--azul-claro); background: #fff; outline: none; }
+.agregar-docente input::placeholder { color: var(--texto-suave); opacity: .6; }
+.agregar-docente button {
+  border: 1px solid var(--borde);
+  background: var(--superficie);
+  color: var(--azul);
+  border-radius: var(--radio-chico);
+  width: 24px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+.agregar-docente button:hover { background: var(--superficie-2); border-color: var(--azul-claro); }
+
 /* --------------------------------------------------------------- responsive */
 
 @media (max-width: 900px) {

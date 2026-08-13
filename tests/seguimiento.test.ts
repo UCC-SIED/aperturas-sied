@@ -4,7 +4,7 @@ import { calcularCambios, type FilaSeguimiento } from '@/lib/seguimiento'
 const fila = (extra: Partial<FilaSeguimiento> = {}): FilaSeguimiento => ({
   codigo: 'EP001',
   estado: 'construccion',
-  docente: 'Juan Pérez',
+  docentes: ['Juan Pérez'],
   asesor: 'Ana López',
   observaciones: null,
   ...extra,
@@ -48,11 +48,11 @@ describe('calcularCambios', () => {
     expect(cambios).toHaveLength(1)
     expect(cambios[0].campos).toEqual({
       estado: 'revision',
-      docente: 'Otro Docente',
+      docentes: ['Otro Docente'],
       observaciones: 'Falta el video',
     })
     expect(cambios[0].detalle).toContain('→ Revisión')
-    expect(cambios[0].detalle).toContain('docente: Otro Docente')
+    expect(cambios[0].detalle).toContain('docentes: Otro Docente')
     expect(cambios[0].detalle).toContain('observaciones actualizadas')
   })
 
@@ -70,15 +70,35 @@ describe('calcularCambios', () => {
     expect(cambios.map((c) => c.codigo)).toEqual(['B'])
   })
 
-  it('un campo vaciado se guarda como nulo, no como texto vacío', () => {
+  it('separa varios docentes escritos en el mismo campo', () => {
     const cambios = calcularCambios([fila()], form({
       estado_EP001: 'construccion',
-      docente_EP001: '   ',
+      docente_EP001: 'Juan Pérez / Ana Gil',
       asesor_EP001: 'Ana López',
       observaciones_EP001: '',
     }))
-    expect(cambios[0].campos.docente).toBeNull()
-    expect(cambios[0].detalle).toContain('se quitó el docente')
+    expect(cambios[0].campos.docentes).toEqual(['Juan Pérez', 'Ana Gil'])
+  })
+
+  it('no marca cambio si sólo cambia el orden de los mismos docentes', () => {
+    const cambios = calcularCambios([fila({ docentes: ['Juan Pérez', 'Ana Gil'] })], form({
+      estado_EP001: 'construccion',
+      docente_EP001: 'Ana Gil / Juan Pérez',
+      asesor_EP001: 'Ana López',
+      observaciones_EP001: '',
+    }))
+    expect(cambios).toEqual([])
+  })
+
+  it('vaciar el campo de docentes los quita a todos', () => {
+    const cambios = calcularCambios([fila()], form({
+      estado_EP001: 'construccion',
+      docente_EP001: '',
+      asesor_EP001: 'Ana López',
+      observaciones_EP001: '',
+    }))
+    expect(cambios[0].campos.docentes).toEqual([])
+    expect(cambios[0].detalle).toContain('se quitaron los docentes')
   })
 
   it('un campo que no vino en el formulario deja el valor como está', () => {

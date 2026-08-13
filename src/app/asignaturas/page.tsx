@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { carrerasVisibles } from '@/lib/permisos'
 import { ESTADO_LABELS, type Estado } from '@/lib/estados'
+import { joinDocentes } from '@/lib/docentes'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,7 @@ export default async function Asignaturas({ searchParams }: { searchParams: Prom
         visibles ? { planItems: { some: { carreraId: { in: visibles } } } } : {},
       ],
     },
-    include: { planItems: { include: { carrera: true } }, aperturas: true },
+    include: { planItems: { include: { carrera: true } }, aperturas: true, docentes: { orderBy: { orden: 'asc' } } },
     orderBy: { nombre: 'asc' },
     take: 300,
   })
@@ -55,7 +56,7 @@ export default async function Asignaturas({ searchParams }: { searchParams: Prom
                     {a.planItems.length > 1 && <small> · transversal</small>}
                   </td>
                   <td>{ESTADO_LABELS[a.estado as Estado]}</td>
-                  <td>{a.docente ?? '—'}</td>
+                  <td>{joinDocentes(a.docentes.map((d) => d.nombre)) || '—'}</td>
                   <td>{a.asesor ?? '—'}</td>
                   <td><small>{a.planItems.map((p) => p.carrera.nombre).join(' · ') || '—'}</small></td>
                   <td className="num">{a.aperturas.length}</td>

@@ -18,14 +18,14 @@ export async function guardarSeguimiento(carreraId: number, formData: FormData) 
 
   const items = await prisma.planItem.findMany({
     where: { carreraId },
-    include: { asignatura: true },
+    include: { asignatura: { include: { docentes: { orderBy: { orden: 'asc' } } } } },
   })
 
   const cambios = calcularCambios(
     items.map((i) => ({
       codigo: i.asignatura.codigo,
       estado: i.asignatura.estado,
-      docente: i.asignatura.docente,
+      docentes: i.asignatura.docentes.map((d) => d.nombre),
       asesor: i.asignatura.asesor,
       observaciones: i.asignatura.observaciones,
     })),
@@ -34,13 +34,24 @@ export async function guardarSeguimiento(carreraId: number, formData: FormData) 
 
   const ahora = new Date()
   for (const c of cambios) {
-    await prisma.asignatura.update({
-      where: { codigo: c.codigo },
-      data: {
-        ...c.campos,
-        ...(c.campos.estado ? { estadoDesde: ahora } : {}),
-      },
-    })
+    const { docentes, ...camposEscalares } = c.campos
+    if (Object.keys(camposEscalares).length) {
+      await prisma.asignatura.update({
+        where: { codigo: c.codigo },
+        data: {
+          ...camposEscalares,
+          ...(camposEscalares.estado ? { estadoDesde: ahora } : {}),
+        },
+      })
+    }
+    if (docentes !== undefined) {
+      await prisma.asignaturaDocente.deleteMany({ where: { asignaturaCodigo: c.codigo } })
+      if (docentes.length) {
+        await prisma.asignaturaDocente.createMany({
+          data: docentes.map((nombre, orden) => ({ asignaturaCodigo: c.codigo, nombre, orden })),
+        })
+      }
+    }
     const nombre = items.find((i) => i.asignatura.codigo === c.codigo)?.asignatura.nombre ?? c.codigo
     await prisma.cambio.create({
       data: {

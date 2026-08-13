@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { carrerasVisibles, puedeEditarProduccion } from '@/lib/permisos'
 import { fmtFecha, fmtFechaISO } from '@/lib/formato'
+import { joinDocentes } from '@/lib/docentes'
 import { ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { Boton } from '@/components/Boton'
 import { editarFechasApertura } from './actions'
@@ -31,7 +32,7 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
     include: {
       aperturas: {
         include: {
-          asignatura: { include: { planItems: { include: { carrera: true } } } },
+          asignatura: { include: { planItems: { include: { carrera: true } }, docentes: { orderBy: { orden: 'asc' } } } },
           cohortes: { include: { cohorte: { include: { carrera: true } } } },
         },
       },
@@ -108,7 +109,7 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                       {ap.asignatura.planItems.length > 1 && <small> · transversal</small>}
                     </td>
                     <td>{ESTADO_LABELS[ap.asignatura.estado as Estado]}</td>
-                    <td>{ap.asignatura.docente ?? '—'}</td>
+                    <td>{joinDocentes(ap.asignatura.docentes.map((d) => d.nombre)) || '—'}</td>
                     <td>{ap.asignatura.asesor ?? '—'}</td>
                     <td>{cohortesDeEsta.join(', ') || '—'}</td>
                     {editable && (

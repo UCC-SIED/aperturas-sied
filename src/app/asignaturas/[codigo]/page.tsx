@@ -5,7 +5,9 @@ import { sesionActual } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
+import { joinDocentes } from '@/lib/docentes'
 import { IconoCompartida } from '@/components/iconos'
+import { EditorDocentes } from '@/components/EditorDocentes'
 import { actualizarAsignatura } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -20,6 +22,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
     include: {
       planItems: { include: { carrera: { include: { unidad: true } } }, orderBy: { orden: 'asc' } },
       aperturas: { include: { periodo: true, cohortes: { include: { cohorte: { include: { carrera: true } } } } }, orderBy: { inicioCursado: 'asc' } },
+      docentes: { orderBy: { orden: 'asc' } },
     },
   })
   if (!a) notFound()
@@ -63,7 +66,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
               ))}
             </select>
           </label>
-          <label>Docente <input name="docente" defaultValue={a.docente ?? ''} /></label>
+          <label>Docente <EditorDocentes name="docente" iniciales={a.docentes.map((d) => d.nombre)} etiqueta={a.nombre} /></label>
           <label>Asesor <input name="asesor" defaultValue={a.asesor ?? ''} /></label>
           <button type="submit">Guardar</button>
         </form>
@@ -71,7 +74,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
         <table>
           <tbody>
             <tr><td><strong>Estado</strong></td><td>{ESTADO_LABELS[a.estado as Estado]}</td></tr>
-            <tr><td><strong>Docente</strong></td><td>{a.docente ?? '—'}</td></tr>
+            <tr><td><strong>Docente</strong></td><td>{joinDocentes(a.docentes.map((d) => d.nombre)) || '—'}</td></tr>
             <tr><td><strong>Asesor</strong></td><td>{a.asesor ?? '—'}</td></tr>
           </tbody>
         </table>

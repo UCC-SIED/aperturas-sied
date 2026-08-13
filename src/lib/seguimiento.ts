@@ -1,9 +1,10 @@
 import { ESTADOS, ESTADO_LABELS, type Estado } from './estados'
+import { parseDocentes, joinDocentes } from './docentes'
 
 export type FilaSeguimiento = {
   codigo: string
   estado: string
-  docente: string | null
+  docentes: string[]
   asesor: string | null
   observaciones: string | null
 }
@@ -12,7 +13,7 @@ export type CambioSeguimiento = {
   codigo: string
   campos: {
     estado?: string
-    docente?: string | null
+    docentes?: string[]
     asesor?: string | null
     observaciones?: string | null
   }
@@ -31,6 +32,14 @@ const leer = (v: FormDataEntryValue | null): string | null | undefined => {
   return s === '' ? null : s
 }
 
+/** Mismos nombres, sin importar el orden en que se escribieron. */
+function mismosDocentes(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  const x = [...a].sort()
+  const y = [...b].sort()
+  return x.every((v, i) => v === y[i])
+}
+
 /**
  * Compara lo que vino del formulario contra lo que hay guardado y devuelve
  * sólo lo que cambió. La pantalla de seguimiento manda las 30 filas de una
@@ -45,7 +54,8 @@ export function calcularCambios(
 
   for (const a of actuales) {
     const estado = String(form.get(`estado_${a.codigo}`) ?? a.estado)
-    const docente = leer(form.get(`docente_${a.codigo}`))
+    const docentesTexto = form.get(`docente_${a.codigo}`)
+    const docentes = docentesTexto === null ? undefined : parseDocentes(String(docentesTexto))
     const asesor = leer(form.get(`asesor_${a.codigo}`))
     const observaciones = leer(form.get(`observaciones_${a.codigo}`))
 
@@ -62,9 +72,9 @@ export function calcularCambios(
         `${ESTADO_LABELS[a.estado as Estado] ?? a.estado} → ${ESTADO_LABELS[estado as Estado] ?? estado}`,
       )
     }
-    if (docente !== undefined && docente !== a.docente) {
-      campos.docente = docente
-      partes.push(docente ? `docente: ${docente}` : 'se quitó el docente')
+    if (docentes !== undefined && !mismosDocentes(docentes, a.docentes)) {
+      campos.docentes = docentes
+      partes.push(docentes.length ? `docentes: ${joinDocentes(docentes)}` : 'se quitaron los docentes')
     }
     if (asesor !== undefined && asesor !== a.asesor) {
       campos.asesor = asesor

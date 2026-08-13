@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
+import { parseDocentes } from '@/lib/docentes'
 
 export async function actualizarAsignatura(codigo: string, formData: FormData) {
   const s = await sesionActual()
@@ -18,13 +19,19 @@ export async function actualizarAsignatura(codigo: string, formData: FormData) {
   const previa = await prisma.asignatura.findUnique({ where: { codigo } })
   if (!previa) throw new Error('Asignatura inexistente')
 
-  const docente = String(formData.get('docente') ?? '').trim() || null
+  const docentes = parseDocentes(String(formData.get('docente') ?? ''))
   const asesor = String(formData.get('asesor') ?? '').trim() || null
 
   await prisma.asignatura.update({
     where: { codigo },
-    data: { estado, docente, asesor },
+    data: { estado, asesor },
   })
+  await prisma.asignaturaDocente.deleteMany({ where: { asignaturaCodigo: codigo } })
+  if (docentes.length) {
+    await prisma.asignaturaDocente.createMany({
+      data: docentes.map((nombre, orden) => ({ asignaturaCodigo: codigo, nombre, orden })),
+    })
+  }
 
   if (previa.estado !== estado) {
     await prisma.cambio.create({

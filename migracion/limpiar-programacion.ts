@@ -44,7 +44,7 @@ async function main() {
   console.log(`  ${await prisma.usuario.count()} usuarios`)
 
   const conEstado = await prisma.asignatura.count({ where: { estado: { not: 'sin_novedad' } } })
-  const conDocente = await prisma.asignatura.count({ where: { docente: { not: null } } })
+  const conDocente = await prisma.asignatura.count({ where: { docentes: { some: {} } } })
   console.log(`  ${conEstado} asignaturas con estado de producción cargado`)
   console.log(`  ${conDocente} con docente asignado`)
 

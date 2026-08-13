@@ -7,6 +7,7 @@ import { ESTADOS, ESTADO_LABELS } from '@/lib/estados'
 import { resumirAvance } from '@/lib/avance'
 import { fmtFecha } from '@/lib/formato'
 import { normalizarBusqueda } from '@/lib/texto'
+import { EditorDocentes } from '@/components/EditorDocentes'
 import { Boton } from '@/components/Boton'
 import { SelectAutoSubmit } from '@/components/SelectAutoSubmit'
 import { BuscadorAutoLimpia } from '@/components/BuscadorAutoLimpia'
@@ -50,6 +51,7 @@ export default async function Produccion({
         include: {
           planItems: true,
           aperturas: { include: { periodo: true } },
+          docentes: { orderBy: { orden: 'asc' } },
         },
       },
     },
@@ -65,7 +67,7 @@ export default async function Produccion({
       !busqueda ||
       normalizarBusqueda(p.asignatura.nombre).includes(busqueda) ||
       normalizarBusqueda(p.asignatura.codigo).includes(busqueda) ||
-      normalizarBusqueda(p.asignatura.docente ?? '').includes(busqueda) ||
+      p.asignatura.docentes.some((d) => normalizarBusqueda(d.nombre).includes(busqueda)) ||
       normalizarBusqueda(p.asignatura.asesor ?? '').includes(busqueda)
     const delEstado = !filtroEstado || p.asignatura.estado === filtroEstado
     return coincide && delEstado
@@ -78,7 +80,8 @@ export default async function Produccion({
           <h1>Seguimiento de producción</h1>
           <p className="sub">
             En qué anda cada asignatura. Lo que se carga acá es lo que ven las direcciones
-            cuando planifican sus períodos.
+            cuando planifican sus períodos. {avance.finalizadas} de {avance.total} terminadas
+            ({avance.porcentaje}%).
           </p>
         </div>
         <a className="boton-descarga" href="/exportar" download>
@@ -114,6 +117,13 @@ export default async function Produccion({
       </form>
 
       <div className="resumen-estados">
+        <Link
+          href={`/produccion?carrera=${carrera.id}`}
+          className={`chip-estado ${!filtroEstado ? 'activo' : ''}`}
+        >
+          <span className="n">{avance.total}</span>
+          <span className="l">Todos los estados</span>
+        </Link>
         {ESTADOS.map((e) => {
           const n = avance.porEstado[e]
           return (
@@ -127,10 +137,6 @@ export default async function Produccion({
             </Link>
           )
         })}
-        <div className="chip-estado total">
-          <span className="n">{avance.porcentaje}%</span>
-          <span className="l">terminado</span>
-        </div>
       </div>
 
       <form action={guardarSeguimiento.bind(null, carrera.id)}>
@@ -176,11 +182,10 @@ export default async function Produccion({
                       </select>
                     </td>
                     <td>
-                      <input
+                      <EditorDocentes
                         name={`docente_${a.codigo}`}
-                        defaultValue={a.docente ?? ''}
-                        placeholder="—"
-                        aria-label={`Docente de ${a.nombre}`}
+                        iniciales={a.docentes.map((d) => d.nombre)}
+                        etiqueta={a.nombre}
                       />
                     </td>
                     <td>

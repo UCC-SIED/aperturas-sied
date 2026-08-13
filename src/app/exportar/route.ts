@@ -5,6 +5,7 @@ import { sesionActual } from '@/lib/sesion'
 import { carrerasVisibles } from '@/lib/permisos'
 import { ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { fmtFecha } from '@/lib/formato'
+import { joinDocentes } from '@/lib/docentes'
 
 /**
  * Descarga la planilla de aperturas. Respeta lo que cada usuario puede ver:
@@ -18,7 +19,7 @@ export async function GET() {
   const aperturas = await prisma.apertura.findMany({
     include: {
       periodo: { include: { unidad: true } },
-      asignatura: { include: { planItems: { include: { carrera: true } } } },
+      asignatura: { include: { planItems: { include: { carrera: true } }, docentes: { orderBy: { orden: 'asc' } } } },
       cohortes: { include: { cohorte: { include: { carrera: true } } } },
     },
     orderBy: [{ periodoId: 'asc' }, { asignaturaCodigo: 'asc' }],
@@ -44,7 +45,7 @@ export async function GET() {
         Asignatura: ap.asignatura.nombre,
         Estado: ESTADO_LABELS[ap.asignatura.estado as Estado] ?? ap.asignatura.estado,
         Catedra: ap.asignatura.catedra ?? '',
-        Docente: ap.asignatura.docente ?? '',
+        Docente: joinDocentes(ap.asignatura.docentes.map((d) => d.nombre)),
         Asesor: ap.asignatura.asesor ?? '',
         Observaciones: ap.asignatura.observaciones ?? '',
         Transversal: ap.asignatura.planItems.length > 1 ? 'Sí' : 'No',

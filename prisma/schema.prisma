@@ -65,15 +65,27 @@ model Asignatura {
   nombre        String
   catedra       String?
   cargaHoraria  Int?
-  docente       String?
   asesor        String?
   estado        String     @default("sin_novedad")
   /// Notas del seguimiento: por qué está trabada, qué falta, con quién se habló.
   observaciones String?
   /// Cuándo se tocó el estado por última vez, para detectar seguimientos viejos.
   estadoDesde   DateTime?
+  docentes      AsignaturaDocente[]
   planItems     PlanItem[]
   aperturas     Apertura[]
+}
+
+/// Una asignatura puede tener más de un docente a cargo; cada uno es su
+/// propio registro, no texto libre separado por "/".
+model AsignaturaDocente {
+  id               Int        @id @default(autoincrement())
+  asignaturaCodigo String
+  asignatura       Asignatura @relation(fields: [asignaturaCodigo], references: [codigo], onDelete: Cascade)
+  nombre           String
+  orden            Int        @default(0)
+
+  @@unique([asignaturaCodigo, nombre])
 }
 
 model PlanItem {
