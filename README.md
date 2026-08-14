@@ -42,11 +42,14 @@ Mientras no esté configurado, el sistema cae en un selector de usuarios para po
 
 ### Configurarlo
 
-En [console.cloud.google.com](https://console.cloud.google.com), con la cuenta institucional:
+No hace falta ninguna gestión con la universidad ni cuenta institucional para armar esto — se puede crear con cualquier cuenta de Google. El filtro real de quién entra no pasa por acá: pasa por `/admin` (ver abajo).
+
+En [console.cloud.google.com](https://console.cloud.google.com):
 
 1. Crear un proyecto (o usar uno existente).
-2. **APIs y servicios → Pantalla de consentimiento OAuth**: tipo **Interno** (así sólo entra gente de la organización), nombre de la app "Gestión de Asignaturas SIED", correo de soporte.
-3. **Credenciales → Crear credenciales → ID de cliente de OAuth**, tipo *Aplicación web*. Ahí van:
+2. **APIs y servicios → Pantalla de consentimiento OAuth**: tipo **Externo**, nombre de la app "Gestión de Asignaturas SIED", correo de soporte. No hace falta pedir permisos más allá de los básicos (correo, perfil).
+3. **Publicar la app** (botón "Publicar aplicación", estado pasa a "En producción"). Al pedir sólo datos básicos, Google no exige un proceso de verificación — puede quedar así sin límite de tiempo. Eso sí: hasta que alguien verifique el dominio (opcional, en Search Console), la primera vez que alguien entra ve un cartel de "Google no verificó esta app"; con "Avanzado → Ir a Gestión de Asignaturas SIED (no seguro)" sigue sin problema.
+4. **Credenciales → Crear credenciales → ID de cliente de OAuth**, tipo *Aplicación web*. Ahí van:
 
    **Orígenes autorizados de JavaScript**
    ```
@@ -60,7 +63,7 @@ En [console.cloud.google.com](https://console.cloud.google.com), con la cuenta i
    https://aperturas-sied.vercel.app/api/auth/callback/google
    ```
 
-4. Copiar el **ID de cliente** y el **secreto** a las variables de entorno:
+5. Copiar el **ID de cliente** y el **secreto** a las variables de entorno:
 
 ```
 AUTH_GOOGLE_ID="...apps.googleusercontent.com"
@@ -71,7 +74,7 @@ AUTH_URL="https://aperturas-sied.vercel.app"
 
 `AUTH_SECRET` se genera con `npx auth secret`. En Vercel van las cuatro en Settings → Environment Variables; en local, en el `.env`.
 
-Con esas variables presentes, el sistema usa Google solo: no hace falta cambiar nada más.
+Con esas variables presentes, el sistema usa Google solo: no hace falta cambiar nada más. Cualquiera con cuenta `@ucc.edu.ar` puede intentar entrar, pero sólo ve algo si está dado de alta en `/admin` — ésa es la puerta que importa.
 
 ### Semáforo
 
