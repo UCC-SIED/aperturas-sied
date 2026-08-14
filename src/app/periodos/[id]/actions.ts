@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { validarFechas } from '@/lib/validar'
+import { parseDocentes } from '@/lib/docentes'
 
 /** Lee una fecha del formulario (viene como aaaa-mm-dd) sin correrla de día. */
 function fecha(form: FormData, campo: string): Date | null {
@@ -58,6 +59,42 @@ export async function editarFechasApertura(aperturaId: number, formData: FormDat
       usuarioId: s!.id,
       accion: 'edito_fechas_apertura',
       detalle: `Fechas propias para ${apertura.asignatura.nombre} (excepción sobre el período)`,
+      asignaturaCodigo: apertura.asignaturaCodigo,
+    },
+  })
+
+  revalidatePath('/', 'layout')
+}
+
+/**
+ * El tutor de esta apertura puntual — distinto del docente de producción,
+ * que es de la asignatura en general y no cambia de una apertura a otra.
+ */
+export async function editarDocentesApertura(aperturaId: number, formData: FormData) {
+  const s = await sesionActual()
+  if (!puedeEditarProduccion(s)) {
+    throw new Error('Sólo el equipo SIED edita el docente tutor')
+  }
+
+  const apertura = await prisma.apertura.findUnique({
+    where: { id: aperturaId },
+    include: { asignatura: true },
+  })
+  if (!apertura) throw new Error('Apertura inexistente')
+
+  const docentes = parseDocentes(String(formData.get('docentesTutor') ?? ''))
+
+  await prisma.aperturaDocente.deleteMany({ where: { aperturaId } })
+  if (docentes.length) {
+    await prisma.aperturaDocente.createMany({
+      data: docentes.map((nombre, orden) => ({ aperturaId, nombre, orden })),
+    })
+  }
+  await prisma.cambio.create({
+    data: {
+      usuarioId: s!.id,
+      accion: 'edito_docente_tutor',
+      detalle: `Docente tutor de ${apertura.asignatura.nombre} en esta apertura`,
       asignaturaCodigo: apertura.asignaturaCodigo,
     },
   })

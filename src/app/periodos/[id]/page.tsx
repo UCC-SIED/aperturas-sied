@@ -7,7 +7,8 @@ import { fmtFecha, fmtFechaISO } from '@/lib/formato'
 import { joinDocentes } from '@/lib/docentes'
 import { ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { Boton } from '@/components/Boton'
-import { editarFechasApertura } from './actions'
+import { EditorDocentes } from '@/components/EditorDocentes'
+import { editarFechasApertura, editarDocentesApertura } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,6 +35,7 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
         include: {
           asignatura: { include: { planItems: { include: { carrera: true } }, docentes: { orderBy: { orden: 'asc' } } } },
           cohortes: { include: { cohorte: { include: { carrera: true } } } },
+          docentesTutor: { orderBy: { orden: 'asc' } },
         },
       },
     },
@@ -90,7 +92,7 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
             <thead>
               <tr>
                 <th>Asignatura</th><th>Producción</th>
-                <th>Docente</th><th>Asesor</th><th>Cohortes</th>
+                <th>Docente</th><th>Docente tutor</th><th>Asesor</th><th>Cohortes</th>
                 {editable && <th>Fechas</th>}
               </tr>
             </thead>
@@ -110,6 +112,23 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                     </td>
                     <td>{ESTADO_LABELS[ap.asignatura.estado as Estado]}</td>
                     <td>{joinDocentes(ap.asignatura.docentes.map((d) => d.nombre)) || '—'}</td>
+                    <td>
+                      {editable ? (
+                        <details className="editar-docente-tutor">
+                          <summary>{joinDocentes(ap.docentesTutor.map((d) => d.nombre)) || 'Asignar'}</summary>
+                          <form action={editarDocentesApertura.bind(null, ap.id)} className="fila-campos">
+                            <EditorDocentes
+                              name="docentesTutor"
+                              iniciales={ap.docentesTutor.map((d) => d.nombre)}
+                              etiqueta="docente tutor de esta apertura"
+                            />
+                            <Boton enCurso="Guardando">Guardar</Boton>
+                          </form>
+                        </details>
+                      ) : (
+                        joinDocentes(ap.docentesTutor.map((d) => d.nombre)) || '—'
+                      )}
+                    </td>
                     <td>{ap.asignatura.asesor ?? '—'}</td>
                     <td>{cohortesDeEsta.join(', ') || '—'}</td>
                     {editable && (

@@ -150,8 +150,22 @@ model Apertura {
   cierreAsignatura    DateTime?
   actas               DateTime?
   cohortes            AperturaCohorte[]
+  docentesTutor       AperturaDocente[]
 
   @@unique([asignaturaCodigo, periodoId])
+}
+
+/// El tutor que acompaña esta apertura puntual — puede cambiar de una
+/// apertura a otra de la misma asignatura (distinto de quien la produjo,
+/// eso vive en Asignatura.docentes).
+model AperturaDocente {
+  id         Int      @id @default(autoincrement())
+  aperturaId Int
+  apertura   Apertura @relation(fields: [aperturaId], references: [id], onDelete: Cascade)
+  nombre     String
+  orden      Int      @default(0)
+
+  @@unique([aperturaId, nombre])
 }
 
 model AperturaCohorte {
