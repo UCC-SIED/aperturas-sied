@@ -4,6 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { puedeAdministrar, esCorreoInstitucional, ROLES } from '@/lib/permisos'
+import { hashContrasena } from '@/lib/contrasenas'
+
+const CONTRASENA_MINIMA = 8
 
 async function exigirAdmin() {
   const s = await sesionActual()
@@ -20,18 +23,37 @@ export async function crearUsuario(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
   const nombre = String(formData.get('nombre') ?? '').trim()
   const rol = String(formData.get('rol') ?? '')
+  const contrasena = String(formData.get('contrasena') ?? '')
 
   if (!esCorreoInstitucional(email)) {
     throw new Error('El correo tiene que ser del dominio de la universidad (@ucc.edu.ar)')
   }
   if (!nombre) throw new Error('Poné el nombre de la persona o del área')
   if (!(ROLES as readonly string[]).includes(rol)) throw new Error('Rol inválido')
+  if (contrasena.length < CONTRASENA_MINIMA) {
+    throw new Error(`La contraseña tiene que tener al menos ${CONTRASENA_MINIMA} caracteres`)
+  }
 
   const existente = await prisma.usuario.findUnique({ where: { email } })
   if (existente) throw new Error(`Ya existe un usuario con el correo ${email}`)
 
-  await prisma.usuario.create({ data: { email, nombre, rol } })
+  await prisma.usuario.create({ data: { email, nombre, rol, passwordHash: hashContrasena(contrasena) } })
   await anotar(admin.id, `Alta de usuario: ${nombre} (${email}) como ${rol}`)
+  revalidatePath('/admin')
+}
+
+export async function establecerContrasena(usuarioId: number, formData: FormData) {
+  const admin = await exigirAdmin()
+  const contrasena = String(formData.get('contrasena') ?? '')
+  if (contrasena.length < CONTRASENA_MINIMA) {
+    throw new Error(`La contraseña tiene que tener al menos ${CONTRASENA_MINIMA} caracteres`)
+  }
+
+  const u = await prisma.usuario.findUnique({ where: { id: usuarioId } })
+  if (!u) throw new Error('Usuario inexistente')
+
+  await prisma.usuario.update({ where: { id: usuarioId }, data: { passwordHash: hashContrasena(contrasena) } })
+  await anotar(admin.id, `${u.nombre}: se le definió una contraseña nueva`)
   revalidatePath('/admin')
 }
 

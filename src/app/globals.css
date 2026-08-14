@@ -683,35 +683,7 @@ form.buscador button:hover { background: #eaf0fb; }
 /* ---------------------------------------------------------------- ingreso */
 
 .ingreso { max-width: 620px; margin: var(--e6) auto; }
-.lista-usuarios { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--e2); }
-.lista-usuarios form { display: block; }
-.usuario {
-  width: 100%;
-  text-align: left;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--e1) var(--e3);
-  background: var(--superficie);
-  border: 1px solid var(--borde);
-  border-radius: var(--radio);
-  padding: var(--e3) var(--e4);
-  transition: border-color var(--transicion), box-shadow var(--transicion);
-}
-.usuario:hover { border-color: var(--azul); box-shadow: var(--sombra-alta); }
-.usuario .nombre { font-weight: 600; font-size: 14px; color: var(--texto); }
-.usuario .rol {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px var(--e2);
-  border-radius: 4px;
-  align-self: center;
-  white-space: nowrap;
-}
-.usuario .rol-admin { background: var(--azul-oscuro); color: #fff; }
-.usuario .rol-sied { background: var(--azul); color: #fff; }
-.usuario .rol-director { background: #e3edfa; color: var(--azul); }
-.usuario .rol-consulta { background: var(--neutro-fondo); color: var(--texto-suave); }
-.usuario .detalle { grid-column: 1 / -1; font-size: 12px; color: var(--texto-suave); }
+.ingreso-credenciales { margin-top: var(--e5); }
 
 /* --------------------------------------------------------------- varios */
 

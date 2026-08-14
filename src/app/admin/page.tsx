@@ -4,7 +4,7 @@ import { sesionActual, googleActivo } from '@/lib/sesion'
 import { puedeAdministrar, ROLES, ROL_LABELS, ROL_DESCRIPCIONES } from '@/lib/permisos'
 import { fmtFechaHora } from '@/lib/formato'
 import { Boton } from '@/components/Boton'
-import { crearUsuario, cambiarRol, alternarActivo, asignarCarreras } from './actions'
+import { crearUsuario, cambiarRol, alternarActivo, asignarCarreras, establecerContrasena } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,8 +34,8 @@ export default async function Admin() {
 
       {!googleActivo() && (
         <p className="aviso-config">
-          El ingreso con Google todavía no está configurado: por ahora se entra eligiendo la cuenta
-          de una lista. Los permisos que definas acá ya funcionan igual.
+          El ingreso con Google todavía no está configurado: por ahora se entra con correo y
+          contraseña, definida acá abajo. Los permisos que definas acá ya funcionan igual.
         </p>
       )}
 
@@ -57,8 +57,16 @@ export default async function Admin() {
             ))}
           </select>
         </label>
+        <label htmlFor="contrasena">
+          Contraseña
+          <input id="contrasena" name="contrasena" type="text" placeholder="mínimo 8 caracteres" required minLength={8} />
+        </label>
         <Boton enCurso="Dando de alta">Dar de alta</Boton>
       </form>
+      <p className="ayuda">
+        Se la das vos ahora — la persona puede pedirte que se la cambies cuando quiera, no hay
+        forma de que la elija sola todavía.
+      </p>
 
       <details className="que-hace-cada-rol">
         <summary>Qué puede hacer cada rol</summary>
@@ -78,7 +86,7 @@ export default async function Admin() {
       <table>
         <thead>
           <tr>
-            <th>Nombre</th><th>Correo</th><th>Rol</th><th>Carreras</th><th>Acceso</th>
+            <th>Nombre</th><th>Correo</th><th>Rol</th><th>Carreras</th><th>Contraseña</th><th>Acceso</th>
           </tr>
         </thead>
         <tbody>
@@ -125,6 +133,22 @@ export default async function Admin() {
                 ) : (
                   <small>todas</small>
                 )}
+              </td>
+              <td>
+                <details className="carreras-de">
+                  <summary>{u.passwordHash ? 'definida' : 'sin definir'} · cambiar</summary>
+                  <form action={establecerContrasena.bind(null, u.id)} className="en-linea">
+                    <input
+                      name="contrasena"
+                      type="text"
+                      placeholder="mínimo 8 caracteres"
+                      required
+                      minLength={8}
+                      aria-label={`Contraseña nueva para ${u.nombre}`}
+                    />
+                    <Boton enCurso="Guardando">Guardar</Boton>
+                  </form>
+                </details>
               </td>
               <td>
                 {u.id === s.id ? (

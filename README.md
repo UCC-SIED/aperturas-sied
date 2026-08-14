@@ -15,9 +15,9 @@ Sistema de gestión de aperturas de aulas y seguimiento de producción en Canvas
 
 Está armada así porque la decisión que toma una dirección no es "esta asignatura, ¿cuándo abre?", sino "en septiembre, ¿qué cursa cada cohorte?". Cada camada avanza por el plan a su propio ritmo: la 2025 puede ir por la asignatura 18 mientras la 2026 recién empieza la 7.
 
-En cada celda se elige la asignatura de un desplegable con el plan completo, numerado en su orden. Las que esa cohorte ya cursó aparecen marcadas ("— ya en Mensual_Agosto_2026") pero se pueden agregar igual, por si hay una reapertura. Cada tarjeta muestra el semáforo, así se decide viendo si el aula está lista, y se puede mover a otro período o quitar. Si falta una cohorte, se crea desde la misma pantalla.
+En cada celda se elige la asignatura de un desplegable con el plan completo, numerado en su orden. Las que esa cohorte ya cursó aparecen marcadas ("— ya en Mensual_Agosto_2026") pero se pueden agregar igual, por si hay una reapertura. Se puede mover a otro período o quitar, y cada cohorte avisa cuántas materias del plan todavía no tienen ninguna apertura. Si falta una cohorte, se crea desde la misma pantalla.
 
-**Períodos** (`/periodos` y `/periodos/[id]`) — el calendario completo y, dentro de cada período, qué abre agrupado por carrera con semáforo, docente, asesor y cohortes.
+**Períodos** (`/periodos` y `/periodos/[id]`) — el calendario completo (Próximo/En curso/Cerrado) y, dentro de cada período, qué abre agrupado por carrera con docente, asesor y cohortes — con la opción de corregir las fechas de una apertura puntual si se atrasa respecto al resto.
 
 **Asignaturas** (`/asignaturas` y `/asignaturas/[codigo]`) — catálogo con búsqueda y la ficha de cada una: estado de producción, planes donde figura con su orden, todas sus aperturas con el ciclo de fechas, e historial de cambios.
 
@@ -34,11 +34,13 @@ En cada celda se elige la asignatura de un desplegable con el plan completo, num
 
 Los permisos se gestionan desde **`/admin`**, sin tocar código. `npm run usuarios` sólo sirve para la carga inicial.
 
+## Ingreso
+
+Mientras no esté configurado Google (ver más abajo), se entra con **correo y contraseña**, definida por administración desde `/admin` — no hay forma de que una persona elija su propia contraseña todavía. Los permisos funcionan igual en los dos modos.
+
 ## Ingreso con Google
 
 Se entra con la cuenta institucional. Hay dos puertas: el correo tiene que ser del dominio de la universidad **y** la persona tiene que estar dada de alta en `/admin`. Tener una cuenta `@ucc.edu.ar` no alcanza.
-
-Mientras no esté configurado, el sistema cae en un selector de usuarios para poder trabajar; los permisos funcionan igual en los dos modos.
 
 ### Configurarlo
 
@@ -76,16 +78,9 @@ AUTH_URL="https://aperturas-sied.vercel.app"
 
 Con esas variables presentes, el sistema usa Google solo: no hace falta cambiar nada más. Cualquiera con cuenta `@ucc.edu.ar` puede intentar entrar, pero sólo ve algo si está dado de alta en `/admin` — ésa es la puerta que importa.
 
-### Semáforo
+### Semáforo (desactivado)
 
-### Semáforo
-
-| Color | Significado |
-|---|---|
-| Lista (verde) | Estado finalizada |
-| En riesgo (amarillo) | En maquetación o revisión y la inscripción abre dentro de 30 días |
-| No llega (rojo) | Etapa anterior a maquetación y la inscripción abre dentro de 30 días |
-| Sin riesgo aún (gris) | Falta más de 30 días o no hay fecha de inscripción |
+El sistema calcula un semáforo de riesgo (verde/amarillo/rojo/gris) según el estado de producción y cuánto falta para la inscripción, pero no se muestra en ninguna pantalla — con producción resolviéndose habitualmente la semana antes de arrancar, el umbral fijo de 30 días marcaba todo en rojo sin necesidad. La lógica (`src/lib/semaforo.ts`) queda lista para reactivarse el día que se recalibre el criterio. Detalle en [docs/2026-08-13-cambios.md](docs/2026-08-13-cambios.md).
 
 ## Desarrollo local
 
