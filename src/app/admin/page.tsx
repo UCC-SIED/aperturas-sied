@@ -152,7 +152,7 @@ export default async function Admin() {
               </td>
               <td>
                 {u.id === s.id ? (
-                  <small>activo</small>
+                  <span className="urgencia urg-preparar">Activo</span>
                 ) : (
                   <form action={alternarActivo.bind(null, u.id)}>
                     <Boton className={u.activo ? 'quitar' : undefined} enCurso="…">
