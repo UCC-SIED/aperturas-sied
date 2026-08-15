@@ -75,13 +75,16 @@ export default async function Planificar({
       asignaturaCodigo: { in: codigos },
       cohortes: { some: { cohorte: { carreraId: carrera.id } } },
     },
-    include: { asignatura: true, cohortes: true },
+    include: { asignatura: true, cohortes: { include: { cohorte: { include: { carrera: true } } } } },
   })
   const aperturas: AperturaGrilla[] = aperturasBase.map((a) => ({
     id: a.id,
     asignaturaCodigo: a.asignaturaCodigo,
     periodoId: a.periodoId,
     cohorteIds: a.cohortes.map((c) => c.cohorteId),
+    carrerasCompartidas: [...new Set(
+      a.cohortes.filter((c) => c.cohorte.carreraId !== carrera.id).map((c) => c.cohorte.carrera.nombre),
+    )],
     asignatura: { codigo: a.asignatura.codigo, nombre: a.asignatura.nombre, estado: a.asignatura.estado },
     aperturaInscripcion: a.aperturaInscripcion,
   }))
@@ -252,9 +255,9 @@ export default async function Planificar({
                                   : ''}
                                 {ap.asignatura.nombre}
                               </Link>
-                              {ap.cohorteIds.length > 1 && (
+                              {ap.carrerasCompartidas.length > 0 && (
                                 <p className="compartida">
-                                  También la cursan otras {ap.cohorteIds.length - 1} cohorte(s)
+                                  También la abrió {ap.carrerasCompartidas.join(', ')}
                                 </p>
                               )}
                               {editable && (

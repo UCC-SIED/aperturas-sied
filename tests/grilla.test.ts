@@ -15,6 +15,7 @@ const ap = (
 ): AperturaGrilla => ({
   id, asignaturaCodigo: codigo, periodoId,
   cohorteIds,
+  carrerasCompartidas: [],
   asignatura: { codigo, nombre: `Asignatura ${codigo}`, estado: 'finalizacion' },
   aperturaInscripcion: null,
 })

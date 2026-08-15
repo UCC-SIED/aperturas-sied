@@ -14,6 +14,8 @@ export type AperturaGrilla = {
   asignaturaCodigo: string
   periodoId: number
   cohorteIds: number[]
+  /** Nombres de otras carreras que también la abrieron (transversal), sin la propia. */
+  carrerasCompartidas: string[]
   asignatura: { codigo: string; nombre: string; estado: string }
   aperturaInscripcion: Date | null
 }
