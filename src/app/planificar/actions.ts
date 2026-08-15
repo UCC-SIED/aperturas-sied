@@ -30,6 +30,23 @@ export async function moverApertura(carreraId: number, formData: FormData) {
   revalidatePath('/', 'layout')
 }
 
+/** El director cerró el aviso de "podés sumarte" sin sumar su cohorte. */
+export async function descartarAviso(carreraId: number, formData: FormData) {
+  const s = await sesionActual()
+  if (!puedeEditarCarrera(s, carreraId)) {
+    throw new Error('No tenés permiso para planificar esta carrera')
+  }
+  const aperturaId = Number(formData.get('aperturaId'))
+  if (!aperturaId) throw new Error('Apertura inexistente')
+
+  await prisma.avisoDescartado.upsert({
+    where: { carreraId_aperturaId: { carreraId, aperturaId } },
+    update: {},
+    create: { carreraId, aperturaId },
+  })
+  revalidatePath('/', 'layout')
+}
+
 /** Una cohorte nueva empieza sin nada planificado: es una fila vacía en la grilla. */
 export async function crearCohorte(carreraId: number, formData: FormData) {
   const s = await sesionActual()

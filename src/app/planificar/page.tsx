@@ -8,7 +8,7 @@ import { estadoPeriodo } from '@/lib/estado-periodo'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
 import { Boton } from '@/components/Boton'
 import { IconoCompartida } from '@/components/iconos'
-import { agregarApertura, quitarApertura, moverApertura, crearCohorte } from './actions'
+import { agregarApertura, quitarApertura, moverApertura, crearCohorte, descartarAviso } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -102,7 +102,12 @@ export default async function Planificar({
       cohortes: { include: { cohorte: { include: { carrera: true } } } },
     },
   }) : []
+  const descartados = new Set(
+    (await prisma.avisoDescartado.findMany({ where: { carreraId: carrera.id }, select: { aperturaId: true } }))
+      .map((d) => d.aperturaId),
+  )
   const avisos = aperturasAjenasBase
+    .filter((ap) => !descartados.has(ap.id))
     .filter((ap) => estadoPeriodo(ap.periodo.inicioCursado, ap.cierreAsignatura, hoy) !== 'cerrado')
     .filter((ap) => !ap.cohortes.some((c) => c.cohorte.carreraId === carrera.id))
     .map((ap) => ({
@@ -164,6 +169,12 @@ export default async function Planificar({
                   <Boton enCurso="Sumando">Sumar esta cohorte</Boton>
                 </form>
               </div>
+              <form action={descartarAviso.bind(null, carrera.id)}>
+                <input type="hidden" name="aperturaId" value={ap.id} />
+                <button type="submit" className="cerrar-aviso" aria-label={`No sumarme a ${ap.asignatura.nombre}`}>
+                  ×
+                </button>
+              </form>
             </div>
           ))}
         </div>

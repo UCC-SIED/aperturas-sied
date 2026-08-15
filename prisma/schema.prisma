@@ -15,13 +15,14 @@ model Unidad {
 }
 
 model Carrera {
-  id        Int              @id @default(autoincrement())
-  nombre    String
-  unidadId  String
-  unidad    Unidad           @relation(fields: [unidadId], references: [id])
-  planItems PlanItem[]
-  cohortes  Cohorte[]
-  usuarios  UsuarioCarrera[]
+  id                Int               @id @default(autoincrement())
+  nombre            String
+  unidadId          String
+  unidad            Unidad            @relation(fields: [unidadId], references: [id])
+  planItems         PlanItem[]
+  cohortes          Cohorte[]
+  usuarios          UsuarioCarrera[]
+  avisosDescartados AvisoDescartado[]
 
   @@unique([unidadId, nombre])
 }
@@ -151,8 +152,21 @@ model Apertura {
   actas               DateTime?
   cohortes            AperturaCohorte[]
   docentesTutor       AperturaDocente[]
+  avisosDescartados   AvisoDescartado[]
 
   @@unique([asignaturaCodigo, periodoId])
+}
+
+/// Un director cerró el aviso de "podés sumarte a esta transversal" sin
+/// sumar su cohorte — no hay que volver a mostrárselo para esa apertura.
+model AvisoDescartado {
+  id         Int      @id @default(autoincrement())
+  carreraId  Int
+  carrera    Carrera  @relation(fields: [carreraId], references: [id], onDelete: Cascade)
+  aperturaId Int
+  apertura   Apertura @relation(fields: [aperturaId], references: [id], onDelete: Cascade)
+
+  @@unique([carreraId, aperturaId])
 }
 
 /// El tutor que acompaña esta apertura puntual — puede cambiar de una
