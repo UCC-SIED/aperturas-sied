@@ -635,8 +635,10 @@ form.ficha {
   margin: var(--e3) 0;
   box-shadow: var(--sombra);
 }
-form.ficha label { display: grid; gap: var(--e1); font-weight: 600; font-size: 12px; color: var(--texto-suave); }
+form.ficha label { display: grid; gap: var(--e1); min-width: 0; font-weight: 600; font-size: 12px; color: var(--texto-suave); }
 form.ficha input, form.ficha select {
+  width: 100%;
+  min-width: 0;
   padding: var(--e2) var(--e3);
   border: 1px solid var(--borde-fuerte);
   border-radius: var(--radio-chico);
