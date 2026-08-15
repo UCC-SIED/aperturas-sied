@@ -99,7 +99,9 @@ export default async function Admin() {
               <td><small>{u.email}</small></td>
               <td>
                 <form action={cambiarRol.bind(null, u.id)} className="en-linea">
-                  <select name="rol" defaultValue={u.rol} aria-label={`Rol de ${u.nombre}`}>
+                  {/* key=rol: fuerza a remontar el select cuando cambia, si no
+                      el navegador se queda mostrando la opción vieja. */}
+                  <select key={u.rol} name="rol" defaultValue={u.rol} aria-label={`Rol de ${u.nombre}`}>
                     {ROLES.map((r) => (
                       <option key={r} value={r}>{ROL_LABELS[r]}</option>
                     ))}
