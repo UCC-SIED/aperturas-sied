@@ -4,8 +4,10 @@ import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { puedeEditarCarrera, carrerasVisibles } from '@/lib/permisos'
 import { armarGrilla, type AperturaGrilla } from '@/lib/grilla'
+import { estadoPeriodo } from '@/lib/estado-periodo'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
 import { Boton } from '@/components/Boton'
+import { IconoCompartida } from '@/components/iconos'
 import { agregarApertura, quitarApertura, moverApertura, crearCohorte } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -86,6 +88,25 @@ export default async function Planificar({
 
   const grilla = armarGrilla(cohortes, periodosTodos, aperturas)
   const ordenPorCodigo = new Map(plan.map((item) => [item.asignaturaCodigo, item.orden]))
+
+  // Transversales: mismo código en el plan de otra carrera, que ya abrió el
+  // período pero esta carrera todavía no se sumó — por si le sirve cursarla junta.
+  const aperturasAjenasBase = codigos.length ? await prisma.apertura.findMany({
+    where: { asignaturaCodigo: { in: codigos } },
+    include: {
+      asignatura: true,
+      periodo: true,
+      cohortes: { include: { cohorte: { include: { carrera: true } } } },
+    },
+  }) : []
+  const avisos = aperturasAjenasBase
+    .filter((ap) => estadoPeriodo(ap.periodo.inicioCursado, ap.cierreAsignatura, hoy) !== 'cerrado')
+    .filter((ap) => !ap.cohortes.some((c) => c.cohorte.carreraId === carrera.id))
+    .map((ap) => ({
+      apertura: ap,
+      otras: [...new Set(ap.cohortes.filter((c) => c.cohorte.carreraId !== carrera.id).map((c) => c.cohorte.carrera.nombre))],
+    }))
+    .filter((a) => a.otras.length > 0)
   const cambios = await prisma.cambio.findMany({
     where: { carreraId: carrera.id },
     include: { usuario: true },
@@ -115,6 +136,35 @@ export default async function Planificar({
           </form>
         )}
       </div>
+
+      {editable && cohortes.length > 0 && avisos.length > 0 && (
+        <div className="avisos-transversales">
+          <h2>Por si te sirve sumarte</h2>
+          {avisos.map(({ apertura: ap, otras }) => (
+            <div className="aviso" role="note" key={ap.id}>
+              <IconoCompartida />
+              <div>
+                <p>
+                  <strong>{ap.asignatura.nombre}</strong> es transversal y ya la abrió{' '}
+                  {otras.join(', ')} en <strong>{ap.periodo.nombre}</strong>. Sumar tu cohorte
+                  no crea una apertura nueva, se une a la que ya existe.
+                </p>
+                <form action={agregarApertura.bind(null, carrera.id)} className="en-linea">
+                  <input type="hidden" name="codigo" value={ap.asignaturaCodigo} />
+                  <input type="hidden" name="periodoId" value={ap.periodoId} />
+                  <select name="cohorteId" defaultValue="" required aria-label={`Cohorte que suma ${ap.asignatura.nombre}`}>
+                    <option value="" disabled>Elegir cohorte...</option>
+                    {cohortes.map((co) => (
+                      <option key={co.id} value={co.id}>{co.nombre}</option>
+                    ))}
+                  </select>
+                  <Boton enCurso="Sumando">Sumar esta cohorte</Boton>
+                </form>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {!cohortes.length ? (
         <div className="vacio">
