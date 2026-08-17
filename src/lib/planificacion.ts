@@ -25,7 +25,7 @@ function exigir(s: Sesion | null, carreraId: number) {
  * el de su propia carrera — sobre todo una sin cohortes, donde no habría cohorte
  * de otro que la protegiera.
  */
-function exigirPertenencia(
+export function exigirPertenencia(
   s: Sesion,
   carreraId: number,
   apertura: {

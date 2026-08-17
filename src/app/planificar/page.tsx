@@ -8,7 +8,11 @@ import { estadoPeriodo } from '@/lib/estado-periodo'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
 import { Boton } from '@/components/Boton'
 import { IconoCompartida } from '@/components/iconos'
-import { agregarApertura, quitarApertura, moverApertura, crearCohorte, descartarAviso } from './actions'
+import { EditorDocentes } from '@/components/EditorDocentes'
+import {
+  agregarApertura, quitarApertura, moverApertura, crearCohorte, descartarAviso,
+  editarDocentesTutorApertura,
+} from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,7 +79,11 @@ export default async function Planificar({
       asignaturaCodigo: { in: codigos },
       cohortes: { some: { cohorte: { carreraId: carrera.id } } },
     },
-    include: { asignatura: true, cohortes: { include: { cohorte: { include: { carrera: true } } } } },
+    include: {
+      asignatura: true,
+      cohortes: { include: { cohorte: { include: { carrera: true } } } },
+      docentesTutor: { orderBy: { orden: 'asc' } },
+    },
   })
   const aperturas: AperturaGrilla[] = aperturasBase.map((a) => ({
     id: a.id,
@@ -85,6 +93,7 @@ export default async function Planificar({
     carrerasCompartidas: [...new Set(
       a.cohortes.filter((c) => c.cohorte.carreraId !== carrera.id).map((c) => c.cohorte.carrera.nombre),
     )],
+    docentesTutor: a.docentesTutor.map((d) => d.nombre),
     asignatura: { codigo: a.asignatura.codigo, nombre: a.asignatura.nombre, estado: a.asignatura.estado },
     aperturaInscripcion: a.aperturaInscripcion,
   }))
@@ -270,6 +279,28 @@ export default async function Planificar({
                                 <p className="compartida">
                                   También la abrió {ap.carrerasCompartidas.join(', ')}
                                 </p>
+                              )}
+                              {editable ? (
+                                <details className="editar-docente-tutor">
+                                  <summary>
+                                    {ap.docentesTutor.length
+                                      ? `Docente tutor: ${ap.docentesTutor.join(' / ')}`
+                                      : 'Asignar docente tutor'}
+                                  </summary>
+                                  <form action={editarDocentesTutorApertura.bind(null, carrera.id)} className="fila-campos">
+                                    <input type="hidden" name="aperturaId" value={ap.id} />
+                                    <EditorDocentes
+                                      name="docentesTutor"
+                                      iniciales={ap.docentesTutor}
+                                      etiqueta={`docente tutor de ${ap.asignatura.nombre}`}
+                                    />
+                                    <Boton enCurso="Guardando">Guardar</Boton>
+                                  </form>
+                                </details>
+                              ) : (
+                                ap.docentesTutor.length > 0 && (
+                                  <p className="compartida">Docente tutor: {ap.docentesTutor.join(' / ')}</p>
+                                )
                               )}
                               {editable && (
                                 <div className="celda-acciones">

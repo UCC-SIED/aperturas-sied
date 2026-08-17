@@ -16,6 +16,7 @@ const ap = (
   id, asignaturaCodigo: codigo, periodoId,
   cohorteIds,
   carrerasCompartidas: [],
+  docentesTutor: [],
   asignatura: { codigo, nombre: `Asignatura ${codigo}`, estado: 'finalizacion' },
   aperturaInscripcion: null,
 })

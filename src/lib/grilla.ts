@@ -16,6 +16,8 @@ export type AperturaGrilla = {
   cohorteIds: number[]
   /** Nombres de otras carreras que también la abrieron (transversal), sin la propia. */
   carrerasCompartidas: string[]
+  /** Docente tutor de esta apertura puntual, no el de producción de la asignatura. */
+  docentesTutor: string[]
   asignatura: { codigo: string; nombre: string; estado: string }
   aperturaInscripcion: Date | null
 }
