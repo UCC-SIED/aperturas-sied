@@ -30,7 +30,6 @@ export default async function Admin() {
   return (
     <main>
       <h1>Administración</h1>
-      <p className="sub">Quién entra al sistema y qué puede hacer.</p>
 
       <h2>Dar de alta</h2>
       <form action={crearUsuario} className="ficha alta-usuario">
@@ -56,10 +55,6 @@ export default async function Admin() {
         </label>
         <Boton enCurso="Dando de alta">Dar de alta</Boton>
       </form>
-      <p className="ayuda">
-        Se la das vos ahora — la persona puede pedirte que se la cambies cuando quiera, no hay
-        forma de que la elija sola todavía.
-      </p>
 
       <details className="que-hace-cada-rol">
         <summary>Qué puede hacer cada rol</summary>
