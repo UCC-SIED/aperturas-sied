@@ -1012,16 +1012,6 @@ table.tabla-asignaturas td { line-height: 1.4; }
 
 /* ------------------------------------------------------------ administración */
 
-.aviso-config {
-  background: var(--superficie-2);
-  border: 1px solid var(--borde);
-  color: var(--texto-suave);
-  padding: var(--e3) var(--e4);
-  border-radius: var(--radio-chico);
-  font-size: 12.5px;
-  margin: 0 0 var(--e4);
-}
-
 .alta-usuario {
   grid-template-columns: 1fr 1fr auto;
   align-items: end;

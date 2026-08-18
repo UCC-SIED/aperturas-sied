@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { sesionActual, googleActivo } from '@/lib/sesion'
+import { sesionActual } from '@/lib/sesion'
 import { puedeAdministrar, ROLES, ROL_LABELS, ROL_DESCRIPCIONES } from '@/lib/permisos'
 import { fmtFechaHora } from '@/lib/formato'
 import { Boton } from '@/components/Boton'
@@ -31,13 +31,6 @@ export default async function Admin() {
     <main>
       <h1>Administración</h1>
       <p className="sub">Quién entra al sistema y qué puede hacer.</p>
-
-      {!googleActivo() && (
-        <p className="aviso-config">
-          El ingreso con Google todavía no está configurado: por ahora se entra con correo y
-          contraseña, definida acá abajo. Los permisos que definas acá ya funcionan igual.
-        </p>
-      )}
 
       <h2>Dar de alta</h2>
       <form action={crearUsuario} className="ficha alta-usuario">
