@@ -764,14 +764,7 @@ form.buscador button:hover { background: #eaf0fb; }
   white-space: nowrap;
   border: 1px solid transparent;
 }
-.urg-montar-ya { background: var(--rojo-fondo); color: var(--rojo); border-color: #f0c5c0; }
 .urg-preparar { background: var(--verde-fondo); color: var(--verde); border-color: #bfe0d0; }
-.urg-esperando-contenido { background: var(--ambar-fondo); color: var(--ambar); border-color: #f2dfae; }
-.urg-sin-fecha { background: var(--neutro-fondo); color: var(--neutro); border-color: var(--borde-fuerte); }
-
-.chip-estado.urg-montar-ya .n { color: var(--rojo); }
-.chip-estado.urg-preparar .n { color: var(--verde); }
-.chip-estado.urg-esperando-contenido .n { color: var(--ambar); }
 
 .una-sola-vez {
   display: flex;
@@ -783,7 +776,6 @@ form.buscador button:hover { background: #eaf0fb; }
 }
 .una-sola-vez .icono { flex: 0 0 auto; }
 
-td small.apremia { color: var(--rojo); font-weight: 600; }
 td small { display: block; }
 
 /* ------------------------------------------------------------ alta de período */
