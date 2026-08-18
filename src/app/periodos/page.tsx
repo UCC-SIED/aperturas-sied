@@ -34,8 +34,18 @@ export default async function Periodos() {
     ? { cohortes: { some: { cohorte: { carreraId: { in: visibles } } } } }
     : {}
 
+  // Un director sólo ve el calendario de la unidad de sus propias carreras —
+  // sin esto, una dirección de Educación veía también los períodos de Posgrado.
+  const unidadesVisibles = visibles
+    ? [...new Set(
+        (await prisma.carrera.findMany({ where: { id: { in: visibles } }, select: { unidadId: true } }))
+          .map((c) => c.unidadId),
+      )]
+    : null
+
   const [periodos, unidades] = await Promise.all([
     prisma.periodo.findMany({
+      where: unidadesVisibles ? { unidadId: { in: unidadesVisibles } } : undefined,
       include: { unidad: true, _count: { select: { aperturas: { where: filtroAperturas } } } },
       orderBy: { inicioCursado: 'desc' },
     }),
@@ -95,7 +105,7 @@ export default async function Periodos() {
       ) : (
         nombresUnidades.map((u) => (
           <section key={u}>
-            <h2>{u}</h2>
+            {nombresUnidades.length > 1 && <h2>{u}</h2>}
             <table>
               <thead>
                 <tr>
