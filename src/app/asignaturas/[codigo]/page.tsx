@@ -37,7 +37,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
 
   return (
     <main>
-      <h1>{a.nombre} <small>{a.codigo}</small></h1>
+      <h1>{a.nombre} <span className="codigo-asignatura">{a.codigo}</span></h1>
       <p className="sub">
         {a.catedra && <>Cátedra {a.catedra} · </>}
         {a.cargaHoraria && <>{a.cargaHoraria} h · </>}
