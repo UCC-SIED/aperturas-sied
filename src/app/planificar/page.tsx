@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
-import { puedeEditarCarrera, carrerasVisibles } from '@/lib/permisos'
+import { puedeEditarCarrera, puedeEditarProduccion, carrerasVisibles } from '@/lib/permisos'
 import { armarGrilla, type AperturaGrilla } from '@/lib/grilla'
 import { estadoPeriodo } from '@/lib/estado-periodo'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
@@ -45,6 +45,7 @@ export default async function Planificar({
   const { carrera: carreraParam, todos: todosParam } = await searchParams
   const carrera = carreras.find((c) => String(c.id) === carreraParam) ?? carreras[0]
   const editable = puedeEditarCarrera(s, carrera.id)
+  const puedeVerMovimientos = puedeEditarProduccion(s)
   const mostrarTodos = todosParam === '1'
   const hoy = new Date()
 
@@ -124,12 +125,12 @@ export default async function Planificar({
       otras: [...new Set(ap.cohortes.filter((c) => c.cohorte.carreraId !== carrera.id).map((c) => c.cohorte.carrera.nombre))],
     }))
     .filter((a) => a.otras.length > 0)
-  const cambios = await prisma.cambio.findMany({
+  const cambios = puedeVerMovimientos ? await prisma.cambio.findMany({
     where: { carreraId: carrera.id },
     include: { usuario: true },
     orderBy: { fecha: 'desc' },
     take: 8,
-  })
+  }) : []
 
   return (
     <main className="planificador">

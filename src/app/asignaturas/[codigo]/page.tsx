@@ -28,12 +28,12 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
   if (!a) notFound()
 
   const editable = puedeEditarProduccion(s)
-  const cambios = await prisma.cambio.findMany({
+  const cambios = editable ? await prisma.cambio.findMany({
     where: { asignaturaCodigo: a.codigo },
     include: { usuario: true },
     orderBy: { fecha: 'desc' },
     take: 12,
-  })
+  }) : []
 
   return (
     <main>
