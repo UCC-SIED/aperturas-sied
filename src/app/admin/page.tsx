@@ -4,7 +4,9 @@ import { sesionActual } from '@/lib/sesion'
 import { puedeAdministrar, ROLES, ROL_LABELS, ROL_DESCRIPCIONES } from '@/lib/permisos'
 import { fmtFechaHora } from '@/lib/formato'
 import { Boton } from '@/components/Boton'
-import { crearUsuario, cambiarRol, alternarActivo, asignarCarreras, establecerContrasena } from './actions'
+import {
+  crearUsuario, cambiarRol, alternarActivo, asignarCarreras, asignarUnidad, establecerContrasena,
+} from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,12 +15,13 @@ export default async function Admin() {
   if (!s) redirect('/ingresar')
   if (!puedeAdministrar(s)) redirect('/panel')
 
-  const [usuarios, carreras, cambios] = await Promise.all([
+  const [usuarios, carreras, unidades, cambios] = await Promise.all([
     prisma.usuario.findMany({
-      include: { carreras: { include: { carrera: true } } },
+      include: { carreras: { include: { carrera: true } }, unidad: true },
       orderBy: [{ activo: 'desc' }, { rol: 'asc' }, { nombre: 'asc' }],
     }),
     prisma.carrera.findMany({ include: { unidad: true }, orderBy: [{ unidadId: 'asc' }, { nombre: 'asc' }] }),
+    prisma.unidad.findMany({ orderBy: { nombre: 'asc' } }),
     prisma.cambio.findMany({
       where: { accion: 'gestion_usuarios' },
       include: { usuario: true },
@@ -118,6 +121,19 @@ export default async function Admin() {
                         </label>
                       ))}
                       <Boton enCurso="Guardando">Guardar carreras</Boton>
+                    </form>
+                  </details>
+                ) : u.rol === 'unidad' ? (
+                  <details className="carreras-de">
+                    <summary>{u.unidad ? `Todas · ${u.unidad.nombre}` : 'sin unidad asignada'}</summary>
+                    <form action={asignarUnidad.bind(null, u.id)} className="en-linea">
+                      <select key={u.unidadId ?? ''} name="unidadId" defaultValue={u.unidadId ?? ''} aria-label={`Unidad de ${u.nombre}`}>
+                        <option value="" disabled>Elegir unidad...</option>
+                        {unidades.map((un) => (
+                          <option key={un.id} value={un.id}>{un.nombre}</option>
+                        ))}
+                      </select>
+                      <Boton enCurso="Guardando">Guardar</Boton>
                     </form>
                   </details>
                 ) : (

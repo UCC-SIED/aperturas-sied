@@ -12,6 +12,7 @@ model Unidad {
   nombre   String
   carreras Carrera[]
   periodos Periodo[]
+  usuarios Usuario[]
 }
 
 model Carrera {
@@ -28,7 +29,8 @@ model Carrera {
 }
 
 /// Quién entra al sistema. El rol define qué puede hacer:
-/// sied = todo · director = planifica sus carreras · consulta = sólo mira.
+/// sied = todo · director = planifica sus carreras · unidad = planifica
+/// todas las carreras de su unidad académica · consulta = sólo mira.
 model Usuario {
   id           Int              @id @default(autoincrement())
   email        String           @unique
@@ -38,6 +40,9 @@ model Usuario {
   /// Hash con sal (scrypt), nunca la contraseña en texto plano. Null hasta
   /// que administración le defina una.
   passwordHash String?
+  /// Sólo para rol "unidad": qué unidad académica planifica entera.
+  unidadId     String?
+  unidad       Unidad?          @relation(fields: [unidadId], references: [id])
   carreras     UsuarioCarrera[]
   cambios      Cambio[]
 }

@@ -6,11 +6,12 @@ export type Sesion = {
   carreraIds: number[]
 }
 
-export const ROLES = ['admin', 'sied', 'director', 'consulta'] as const
+export const ROLES = ['admin', 'sied', 'director', 'unidad', 'consulta'] as const
 export const ROL_LABELS: Record<string, string> = {
   admin: 'Administración',
   sied: 'Equipo SIED',
   director: 'Dirección de carrera',
+  unidad: 'Unidad académica',
   consulta: 'Consulta',
 }
 
@@ -18,6 +19,7 @@ export const ROL_DESCRIPCIONES: Record<string, string> = {
   admin: 'Todo lo del equipo SIED, y además gestiona usuarios, roles y permisos.',
   sied: 'Planifica cualquier carrera y edita el estado de producción de las asignaturas.',
   director: 'Planifica las aperturas de sus carreras. Ve el estado de producción pero no lo edita.',
+  unidad: 'Planifica las aperturas de todas las carreras de su unidad académica (Posgrado o Educación). Ve el estado de producción pero no lo edita.',
   consulta: 'Sólo lectura.',
 }
 
@@ -26,11 +28,20 @@ function esEquipo(s: Sesion | null): boolean {
   return s?.rol === 'sied' || s?.rol === 'admin'
 }
 
+/**
+ * Director y unidad académica comparten la misma mecánica: planifican sólo
+ * las carreras de `carreraIds` — la diferencia es quién puebla esa lista
+ * (asignación puntual vs. todas las de su unidad, resuelto en sesionActual).
+ */
+function tieneCarrerasAsignadas(s: Sesion | null): boolean {
+  return s?.rol === 'director' || s?.rol === 'unidad'
+}
+
 /** Puede planificar aperturas de esa carrera (agregar, quitar, mover de período). */
 export function puedeEditarCarrera(s: Sesion | null, carreraId: number): boolean {
   if (!s) return false
   if (esEquipo(s)) return true
-  if (s.rol === 'director') return s.carreraIds.includes(carreraId)
+  if (tieneCarrerasAsignadas(s)) return s.carreraIds.includes(carreraId)
   return false
 }
 
@@ -54,7 +65,7 @@ export function esSoloLectura(s: Sesion | null): boolean {
  */
 export function carrerasVisibles(s: Sesion | null): number[] | null {
   if (!s) return []
-  return s.rol === 'director' ? s.carreraIds : null
+  return tieneCarrerasAsignadas(s) ? s.carreraIds : null
 }
 
 /** El dominio institucional: sólo entra gente de la universidad. */

@@ -68,11 +68,15 @@ export async function cambiarRol(usuarioId: number, formData: FormData) {
     throw new Error('No podés quitarte a vos mismo el rol de administración')
   }
 
-  await prisma.usuario.update({ where: { id: usuarioId }, data: { rol } })
-  // Un usuario que deja de ser director no conserva sus carreras
+  const data: { rol: string; unidadId?: null } = { rol }
+  // Un usuario que deja de ser director no conserva sus carreras puntuales,
+  // y uno que deja de ser "unidad" no conserva la unidad que planificaba entera.
   if (rol !== 'director') {
     await prisma.usuarioCarrera.deleteMany({ where: { usuarioId } })
   }
+  if (rol !== 'unidad') data.unidadId = null
+
+  await prisma.usuario.update({ where: { id: usuarioId }, data })
   await anotar(admin.id, `${u.nombre}: rol ${u.rol} → ${rol}`)
   revalidatePath('/admin')
 }
@@ -105,5 +109,20 @@ export async function asignarCarreras(usuarioId: number, formData: FormData) {
     admin.id,
     `${u.nombre}: carreras → ${nombres.map((c) => c.nombre).join(', ') || 'ninguna'}`,
   )
+  revalidatePath('/admin')
+}
+
+/** Sólo para rol "unidad": qué unidad académica planifica entera. */
+export async function asignarUnidad(usuarioId: number, formData: FormData) {
+  const admin = await exigirAdmin()
+  const u = await prisma.usuario.findUnique({ where: { id: usuarioId } })
+  if (!u) throw new Error('Usuario inexistente')
+
+  const unidadId = String(formData.get('unidadId') ?? '') || null
+  const unidad = unidadId ? await prisma.unidad.findUnique({ where: { id: unidadId } }) : null
+  if (unidadId && !unidad) throw new Error('Unidad inexistente')
+
+  await prisma.usuario.update({ where: { id: usuarioId }, data: { unidadId } })
+  await anotar(admin.id, `${u.nombre}: unidad → ${unidad?.nombre ?? 'ninguna'}`)
   revalidatePath('/admin')
 }

@@ -8,6 +8,8 @@ const admin = { id: 0, nombre: 'Admin', email: 'tecnologia.sied@ucc.edu.ar', rol
 const sied = { id: 1, nombre: 'Goni', email: 'g@ucc.edu.ar', rol: 'sied', carreraIds: [] }
 const dir = { id: 2, nombre: 'Directora', email: 'd@ucc.edu.ar', rol: 'director', carreraIds: [7, 9] }
 const consulta = { id: 3, nombre: 'Dirección', email: 'c@ucc.edu.ar', rol: 'consulta', carreraIds: [] }
+// carreraIds ya viene resuelto por sesionActual con todas las de su unidad.
+const unidad = { id: 4, nombre: 'Posgrado', email: 'u@ucc.edu.ar', rol: 'unidad', carreraIds: [7, 8, 9] }
 
 describe('permisos', () => {
   it('el SIED puede editar cualquier carrera', () => {
@@ -49,6 +51,15 @@ describe('permisos', () => {
     const huerfano = { ...dir, carreraIds: [] }
     expect(carrerasVisibles(huerfano)).toEqual([])
     expect(puedeEditarCarrera(huerfano, 7)).toBe(false)
+  })
+
+  it('unidad académica planifica todas las carreras de su unidad, no edita producción', () => {
+    expect(puedeEditarCarrera(unidad, 7)).toBe(true)
+    expect(puedeEditarCarrera(unidad, 8)).toBe(true)
+    expect(puedeEditarCarrera(unidad, 999)).toBe(false)
+    expect(carrerasVisibles(unidad)).toEqual([7, 8, 9])
+    expect(puedeEditarProduccion(unidad)).toBe(false)
+    expect(esSoloLectura(unidad)).toBe(false)
   })
 })
 

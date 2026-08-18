@@ -30,6 +30,7 @@ En cada celda se elige la asignatura de un desplegable con el plan completo, num
 | **Administración** | Todo lo del equipo SIED, y además da de alta usuarios, cambia roles y asigna carreras desde `/admin` |
 | **Equipo SIED** | Planificar cualquier carrera, editar estados de producción, docentes y asesores |
 | **Dirección de carrera** | Planificar sus carreras (agregar, mover, quitar aperturas). Ve el estado de producción pero no lo edita. No ve otras carreras |
+| **Unidad académica** | Igual que Dirección de carrera, pero para *todas* las carreras de su unidad (Posgrado o Educación) — para cuando no planifica cada dirección por separado sino la unidad entera |
 | **Consulta** | Sólo lectura |
 
 Los permisos se gestionan desde **`/admin`**, sin tocar código. `npm run usuarios` sólo sirve para la carga inicial.

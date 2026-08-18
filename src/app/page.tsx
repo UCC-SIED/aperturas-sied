@@ -6,6 +6,6 @@ export const dynamic = 'force-dynamic'
 export default async function Home() {
   const s = await sesionActual()
   if (!s) redirect('/ingresar')
-  // Los directores entran directo a lo que tienen que decidir; el resto, a la foto general.
-  redirect(s.rol === 'director' ? '/planificar' : '/panel')
+  // Quien planifica entra directo a lo que tiene que decidir; el resto, a la foto general.
+  redirect(s.rol === 'director' || s.rol === 'unidad' ? '/planificar' : '/panel')
 }

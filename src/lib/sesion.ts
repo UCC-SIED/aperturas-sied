@@ -32,12 +32,18 @@ export async function sesionActual(): Promise<Sesion | null> {
   })
   if (!u || !u.activo) return null
 
+  // El rol "unidad" no tiene carreras asignadas una por una: planifica todas
+  // las que haya en su unidad, incluida cualquiera que se sume después.
+  const carreraIds = u.rol === 'unidad' && u.unidadId
+    ? (await prisma.carrera.findMany({ where: { unidadId: u.unidadId }, select: { id: true } })).map((c) => c.id)
+    : u.carreras.map((c) => c.carreraId)
+
   return {
     id: u.id,
     nombre: u.nombre,
     email: u.email,
     rol: u.rol,
-    carreraIds: u.carreras.map((c) => c.carreraId),
+    carreraIds,
   }
 }
 
