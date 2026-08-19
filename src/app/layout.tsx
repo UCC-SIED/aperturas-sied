@@ -9,7 +9,10 @@ import { IconoSalir } from '@/components/iconos'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Gestión de Asignaturas SIED',
+  title: {
+    default: 'Gestión de Asignaturas SIED',
+    template: '%s · Gestión SIED',
+  },
   description: 'Aperturas de aulas y seguimiento de producción en Canvas — SIED UCC',
 }
 

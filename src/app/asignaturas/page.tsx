@@ -7,6 +7,8 @@ import { joinDocentes } from '@/lib/docentes'
 import { EstadoBadge } from '@/components/EstadoBadge'
 import { IconoBuscar } from '@/components/iconos'
 
+export const metadata = { title: 'Asignaturas' }
+
 export const dynamic = 'force-dynamic'
 
 export default async function Asignaturas({ searchParams }: { searchParams: Promise<{ q?: string }> }) {

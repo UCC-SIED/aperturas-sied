@@ -8,12 +8,14 @@ import { resumirAvance } from '@/lib/avance'
 import { fmtFecha } from '@/lib/formato'
 import { normalizarBusqueda } from '@/lib/texto'
 import { EditorDocentes } from '@/components/EditorDocentes'
-import { Boton } from '@/components/Boton'
+import { BarraGuardar } from '@/components/BarraGuardar'
 import { SelectAutoSubmit } from '@/components/SelectAutoSubmit'
 import { BuscadorAutoLimpia } from '@/components/BuscadorAutoLimpia'
 import { IconoDescarga } from '@/components/iconos'
 import { BarraAvance } from '@/components/BarraAvance'
 import { guardarSeguimiento } from './actions'
+
+export const metadata = { title: 'Seguimiento de producción' }
 
 export const dynamic = 'force-dynamic'
 
@@ -233,12 +235,7 @@ export default async function Produccion({
           </table>
         </div>
 
-        <div className="barra-guardar">
-          <Boton enCurso="Guardando cambios">Guardar cambios</Boton>
-          <span className="nota">
-            Se guardan todas las filas de {carrera.nombre} que hayas modificado.
-          </span>
-        </div>
+        <BarraGuardar nota={`Se guardan todas las filas de ${carrera.nombre} que hayas modificado.`} />
       </form>
     </main>
   )

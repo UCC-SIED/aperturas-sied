@@ -14,6 +14,8 @@ import {
   editarDocentesTutorApertura,
 } from './actions'
 
+export const metadata = { title: 'Planificar aperturas' }
+
 export const dynamic = 'force-dynamic'
 
 /** Cuántos períodos se muestran por defecto en la grilla, para no llenarla de columnas. */
@@ -37,7 +39,11 @@ export default async function Planificar({
     return (
       <main>
         <h1>Planificar aperturas</h1>
-        <p className="vacio">No tenés carreras asignadas. Pedile al equipo SIED que te habilite.</p>
+        <p className="vacio">
+          No tenés carreras asignadas todavía, así que no hay nada que planificar. Pedile al
+          equipo SIED que te habilite escribiendo a{' '}
+          <a href="mailto:tecnologia.sied@ucc.edu.ar">tecnologia.sied@ucc.edu.ar</a>.
+        </p>
       </main>
     )
   }
@@ -134,12 +140,14 @@ export default async function Planificar({
 
   return (
     <main className="planificador">
-      <div className="encabezado-plan">
+      <div className="encabezado encabezado-plan">
         <div>
-          <h1>Planificar aperturas</h1>
+          <h1>
+            Planificar aperturas
+            {!editable && <span className="sello-lectura">Sólo lectura</span>}
+          </h1>
           <p className="sub">
             {carrera.nombre} · {carrera.unidad.nombre}
-            {!editable && ' · sólo lectura'}
           </p>
         </div>
         {carreras.length > 1 && (

@@ -8,6 +8,8 @@ import { fmtFecha } from '@/lib/formato'
 import { IconoDescarga } from '@/components/iconos'
 import { BarraAvance } from '@/components/BarraAvance'
 
+export const metadata = { title: 'Panel de control' }
+
 export const dynamic = 'force-dynamic'
 
 export default async function Panel() {

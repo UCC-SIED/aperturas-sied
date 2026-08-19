@@ -11,6 +11,8 @@ import { crearPeriodo, borrarPeriodo } from './actions'
 
 const ESTADO_LABEL = { proximo: 'Próximo', en_curso: 'En curso', cerrado: 'cerrado' } as const
 
+export const metadata = { title: 'Períodos' }
+
 export const dynamic = 'force-dynamic'
 
 const CAMPOS_FECHA = [

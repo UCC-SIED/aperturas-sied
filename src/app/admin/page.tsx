@@ -8,6 +8,8 @@ import {
   crearUsuario, cambiarRol, alternarActivo, asignarCarreras, asignarUnidad, establecerContrasena,
 } from './actions'
 
+export const metadata = { title: 'Administración' }
+
 export const dynamic = 'force-dynamic'
 
 export default async function Admin() {

@@ -13,6 +13,15 @@ import { actualizarAsignatura } from './actions'
 
 export const dynamic = 'force-dynamic'
 
+export async function generateMetadata({ params }: { params: Promise<{ codigo: string }> }) {
+  const { codigo } = await params
+  const a = await prisma.asignatura.findUnique({
+    where: { codigo: decodeURIComponent(codigo) },
+    select: { nombre: true },
+  })
+  return { title: a?.nombre ?? 'Asignatura' }
+}
+
 export default async function Asignatura({ params }: { params: Promise<{ codigo: string }> }) {
   const s = await sesionActual()
   if (!s) redirect('/ingresar')

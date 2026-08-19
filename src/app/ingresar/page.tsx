@@ -5,6 +5,8 @@ import { CampoContrasena } from '@/components/CampoContrasena'
 import { IconoGoogle, IconoAlerta, IconoCandado } from '@/components/iconos'
 import { entrarConCredenciales } from './actions'
 
+export const metadata = { title: 'Ingresar' }
+
 export const dynamic = 'force-dynamic'
 
 const MENSAJES: Record<string, string> = {

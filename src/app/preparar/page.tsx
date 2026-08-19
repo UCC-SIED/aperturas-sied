@@ -6,6 +6,8 @@ import { puedeEditarProduccion } from '@/lib/permisos'
 import { IconoCompartida } from '@/components/iconos'
 import { EstadoBadge } from '@/components/EstadoBadge'
 
+export const metadata = { title: 'Aulas a preparar' }
+
 export const dynamic = 'force-dynamic'
 
 export default async function Preparar({

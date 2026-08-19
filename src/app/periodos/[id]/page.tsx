@@ -5,12 +5,18 @@ import { sesionActual } from '@/lib/sesion'
 import { carrerasVisibles, puedeEditarProduccion } from '@/lib/permisos'
 import { fmtFecha, fmtFechaISO } from '@/lib/formato'
 import { joinDocentes } from '@/lib/docentes'
-import { ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { Boton } from '@/components/Boton'
 import { EditorDocentes } from '@/components/EditorDocentes'
+import { EstadoBadge } from '@/components/EstadoBadge'
 import { editarFechasApertura, editarDocentesApertura } from './actions'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const p = await prisma.periodo.findUnique({ where: { id: Number(id) }, select: { nombre: true } })
+  return { title: p?.nombre ?? 'Período' }
+}
 
 const CAMPOS_FECHA = [
   ['aperturaInscripcion', 'Apertura de inscripción'],
@@ -67,15 +73,36 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
 
   return (
     <main>
-      <h1>
-        {periodo.nombre} <small>· {periodo.tipo} · inicio de cursado {fmtFecha(periodo.inicioCursado)}</small>
-      </h1>
-      <p className="sub">
-        Inscripción {fmtFecha(periodo.aperturaInscripcion)} al {fmtFecha(periodo.cierreInscripcion)}
-        {periodo.aperturaAfi && <> · AFI {fmtFecha(periodo.aperturaAfi)} al {fmtFecha(periodo.cierreAfi)}</>}
-        {periodo.cierreAsignatura && <> · cierre {fmtFecha(periodo.cierreAsignatura)}</>}
-        {' · '}{total} {total === 1 ? 'asignatura' : 'asignaturas'}
-      </p>
+      <Link className="volver" href="/periodos">← Todos los períodos</Link>
+      <div className="encabezado">
+        <div>
+          <h1>
+            {periodo.nombre} <span className="contador">· {periodo.tipo}</span>
+          </h1>
+          <p className="sub">
+            {total} {total === 1 ? 'asignatura planificada' : 'asignaturas planificadas'} en este período.
+          </p>
+        </div>
+      </div>
+
+      <dl className="fechas-periodo">
+        <div>
+          <dt>Inscripción</dt>
+          <dd>{fmtFecha(periodo.aperturaInscripcion)} – {fmtFecha(periodo.cierreInscripcion)}</dd>
+        </div>
+        <div>
+          <dt>Cursado</dt>
+          <dd>{fmtFecha(periodo.inicioCursado)} – {fmtFecha(periodo.finCursado)}</dd>
+        </div>
+        <div>
+          <dt>AFI</dt>
+          <dd>{fmtFecha(periodo.aperturaAfi)} – {fmtFecha(periodo.cierreAfi)}</dd>
+        </div>
+        <div>
+          <dt>Cierre de asignatura</dt>
+          <dd>{fmtFecha(periodo.cierreAsignatura)}</dd>
+        </div>
+      </dl>
 
       {!grupos.length && (
         <p className="vacio">
@@ -110,7 +137,7 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                       <small>{ap.asignatura.codigo}</small>
                       {ap.asignatura.planItems.length > 1 && <small> · transversal</small>}
                     </td>
-                    <td>{ESTADO_LABELS[ap.asignatura.estado as Estado]}</td>
+                    <td><EstadoBadge estado={ap.asignatura.estado} /></td>
                     <td>{joinDocentes(ap.asignatura.docentes.map((d) => d.nombre)) || '—'}</td>
                     <td>
                       {editable ? (

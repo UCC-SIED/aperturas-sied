@@ -1647,3 +1647,115 @@ h1 .contador { font-size: 14px; font-weight: 500; color: var(--texto-suave); }
 .estado-badge.est-revision { background: var(--ambar-fondo); color: var(--ambar); border-color: #f2dfae; }
 .estado-badge.est-construccion,
 .estado-badge.est-contrato { background: #eaf0fb; color: var(--azul); border-color: #c8d8f2; }
+
+/* Las fechas del período en tarjetas: en un párrafo separado por puntos hay
+   que leerlo entero para encontrar una sola. */
+.fechas-periodo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--e3);
+  margin: 0 0 var(--e5);
+  padding: 0;
+}
+.fechas-periodo > div {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: var(--e3);
+}
+.fechas-periodo dt {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+  margin-bottom: 2px;
+}
+.fechas-periodo dd {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cuando alguien mira una carrera que no puede editar, hay que decirlo arriba
+   y no dejar que lo descubra al apretar un botón que no está. */
+.sello-lectura {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: var(--e2);
+  padding: 2px var(--e2);
+  border-radius: 4px;
+  background: var(--neutro-fondo);
+  border: 1px solid var(--borde-fuerte);
+  color: var(--texto-suave);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+.encabezado-plan.encabezado { border-bottom: 1px solid var(--borde); }
+
+form.buscador input, form.buscador button { min-height: 38px; }
+
+/* --------------------------------------------------------- pantallas chicas */
+
+@media (max-width: 700px) {
+  /* La barra se vuelve una tira que se desliza; la marca queda fija a la
+     izquierda para no perder la referencia al desplazarla. */
+  .topbar { gap: var(--e3); }
+  .topbar .marca { position: sticky; left: 0; background: var(--azul); padding-right: var(--e2); z-index: 2; }
+  .sesion .nombre { display: none; }
+
+  /* Las tablas anchas se deslizan solas en vez de estirar la página entera. */
+  main > table,
+  main > section > table,
+  main > form > table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  thead th { position: static; }
+
+  h1 { font-size: 18px; }
+  .contenido { padding: var(--e4) var(--e3) var(--e5); }
+  .fechas-periodo { grid-template-columns: 1fr 1fr; }
+  form.buscador { flex-wrap: wrap; }
+  form.buscador .caja-busqueda { flex-basis: 100%; max-width: none; }
+}
+
+/* ------------------------------------------------------- sólo para lectores */
+
+.sr-solo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.acciones-error a {
+  padding: var(--e2) var(--e4);
+  border: 1px solid var(--azul);
+  color: var(--azul);
+  border-radius: var(--radio-chico);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.acciones-error a:hover { background: #eaf0fb; text-decoration: none; }
+
+/* La contraseña que administración le dicta a alguien: en monoespaciada no se
+   confunden el 1 con la l ni el 0 con la O. */
+.alta-usuario input[type='text'][name='contrasena'],
+td input[name='contrasena'] {
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  letter-spacing: .02em;
+}
+
+.barra-guardar.con-cambios {
+  border-color: var(--ambar);
+  background: var(--ambar-fondo);
+  box-shadow: 0 -2px 10px rgba(168, 104, 0, .12);
+}
+.barra-guardar .pendiente { color: var(--ambar); }
