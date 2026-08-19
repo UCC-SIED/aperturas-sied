@@ -1229,13 +1229,15 @@ table.tabla-asignaturas td { line-height: 1.4; }
 
 /* ------------------------------------------------------------ administración */
 
-.alta-usuario {
-  grid-template-columns: 1fr 1fr auto;
+/* form.ficha limita a 460px; hay que ganarle en especificidad o el alta de
+   usuarios queda apretada en dos columnas angostas. */
+form.ficha.alta-usuario {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   align-items: end;
   max-width: none;
   gap: var(--e3);
 }
-.alta-usuario button { align-self: end; }
+form.ficha.alta-usuario button { align-self: end; justify-self: stretch; white-space: nowrap; }
 
 .que-hace-cada-rol { margin: var(--e3) 0 var(--e5); }
 .que-hace-cada-rol summary { cursor: pointer; font-size: 13px; color: var(--texto-suave); font-weight: 600; }
