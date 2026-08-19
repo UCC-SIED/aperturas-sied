@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
-import { ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { IconoCompartida } from '@/components/iconos'
+import { EstadoBadge } from '@/components/EstadoBadge'
 
 export const dynamic = 'force-dynamic'
 
@@ -76,11 +76,17 @@ export default async function Preparar({
 
   return (
     <main>
-      <h1>Aulas a preparar</h1>
-      <p className="sub">
-        Lo que las direcciones definieron abrir. Se monta el aula cuando el contenido está en
-        maquetación o terminado.
-      </p>
+      <div className="encabezado">
+        <div>
+          <h1>
+            Aulas a preparar <span className="contador">({items.length})</span>
+          </h1>
+          <p className="sub">
+            Lo que las direcciones definieron abrir. Se monta el aula cuando el contenido está en
+            maquetación o terminado.
+          </p>
+        </div>
+      </div>
 
       <form className="filtros-seguimiento">
         <label htmlFor="periodo">
@@ -123,7 +129,7 @@ export default async function Preparar({
                     </p>
                   )}
                 </td>
-                <td>{ESTADO_LABELS[i.estado as Estado]}</td>
+                <td><EstadoBadge estado={i.estado} /></td>
                 <td>{i.periodo}</td>
                 <td>
                   <small>

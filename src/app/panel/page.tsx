@@ -6,6 +6,7 @@ import { carrerasVisibles } from '@/lib/permisos'
 import { resumirAvance } from '@/lib/avance'
 import { fmtFecha } from '@/lib/formato'
 import { IconoDescarga } from '@/components/iconos'
+import { BarraAvance } from '@/components/BarraAvance'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,18 +52,47 @@ export default async function Panel() {
 
   return (
     <main>
-      <div className="encabezado-plan">
+      <div className="encabezado">
         <div>
           <h1>Panel de control</h1>
           <p className="sub">
-            {global.finalizadas} de {global.total} asignaturas terminadas ({global.porcentaje}%)
-            {visibles ? ' en tus carreras' : ' en total'}.
+            Cómo viene la producción de contenidos{visibles ? ' en tus carreras' : ' en todas las carreras'}.
           </p>
         </div>
-        <a className="boton-descarga" href="/exportar" download>
-          <IconoDescarga />
-          Descargar planilla
-        </a>
+        <div className="acciones">
+          <a className="boton-descarga" href="/exportar" download>
+            <IconoDescarga />
+            Descargar planilla
+          </a>
+        </div>
+      </div>
+
+      <div className="indicadores">
+        <div className="indicador destacado">
+          <span className="rotulo">Avance total</span>
+          <span className="valor">{global.porcentaje}%</span>
+          <span className="pie">{global.finalizadas} de {global.total} terminadas</span>
+        </div>
+        <div className="indicador">
+          <span className="rotulo">Carreras</span>
+          <span className="valor">{carreras.length}</span>
+          <span className="pie">{global.total} asignaturas distintas</span>
+        </div>
+        <div className="indicador">
+          <span className="rotulo">En maquetación</span>
+          <span className="valor">{global.porEstado.maquetacion}</span>
+          <span className="pie">a un paso de estar listas</span>
+        </div>
+        <div className="indicador">
+          <span className="rotulo">En construcción</span>
+          <span className="valor">{global.porEstado.construccion}</span>
+          <span className="pie">contenido en desarrollo</span>
+        </div>
+        <div className="indicador">
+          <span className="rotulo">Sin novedad</span>
+          <span className="valor">{global.porEstado.sin_novedad}</span>
+          <span className="pie">todavía sin arrancar</span>
+        </div>
       </div>
 
       <h2>Avance por carrera</h2>
@@ -90,23 +120,18 @@ export default async function Panel() {
                 <td className="num">{a.porEstado.contratacion}</td>
                 <td className="num">{a.porEstado.sin_novedad}</td>
                 <td>
-                  <div
-                    className="barra"
-                    role="progressbar"
-                    aria-valuenow={a.porcentaje}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={`Avance de ${c.nombre}`}
-                  >
-                    <div className="relleno" style={{ transform: `scaleX(${a.porcentaje / 100})` }} />
-                    <span>{a.porcentaje}%</span>
-                  </div>
+                  <BarraAvance porcentaje={a.porcentaje} etiqueta={`Avance de ${c.nombre}`} />
                 </td>
               </tr>
             )
           })}
           {!carreras.length && (
-            <tr><td colSpan={9}>Sin carreras asignadas.</td></tr>
+            <tr>
+              <td colSpan={9} className="celda-vacia">
+                No tenés carreras asignadas todavía. Pedile al equipo SIED que te las asigne
+                desde Administración.
+              </td>
+            </tr>
           )}
         </tbody>
       </table>
@@ -129,7 +154,12 @@ export default async function Panel() {
             ))}
           </tbody>
         </table>
-      ) : <p className="vacio">No hay períodos próximos cargados.</p>}
+      ) : (
+        <p className="vacio">
+          No hay períodos próximos cargados. El calendario se carga desde{' '}
+          <Link href="/periodos">Períodos</Link>.
+        </p>
+      )}
     </main>
   )
 }

@@ -59,3 +59,72 @@ export function IconoDescarga() {
     </svg>
   )
 }
+
+/** Ojo abierto: mostrar la contraseña escrita. */
+export function IconoOjo() {
+  return (
+    <svg {...base} className="icono">
+      <path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
+
+/** Ojo tachado: volver a ocultarla. */
+export function IconoOjoTachado() {
+  return (
+    <svg {...base} className="icono">
+      <path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c4.64 0 8.34 2.9 9.94 6.65a1 1 0 0 1 0 .7 15.9 15.9 0 0 1-2.2 3.53M6.6 6.6A15.9 15.9 0 0 0 2.06 11.65a1 1 0 0 0 0 .7C3.66 16.1 7.36 19 12 19c1.9 0 3.63-.49 5.1-1.3" />
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20" />
+    </svg>
+  )
+}
+
+/** Flecha con tope: el aviso de Bloq Mayús activado. */
+export function IconoMayusculas() {
+  return (
+    <svg {...base} className="icono">
+      <path d="M14.5 3.5 20 9a1 1 0 0 1-.7 1.7H16v3a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-3H4.7A1 1 0 0 1 4 9l5.5-5.5a3.5 3.5 0 0 1 5 0" />
+      <rect x="8" y="18" width="8" height="3" rx="1" />
+    </svg>
+  )
+}
+
+/** Triángulo de atención: algo salió mal y hay que leerlo. */
+export function IconoAlerta() {
+  return (
+    <svg {...base} className="icono">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0" />
+      <path d="M12 9v4M12 17h.01" />
+    </svg>
+  )
+}
+
+/** Candado cerrado: la marca de la pantalla de ingreso. */
+export function IconoCandado() {
+  return (
+    <svg {...base} className="icono">
+      <rect x="3" y="11" width="18" height="11" rx="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  )
+}
+
+/** Lupa: buscar dentro de una lista larga. */
+export function IconoBuscar() {
+  return (
+    <svg {...base} className="icono">
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  )
+}
+
+/** Puerta con flecha: cerrar la sesión. */
+export function IconoSalir() {
+  return (
+    <svg {...base} className="icono">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+    </svg>
+  )
+}

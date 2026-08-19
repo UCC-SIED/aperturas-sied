@@ -12,6 +12,7 @@ import { Boton } from '@/components/Boton'
 import { SelectAutoSubmit } from '@/components/SelectAutoSubmit'
 import { BuscadorAutoLimpia } from '@/components/BuscadorAutoLimpia'
 import { IconoDescarga } from '@/components/iconos'
+import { BarraAvance } from '@/components/BarraAvance'
 import { guardarSeguimiento } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -75,19 +76,21 @@ export default async function Produccion({
 
   return (
     <main className="seguimiento">
-      <div className="encabezado-plan">
+      <div className="encabezado">
         <div>
           <h1>Seguimiento de producción</h1>
           <p className="sub">
-            En qué anda cada asignatura. Lo que se carga acá es lo que ven las direcciones
-            cuando planifican sus períodos. {avance.finalizadas} de {avance.total} terminadas
-            ({avance.porcentaje}%).
+            En qué anda cada asignatura de <strong>{carrera.nombre}</strong>. Lo que se carga acá
+            es lo que ven las direcciones cuando planifican sus períodos.
           </p>
         </div>
-        <a className="boton-descarga" href="/exportar" download>
-          <IconoDescarga />
-          Descargar planilla
-        </a>
+        <div className="acciones">
+          <BarraAvance porcentaje={avance.porcentaje} etiqueta={`Avance de ${carrera.nombre}`} />
+          <a className="boton-descarga" href="/exportar" download>
+            <IconoDescarga />
+            Descargar planilla
+          </a>
+        </div>
       </div>
 
       <form className="filtros-seguimiento">

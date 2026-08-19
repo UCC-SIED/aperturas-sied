@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import { sesionActual, cerrarSesion, googleActivo } from '@/lib/sesion'
 import { signOut } from '@/auth'
 import { ROL_LABELS, puedeAdministrar } from '@/lib/permisos'
+import { BarraSuperior, EnlaceNav, Contenido } from '@/components/Marco'
+import { IconoSalir } from '@/components/iconos'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -26,38 +28,45 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="es">
       <body>
-        <header className="topbar">
-          <span className="marca">Gestión SIED</span>
+        <a className="saltar-al-contenido" href="#contenido">Saltar al contenido</a>
+        <BarraSuperior>
+          <Link href="/" className="marca">Gestión SIED</Link>
           {s && (
-            <nav>
-              <Link href="/panel">Panel</Link>
-              {s.rol !== 'consulta' && <Link href="/planificar">Planificar</Link>}
-              <Link href="/periodos">Períodos</Link>
-              <Link href="/asignaturas">Asignaturas</Link>
+            <nav aria-label="Secciones">
+              <EnlaceNav href="/panel">Panel</EnlaceNav>
+              {s.rol !== 'consulta' && <EnlaceNav href="/planificar">Planificar</EnlaceNav>}
+              <EnlaceNav href="/periodos">Períodos</EnlaceNav>
+              <EnlaceNav href="/asignaturas">Asignaturas</EnlaceNav>
               {(s.rol === 'sied' || s.rol === 'admin') && (
                 <>
-                  <Link href="/produccion">Producción</Link>
-                  <Link href="/preparar">Aulas a preparar</Link>
+                  <EnlaceNav href="/produccion">Producción</EnlaceNav>
+                  <EnlaceNav href="/preparar">Aulas a preparar</EnlaceNav>
                 </>
               )}
-              {puedeAdministrar(s) && <Link href="/admin">Administración</Link>}
+              {puedeAdministrar(s) && <EnlaceNav href="/admin">Administración</EnlaceNav>}
             </nav>
           )}
           {s ? (
             <div className="sesion">
-              <span className="quien">{s.nombre}</span>
-              <span className="rol">{ROL_LABELS[s.rol] ?? s.rol}</span>
+              <span className="quien">
+                <span className="inicial" aria-hidden>{s.nombre.trim().charAt(0).toUpperCase()}</span>
+                <span className="nombre">{s.nombre}</span>
+                <span className="rol">{ROL_LABELS[s.rol] ?? s.rol}</span>
+              </span>
               <form action={salir}>
-                <button type="submit">Salir</button>
+                <button type="submit" title="Cerrar sesión">
+                  <IconoSalir />
+                  <span>Salir</span>
+                </button>
               </form>
             </div>
           ) : (
             <div className="sesion">
-              <Link href="/ingresar" style={{ color: '#fff' }}>Ingresar</Link>
+              <Link href="/ingresar" className="entrar">Ingresar</Link>
             </div>
           )}
-        </header>
-        <div className="contenido">{children}</div>
+        </BarraSuperior>
+        <Contenido>{children}</Contenido>
       </body>
     </html>
   )

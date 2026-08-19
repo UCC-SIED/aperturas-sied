@@ -32,7 +32,15 @@ export default async function Admin() {
 
   return (
     <main>
-      <h1>Administración</h1>
+      <div className="encabezado">
+        <div>
+          <h1>Administración</h1>
+          <p className="sub">
+            Quién entra al sistema, con qué rol y sobre qué carreras. Los cambios tienen efecto
+            en el momento, sin necesidad de que la persona vuelva a ingresar.
+          </p>
+        </div>
+      </div>
 
       <h2>Dar de alta</h2>
       <form action={crearUsuario} className="ficha alta-usuario">

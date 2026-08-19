@@ -8,6 +8,7 @@ import { fmtFecha, fmtFechaHora } from '@/lib/formato'
 import { joinDocentes } from '@/lib/docentes'
 import { IconoCompartida } from '@/components/iconos'
 import { EditorDocentes } from '@/components/EditorDocentes'
+import { EstadoBadge } from '@/components/EstadoBadge'
 import { actualizarAsignatura } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -37,12 +38,20 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
 
   return (
     <main>
-      <h1>{a.nombre} <span className="codigo-asignatura">{a.codigo}</span></h1>
-      <p className="sub">
-        {a.catedra && <>Cátedra {a.catedra} · </>}
-        {a.cargaHoraria && <>{a.cargaHoraria} h · </>}
-        {ESTADO_LABELS[a.estado as Estado]}
-      </p>
+      <Link className="volver" href="/asignaturas">← Todas las asignaturas</Link>
+      <div className="encabezado">
+        <div>
+          <h1>{a.nombre} <span className="codigo-asignatura">{a.codigo}</span></h1>
+          <p className="sub">
+            {a.catedra && <>Cátedra {a.catedra} · </>}
+            {a.cargaHoraria && <>{a.cargaHoraria} h · </>}
+            {a.planItems.length === 1 ? 'En 1 plan de estudio' : `En ${a.planItems.length} planes de estudio`}
+          </p>
+        </div>
+        <div className="acciones">
+          <EstadoBadge estado={a.estado} />
+        </div>
+      </div>
 
       {a.planItems.length > 1 && (
         <div className="aviso" role="note">
@@ -73,7 +82,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
       ) : (
         <table>
           <tbody>
-            <tr><td><strong>Estado</strong></td><td>{ESTADO_LABELS[a.estado as Estado]}</td></tr>
+            <tr><td><strong>Estado</strong></td><td><EstadoBadge estado={a.estado} /></td></tr>
             <tr><td><strong>Docente</strong></td><td>{joinDocentes(a.docentes.map((d) => d.nombre)) || '—'}</td></tr>
             <tr><td><strong>Asesor</strong></td><td>{a.asesor ?? '—'}</td></tr>
           </tbody>

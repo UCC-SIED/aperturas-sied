@@ -3,8 +3,9 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { carrerasVisibles } from '@/lib/permisos'
-import { ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { joinDocentes } from '@/lib/docentes'
+import { EstadoBadge } from '@/components/EstadoBadge'
+import { IconoBuscar } from '@/components/iconos'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,14 +30,29 @@ export default async function Asignaturas({ searchParams }: { searchParams: Prom
 
   return (
     <main>
-      <h1>Asignaturas</h1>
-      <p className="sub">
-        {visibles ? 'Las de tus carreras.' : 'Catálogo completo.'} Una asignatura existe una sola vez
-        aunque la compartan varias carreras.
-      </p>
+      <div className="encabezado">
+        <div>
+          <h1>
+            Asignaturas <span className="contador">({asignaturas.length})</span>
+          </h1>
+          <p className="sub">
+            {visibles ? 'Las de tus carreras.' : 'Catálogo completo.'} Una asignatura existe una sola
+            vez aunque la compartan varias carreras.
+          </p>
+        </div>
+      </div>
       <form className="buscador">
-        <input name="q" defaultValue={q} placeholder="Buscar por nombre o código..." aria-label="Buscar asignatura" />
+        <div className="caja-busqueda">
+          <IconoBuscar />
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder="Buscar por nombre o código…"
+            aria-label="Buscar asignatura"
+          />
+        </div>
         <button type="submit">Buscar</button>
+        {q && <a className="limpiar-filtro" href="/asignaturas">Limpiar</a>}
       </form>
       {asignaturas.length ? (
         <div className="tabla-scroll">
@@ -55,7 +71,7 @@ export default async function Asignaturas({ searchParams }: { searchParams: Prom
                     <Link href={`/asignaturas/${encodeURIComponent(a.codigo)}`}>{a.nombre}</Link>
                     {a.planItems.length > 1 && <small> · transversal</small>}
                   </td>
-                  <td>{ESTADO_LABELS[a.estado as Estado]}</td>
+                  <td><EstadoBadge estado={a.estado} /></td>
                   <td>{joinDocentes(a.docentes.map((d) => d.nombre)) || '—'}</td>
                   <td>{a.asesor ?? '—'}</td>
                   <td><small>{a.planItems.map((p) => p.carrera.nombre).join(' · ') || '—'}</small></td>

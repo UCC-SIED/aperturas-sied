@@ -57,11 +57,17 @@ export default async function Periodos() {
 
   return (
     <main>
-      <h1>Períodos</h1>
-      <p className="sub">
-        El calendario del año: cuándo abre la inscripción, cuándo se cursa y cuándo cierra cada
-        período. Las asignaturas que se planifican heredan estas fechas.
-      </p>
+      <div className="encabezado">
+        <div>
+          <h1>
+            Períodos <span className="contador">({periodos.length})</span>
+          </h1>
+          <p className="sub">
+            El calendario del año: cuándo abre la inscripción, cuándo se cursa y cuándo cierra
+            cada período. Las asignaturas que se planifican heredan estas fechas.
+          </p>
+        </div>
+      </div>
 
       {editable && (
         <details className="alta-periodo" open={!periodos.length}>
