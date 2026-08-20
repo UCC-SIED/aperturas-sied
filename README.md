@@ -37,7 +37,16 @@ Los permisos se gestionan desde **`/admin`**, sin tocar código. `npm run usuari
 
 ## Ingreso
 
-Mientras no esté configurado Google (ver más abajo), se entra con **correo y contraseña**, definida por administración desde `/admin` — no hay forma de que una persona elija su propia contraseña todavía. Los permisos funcionan igual en los dos modos.
+Mientras no esté configurado Google (ver más abajo), se entra con **correo y contraseña**. La primera se la carga administración desde `/admin`; después, si alguien se la olvida, puede recuperarla sola desde **"¿Olvidaste tu contraseña?"** en `/ingresar` — le llega un link por correo, válido dos horas, para elegir una nueva. Los permisos funcionan igual en los dos modos de ingreso.
+
+### Recuperar contraseña (configurar el envío de correo)
+
+El link de recuperación se manda con [Resend](https://resend.com) — no usa el SMTP de la universidad ni ninguna cuenta de correo existente.
+
+1. Crear una cuenta gratis en [resend.com](https://resend.com) (hasta 3.000 correos/mes).
+2. **API Keys → Create API Key**, copiarla a `RESEND_API_KEY`.
+3. Sin verificar un dominio, Resend sólo entrega a la casilla dueña de la cuenta — sirve para probar el flujo, pero no para que le llegue a cualquier usuario real. Para eso, en **Domains → Add Domain** cargar `ucc.edu.ar` (o el dominio que se use para enviar) y sumar los registros DNS que pide Resend; una vez verificado, `RESEND_FROM_EMAIL` puede ser una dirección de ese dominio, por ejemplo `Gestión de Asignaturas SIED <no-responder@ucc.edu.ar>`.
+4. Sin `RESEND_API_KEY` cargada, pedir la recuperación tira error en vez de mandar nada — no hay un modo "silencioso" a medio configurar.
 
 ## Ingreso con Google
 

@@ -45,6 +45,20 @@ model Usuario {
   unidad       Unidad?          @relation(fields: [unidadId], references: [id])
   carreras     UsuarioCarrera[]
   cambios      Cambio[]
+  reinicios    ReinicioContrasena[]
+}
+
+/// Un pedido de "olvidé mi contraseña": el link que se manda por correo
+/// vale una sola vez y vence a las dos horas. Se guarda el hash del token,
+/// nunca el token en sí — igual que la contraseña.
+model ReinicioContrasena {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expira    DateTime
+  usado     Boolean  @default(false)
+  creado    DateTime @default(now())
 }
 
 model UsuarioCarrera {

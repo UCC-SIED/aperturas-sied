@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { googleActivo } from '@/lib/sesion'
 import { signIn } from '@/auth'
 import { Boton } from '@/components/Boton'
@@ -79,6 +80,9 @@ export default async function Ingresar({
               />
             </div>
             <CampoContrasena />
+            <p className="olvide-contrasena">
+              <Link href="/recuperar">¿Olvidaste tu contraseña?</Link>
+            </p>
             <Boton className="boton-principal" enCurso="Ingresando">Ingresar</Boton>
           </form>
         )}
