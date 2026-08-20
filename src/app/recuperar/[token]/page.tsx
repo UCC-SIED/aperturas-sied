@@ -1,10 +1,8 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { hashToken } from '@/lib/tokens'
-import { Boton } from '@/components/Boton'
-import { CampoContrasena } from '@/components/CampoContrasena'
 import { IconoCandado, IconoAlerta } from '@/components/iconos'
-import { restablecerContrasena } from './actions'
+import { FormRestablecer } from './FormRestablecer'
 
 export const metadata = { title: 'Elegir contraseña nueva' }
 
@@ -45,15 +43,7 @@ export default async function RecuperarConToken({
             </p>
           </>
         ) : (
-          <form action={restablecerContrasena.bind(null, token)} className="form-ingreso">
-            <CampoContrasena
-              id="contrasena"
-              name="contrasena"
-              label="Contraseña nueva"
-              autoComplete="new-password"
-            />
-            <Boton className="boton-principal" enCurso="Guardando">Guardar y entrar</Boton>
-          </form>
+          <FormRestablecer token={token} />
         )}
       </div>
     </main>

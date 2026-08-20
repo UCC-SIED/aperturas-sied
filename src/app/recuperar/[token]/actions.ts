@@ -8,10 +8,16 @@ import { iniciarSesion } from '@/lib/sesion'
 
 const CONTRASENA_MINIMA = 8
 
-export async function restablecerContrasena(token: string, formData: FormData) {
+export type EstadoContrasena = { error: string | null }
+
+export async function restablecerContrasena(
+  token: string,
+  _prevState: EstadoContrasena,
+  formData: FormData,
+): Promise<EstadoContrasena> {
   const contrasena = String(formData.get('contrasena') ?? '')
   if (contrasena.length < CONTRASENA_MINIMA) {
-    throw new Error(`La contraseña tiene que tener al menos ${CONTRASENA_MINIMA} caracteres`)
+    return { error: `La contraseña tiene que tener al menos ${CONTRASENA_MINIMA} caracteres` }
   }
 
   const reinicio = await prisma.reinicioContrasena.findUnique({

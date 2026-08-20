@@ -1,7 +1,6 @@
 import Link from 'next/link'
-import { Boton } from '@/components/Boton'
 import { IconoCandado, IconoAlerta } from '@/components/iconos'
-import { solicitarRecuperacion } from './actions'
+import { FormRecuperar } from './FormRecuperar'
 
 export const metadata = { title: 'Recuperar contraseña' }
 
@@ -49,23 +48,7 @@ export default async function Recuperar({
               Ingresá tu correo institucional y te mandamos un link para elegir una contraseña
               nueva.
             </p>
-            <form action={solicitarRecuperacion} className="form-ingreso">
-              <div className="campo">
-                <label htmlFor="email">Correo institucional</label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  inputMode="email"
-                  autoComplete="username"
-                  placeholder="alguien@ucc.edu.ar"
-                  spellCheck={false}
-                  required
-                  autoFocus
-                />
-              </div>
-              <Boton className="boton-principal" enCurso="Enviando">Mandar link</Boton>
-            </form>
+            <FormRecuperar />
             <p className="nota-ingreso">
               <Link href="/ingresar">Volver a ingresar</Link>
             </p>
