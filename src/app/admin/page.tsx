@@ -1,22 +1,23 @@
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesion } from '@/lib/sesion'
 import { puedeAdministrar, ROLES, ROL_LABELS, ROL_DESCRIPCIONES } from '@/lib/permisos'
 import { fmtFechaHora } from '@/lib/formato'
 import { pedidosPendientes } from '@/lib/pedidos'
 import { Boton } from '@/components/Boton'
+import { CONTRASENA_MINIMA } from '@/lib/credenciales'
 import {
-  crearUsuario, cambiarRol, alternarActivo, asignarCarreras, asignarUnidad,
+  cambiarRol, alternarActivo, asignarCarreras, asignarUnidad,
   establecerContrasena, descartarPedido,
 } from './actions'
+import { FormAlta } from './FormAlta'
 
 export const metadata = { title: 'Administración' }
 
 export const dynamic = 'force-dynamic'
 
 export default async function Admin() {
-  const s = await sesionActual()
-  if (!s) redirect('/ingresar')
+  const s = await exigirSesion()
   if (!puedeAdministrar(s)) redirect('/panel')
 
   const [usuarios, carreras, unidades, cambios, pedidos] = await Promise.all([
@@ -74,7 +75,7 @@ export default async function Admin() {
                         type="text"
                         placeholder="mínimo 8 caracteres"
                         required
-                        minLength={8}
+                        minLength={CONTRASENA_MINIMA}
                         aria-label={`Contraseña nueva para ${p.usuario.nombre}`}
                       />
                       <Boton enCurso="Guardando">Guardar</Boton>
@@ -93,31 +94,7 @@ export default async function Admin() {
       )}
 
       <h2>Dar de alta</h2>
-      <form action={crearUsuario} className="ficha alta-usuario">
-        <label htmlFor="nombre">
-          Nombre
-          {/* Sin ejemplo: acá va tanto una persona como un área, y "Dirección
-              de Empresas" hacía creer que sólo se daban de alta direcciones. */}
-          <input id="nombre" name="nombre" required />
-        </label>
-        <label htmlFor="email">
-          Correo institucional
-          <input id="email" name="email" type="email" placeholder="alguien@ucc.edu.ar" required />
-        </label>
-        <label htmlFor="rol">
-          Rol
-          <select id="rol" name="rol" defaultValue="director">
-            {ROLES.map((r) => (
-              <option key={r} value={r}>{ROL_LABELS[r]}</option>
-            ))}
-          </select>
-        </label>
-        <label htmlFor="contrasena">
-          Contraseña
-          <input id="contrasena" name="contrasena" type="text" placeholder="mínimo 8 caracteres" required minLength={8} />
-        </label>
-        <Boton enCurso="Dando de alta">Dar de alta</Boton>
-      </form>
+      <FormAlta roles={ROLES.map((r) => ({ valor: r, etiqueta: ROL_LABELS[r] }))} />
 
       <details className="que-hace-cada-rol">
         <summary>Qué puede hacer cada rol</summary>
@@ -209,7 +186,7 @@ export default async function Admin() {
                       type="text"
                       placeholder="mínimo 8 caracteres"
                       required
-                      minLength={8}
+                      minLength={CONTRASENA_MINIMA}
                       aria-label={`Contraseña nueva para ${u.nombre}`}
                     />
                     <Boton enCurso="Guardando">Guardar</Boton>

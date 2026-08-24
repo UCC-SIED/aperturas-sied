@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesion } from '@/lib/sesion'
 import { carrerasVisibles } from '@/lib/permisos'
 import { ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { fmtFecha } from '@/lib/formato'
@@ -12,8 +12,7 @@ import { joinDocentes } from '@/lib/docentes'
  * un director sólo baja sus carreras.
  */
 export async function GET() {
-  const s = await sesionActual()
-  if (!s) return new NextResponse('Iniciá sesión', { status: 401 })
+  const s = await exigirSesion()
 
   const visibles = carrerasVisibles(s)
   const aperturas = await prisma.apertura.findMany({

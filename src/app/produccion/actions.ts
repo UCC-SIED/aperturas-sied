@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesionActiva } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { calcularCambios } from '@/lib/seguimiento'
 
@@ -11,7 +11,7 @@ import { calcularCambios } from '@/lib/seguimiento'
  * Sólo escribe las filas que realmente cambiaron.
  */
 export async function guardarSeguimiento(carreraId: number, formData: FormData) {
-  const s = await sesionActual()
+  const s = await exigirSesionActiva()
   if (!puedeEditarProduccion(s)) {
     throw new Error('Sólo el equipo SIED edita el estado de producción')
   }
@@ -55,7 +55,7 @@ export async function guardarSeguimiento(carreraId: number, formData: FormData) 
     const nombre = items.find((i) => i.asignatura.codigo === c.codigo)?.asignatura.nombre ?? c.codigo
     await prisma.cambio.create({
       data: {
-        usuarioId: s!.id,
+        usuarioId: s.id,
         accion: 'cambio_estado',
         detalle: `${nombre}: ${c.detalle}`,
         asignaturaCodigo: c.codigo,

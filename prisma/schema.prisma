@@ -32,20 +32,24 @@ model Carrera {
 /// sied = todo · director = planifica sus carreras · unidad = planifica
 /// todas las carreras de su unidad académica · consulta = sólo mira.
 model Usuario {
-  id                Int                @id @default(autoincrement())
-  email             String             @unique
-  nombre            String
-  rol               String             @default("consulta")
-  activo            Boolean            @default(true)
+  id                   Int                @id @default(autoincrement())
+  email                String             @unique
+  nombre               String
+  rol                  String             @default("consulta")
+  activo               Boolean            @default(true)
   /// Hash con sal (scrypt), nunca la contraseña en texto plano. Null hasta
   /// que administración le defina una.
-  passwordHash      String?
+  passwordHash         String?
+  /// Mientras esté en true, la persona no puede usar el sistema hasta elegir
+  /// una contraseña propia. Arranca en true porque la provisoria del alta la
+  /// conoce administración: tiene que dejar de servir en cuanto entre.
+  debeElegirContrasena Boolean            @default(true)
   /// Sólo para rol "unidad": qué unidad académica planifica entera.
-  unidadId          String?
-  unidad            Unidad?            @relation(fields: [unidadId], references: [id])
-  carreras          UsuarioCarrera[]
-  cambios           Cambio[]
-  pedidosContrasena PedidoContrasena[]
+  unidadId             String?
+  unidad               Unidad?            @relation(fields: [unidadId], references: [id])
+  carreras             UsuarioCarrera[]
+  cambios              Cambio[]
+  pedidosContrasena    PedidoContrasena[]
 }
 
 /// Un pedido de "no puedo entrar", que el equipo SIED resuelve a mano desde

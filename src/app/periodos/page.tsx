@@ -1,7 +1,6 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesion } from '@/lib/sesion'
 import { carrerasVisibles, puedeEditarProduccion } from '@/lib/permisos'
 import { fmtFecha } from '@/lib/formato'
 import { estadoPeriodo } from '@/lib/estado-periodo'
@@ -27,8 +26,7 @@ const CAMPOS_FECHA = [
 ] as const
 
 export default async function Periodos() {
-  const s = await sesionActual()
-  if (!s) redirect('/ingresar')
+  const s = await exigirSesion()
 
   const visibles = carrerasVisibles(s)
   const editable = puedeEditarProduccion(s)

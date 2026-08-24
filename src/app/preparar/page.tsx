@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesion } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { IconoCompartida } from '@/components/iconos'
 import { EstadoBadge } from '@/components/EstadoBadge'
@@ -16,8 +16,7 @@ export default async function Preparar({
 }: {
   searchParams: Promise<{ periodo?: string }>
 }) {
-  const s = await sesionActual()
-  if (!s) redirect('/ingresar')
+  const s = await exigirSesion()
   if (!puedeEditarProduccion(s)) redirect('/panel')
 
   const hoy = new Date()

@@ -4,12 +4,12 @@ import {
   puedeAdministrar, esCorreoInstitucional,
 } from '@/lib/permisos'
 
-const admin = { id: 0, nombre: 'Admin', email: 'tecnologia.sied@ucc.edu.ar', rol: 'admin', carreraIds: [] }
-const sied = { id: 1, nombre: 'Goni', email: 'g@ucc.edu.ar', rol: 'sied', carreraIds: [] }
-const dir = { id: 2, nombre: 'Directora', email: 'd@ucc.edu.ar', rol: 'director', carreraIds: [7, 9] }
-const consulta = { id: 3, nombre: 'Dirección', email: 'c@ucc.edu.ar', rol: 'consulta', carreraIds: [] }
+const admin = { id: 0, nombre: 'Admin', email: 'tecnologia.sied@ucc.edu.ar', rol: 'admin', carreraIds: [], debeElegirContrasena: false }
+const sied = { id: 1, nombre: 'Goni', email: 'g@ucc.edu.ar', rol: 'sied', carreraIds: [], debeElegirContrasena: false }
+const dir = { id: 2, nombre: 'Directora', email: 'd@ucc.edu.ar', rol: 'director', carreraIds: [7, 9], debeElegirContrasena: false }
+const consulta = { id: 3, nombre: 'Dirección', email: 'c@ucc.edu.ar', rol: 'consulta', carreraIds: [], debeElegirContrasena: false }
 // carreraIds ya viene resuelto por sesionActual con todas las de su unidad.
-const unidad = { id: 4, nombre: 'Posgrado', email: 'u@ucc.edu.ar', rol: 'unidad', carreraIds: [7, 8, 9] }
+const unidad = { id: 4, nombre: 'Posgrado', email: 'u@ucc.edu.ar', rol: 'unidad', carreraIds: [7, 8, 9], debeElegirContrasena: false }
 
 describe('permisos', () => {
   it('el SIED puede editar cualquier carrera', () => {

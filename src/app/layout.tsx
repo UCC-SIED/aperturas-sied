@@ -51,11 +51,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           )}
           {s ? (
             <div className="sesion">
-              <span className="quien">
+              <Link href="/perfil" className="quien" title="Mi cuenta">
                 <span className="inicial" aria-hidden>{s.nombre.trim().charAt(0).toUpperCase()}</span>
                 <span className="nombre">{s.nombre}</span>
                 <span className="rol">{ROL_LABELS[s.rol] ?? s.rol}</span>
-              </span>
+              </Link>
               <form action={salir}>
                 <button type="submit" title="Cerrar sesión">
                   <IconoSalir />

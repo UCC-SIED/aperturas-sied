@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { prisma } from './db'
 import { auth } from '@/auth'
 import type { Sesion } from './permisos'
@@ -44,6 +45,7 @@ export async function sesionActual(): Promise<Sesion | null> {
     email: u.email,
     rol: u.rol,
     carreraIds,
+    debeElegirContrasena: u.debeElegirContrasena,
   }
 }
 
@@ -60,4 +62,33 @@ export async function iniciarSesion(email: string) {
 
 export async function cerrarSesion() {
   ;(await cookies()).delete(COOKIE)
+}
+
+/**
+ * La sesión de alguien que puede usar el sistema. Si no puede, no vuelve.
+ *
+ * El chequeo va acá y no en el layout raíz a propósito: los layouts del App
+ * Router no se reejecutan al navegar del lado del cliente, así que un guardia
+ * ahí no correría en cada cambio de ruta. Ver la guía de autenticación de Next
+ * en node_modules/next/dist/docs/01-app/02-guides/authentication.md.
+ */
+export async function exigirSesion(): Promise<Sesion> {
+  const s = await sesionActual()
+  if (!s) redirect('/ingresar')
+  if (s.debeElegirContrasena) redirect('/elegir-contrasena')
+  return s
+}
+
+/**
+ * Lo mismo para usar dentro de una server action, que se puede disparar sin
+ * pasar por ninguna pantalla. Lanza en vez de redirigir, que es el patrón de
+ * las acciones de este proyecto: las recoge src/app/error.tsx.
+ */
+export async function exigirSesionActiva(): Promise<Sesion> {
+  const s = await sesionActual()
+  if (!s) throw new Error('Tenés que ingresar de nuevo')
+  if (s.debeElegirContrasena) {
+    throw new Error('Antes de seguir tenés que elegir una contraseña propia')
+  }
+  return s
 }

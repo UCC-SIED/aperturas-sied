@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesion } from '@/lib/sesion'
 import { carrerasVisibles, puedeEditarProduccion } from '@/lib/permisos'
 import { fmtFecha, fmtFechaISO } from '@/lib/formato'
 import { joinDocentes } from '@/lib/docentes'
@@ -30,8 +30,7 @@ const CAMPOS_FECHA = [
 ] as const
 
 export default async function Periodo({ params }: { params: Promise<{ id: string }> }) {
-  const s = await sesionActual()
-  if (!s) redirect('/ingresar')
+  const s = await exigirSesion()
 
   const { id } = await params
   const periodo = await prisma.periodo.findUnique({

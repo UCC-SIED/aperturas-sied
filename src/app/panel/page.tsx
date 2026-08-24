@@ -1,7 +1,6 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesion } from '@/lib/sesion'
 import { carrerasVisibles } from '@/lib/permisos'
 import { resumirAvance } from '@/lib/avance'
 import { fmtFecha } from '@/lib/formato'
@@ -13,8 +12,7 @@ export const metadata = { title: 'Panel de control' }
 export const dynamic = 'force-dynamic'
 
 export default async function Panel() {
-  const s = await sesionActual()
-  if (!s) redirect('/ingresar')
+  const s = await exigirSesion()
 
   const visibles = carrerasVisibles(s)
   const hoy = new Date()

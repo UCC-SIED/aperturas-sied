@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesionActiva } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { validarFechas } from '@/lib/validar'
 import { parseDocentes } from '@/lib/docentes'
@@ -23,7 +23,7 @@ function fecha(form: FormData, campo: string): Date | null {
  * corregirlas para ésta en particular, sin tocar el período ni las demás.
  */
 export async function editarFechasApertura(aperturaId: number, formData: FormData) {
-  const s = await sesionActual()
+  const s = await exigirSesionActiva()
   if (!puedeEditarProduccion(s)) {
     throw new Error('Sólo el equipo SIED corrige las fechas de una apertura')
   }
@@ -56,7 +56,7 @@ export async function editarFechasApertura(aperturaId: number, formData: FormDat
   await prisma.apertura.update({ where: { id: aperturaId }, data: fechas })
   await prisma.cambio.create({
     data: {
-      usuarioId: s!.id,
+      usuarioId: s.id,
       accion: 'edito_fechas_apertura',
       detalle: `Fechas propias para ${apertura.asignatura.nombre} (excepción sobre el período)`,
       asignaturaCodigo: apertura.asignaturaCodigo,
@@ -71,7 +71,7 @@ export async function editarFechasApertura(aperturaId: number, formData: FormDat
  * que es de la asignatura en general y no cambia de una apertura a otra.
  */
 export async function editarDocentesApertura(aperturaId: number, formData: FormData) {
-  const s = await sesionActual()
+  const s = await exigirSesionActiva()
   if (!puedeEditarProduccion(s)) {
     throw new Error('Sólo el equipo SIED edita el docente tutor')
   }
@@ -92,7 +92,7 @@ export async function editarDocentesApertura(aperturaId: number, formData: FormD
   }
   await prisma.cambio.create({
     data: {
-      usuarioId: s!.id,
+      usuarioId: s.id,
       accion: 'edito_docente_tutor',
       detalle: `Docente tutor de ${apertura.asignatura.nombre} en esta apertura`,
       asignaturaCodigo: apertura.asignaturaCodigo,
