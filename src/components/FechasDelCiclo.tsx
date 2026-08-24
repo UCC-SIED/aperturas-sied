@@ -83,8 +83,12 @@ export function FechasDelCiclo({
     <div ref={ref} className="fila-campos fechas">
       {CAMPOS.map(([campo, etiqueta]) => (
         <label key={campo} htmlFor={campo}>
-          {etiqueta}
-          {campo === 'inicioCursado' && <span className="requerido"> *</span>}
+          {/* El texto y el asterisco van juntos en un span: la etiqueta es un
+              grid y, sueltos, el asterisco se lleva una fila entera. */}
+          <span>
+            {etiqueta}
+            {campo === 'inicioCursado' && <span className="requerido"> *</span>}
+          </span>
           <input
             id={campo}
             name={campo}

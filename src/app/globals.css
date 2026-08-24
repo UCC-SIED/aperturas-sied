@@ -917,9 +917,15 @@ form.form-periodo {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: var(--e3);
+  /* Los campos se alinean por abajo: si una etiqueta ocupa dos renglones —el
+     asterisco de "Inicio de cursado *" no entraba— su campo quedaba más bajo
+     que los de al lado y la fila se veía escalonada. */
+  align-items: end;
 }
-.fila-campos.fechas { grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); }
+.fila-campos.fechas { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 .fila-campos label { display: grid; gap: var(--e1); font-size: 11.5px; font-weight: 600; color: var(--texto-suave); }
+/* El asterisco no se separa de la última palabra ni se lleva un renglón entero. */
+.fila-campos .requerido { white-space: nowrap; }
 .fila-campos .opcional { font-weight: 400; text-transform: none; }
 .fila-campos .requerido { color: var(--rojo); }
 
