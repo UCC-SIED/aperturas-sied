@@ -1879,3 +1879,18 @@ table.tabla-seguimiento .estado-badge {
 @media (max-height: 700px) {
   .tabla-scroll { max-height: none; min-height: 0; }
 }
+
+/* El nombre de la barra ahora lleva al perfil: que se note que es clickeable. */
+.sesion a.quien { border-radius: var(--radio-chico); padding: 2px var(--e1); color: #fff; }
+.sesion a.quien:hover { background: rgba(255, 255, 255, .12); text-decoration: none; }
+
+.mensaje-ok {
+  background: var(--verde-fondo);
+  border: 1px solid #bfe0d0;
+  color: var(--verde);
+  padding: var(--e3);
+  border-radius: var(--radio-chico);
+  font-size: 13px;
+  margin: 0;
+  font-weight: 600;
+}
