@@ -98,7 +98,10 @@ export default async function Produccion({
       <form className="filtros-seguimiento">
         <label htmlFor="carrera">
           Carrera
-          <SelectAutoSubmit id="carrera" name="carrera" defaultValue={String(carrera.id)}>
+          {/* key: sin esto el select se queda mostrando la opción anterior
+              cuando el servidor devuelve otra, y el filtro deja de coincidir
+              con lo que muestra la tabla. */}
+          <SelectAutoSubmit key={carrera.id} id="carrera" name="carrera" defaultValue={String(carrera.id)}>
             {carreras.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.nombre} ({c._count.planItems})
@@ -108,7 +111,7 @@ export default async function Produccion({
         </label>
         <label htmlFor="estado">
           Estado
-          <SelectAutoSubmit id="estado" name="estado" defaultValue={filtroEstado}>
+          <SelectAutoSubmit key={filtroEstado} id="estado" name="estado" defaultValue={filtroEstado}>
             <option value="">Todos</option>
             {ESTADOS.map((e) => (
               <option key={e} value={e}>{ESTADO_LABELS[e]}</option>

@@ -94,7 +94,7 @@ export default async function Preparar({
       <form className="filtros-seguimiento">
         <label htmlFor="periodo">
           Período
-          <SelectAutoSubmit id="periodo" name="periodo" defaultValue={periodoParam ?? ''}>
+          <SelectAutoSubmit key={periodoParam ?? ''} id="periodo" name="periodo" defaultValue={periodoParam ?? ''}>
             <option value="">Todos los próximos</option>
             {periodos.map((p) => (
               <option key={p.id} value={p.id}>

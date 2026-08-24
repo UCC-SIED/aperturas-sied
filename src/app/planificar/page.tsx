@@ -154,7 +154,7 @@ export default async function Planificar({
         {carreras.length > 1 && (
           <form className="selector-carrera">
             <label htmlFor="carrera">Carrera</label>
-            <SelectAutoSubmit id="carrera" name="carrera" defaultValue={String(carrera.id)}>
+            <SelectAutoSubmit key={carrera.id} id="carrera" name="carrera" defaultValue={String(carrera.id)}>
               {carreras.map((c) => (
                 <option key={c.id} value={c.id}>{c.nombre}</option>
               ))}
