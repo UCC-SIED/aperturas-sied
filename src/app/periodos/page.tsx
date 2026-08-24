@@ -69,7 +69,7 @@ export default async function Periodos() {
             <div className="fila-campos">
               <label htmlFor="nombre">
                 Nombre
-                <input id="nombre" name="nombre" placeholder="Mensual_Marzo_2027 · Bimestral_Agosto_2026" required />
+                <input id="nombre" name="nombre" required />
               </label>
               <SelectorUnidadTipo unidades={unidades} />
             </div>

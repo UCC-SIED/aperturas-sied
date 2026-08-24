@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { cicloPosgrado } from '@/lib/ciclo'
 
 const CAMPOS = [
@@ -50,6 +50,11 @@ export function FechasDelCiclo({
   /** Lo último que puso la regla, para distinguirlo de lo escrito a mano. */
   const calculado = useRef<Partial<Record<Campo, string>>>({})
 
+  /** El tipo que está elegido ahora en el formulario, que puede haber cambiado. */
+  function tipoActual(caja: HTMLDivElement): string | undefined {
+    return caja.closest('form')?.querySelector<HTMLSelectElement>('[name="tipo"]')?.value ?? tipo
+  }
+
   function completar(inicio: string) {
     const caja = ref.current
     if (!caja) return
@@ -58,9 +63,7 @@ export function FechasDelCiclo({
 
     // Educación tiene su propio calendario y otras reglas: acá se aplican sólo
     // las de Posgrado, que son las de los períodos mensuales.
-    const tipoElegido =
-      caja.closest('form')?.querySelector<HTMLSelectElement>('[name="tipo"]')?.value ?? tipo
-    if (tipoElegido !== 'mensual') return
+    if (tipoActual(caja) !== 'mensual') return
 
     const ciclo = cicloPosgrado(fecha)
     for (const [campo] of CAMPOS) {
@@ -78,6 +81,51 @@ export function FechasDelCiclo({
       calculado.current[campo] = nuevo
     }
   }
+
+  /**
+   * Al abrir la pantalla de corregir un período, los campos ya vienen con
+   * fechas. Se anota cuáles coinciden con lo que daría la regla, para poder
+   * recalcularlas si después se corrige el inicio: sin esto se las tomaba a
+   * todas por escritas a mano y no se movía ninguna.
+   */
+  useEffect(() => {
+    const inicio = deISO(valores.inicioCursado ?? '')
+    if (!inicio || tipo !== 'mensual') return
+    const ciclo = cicloPosgrado(inicio)
+    for (const [campo] of CAMPOS) {
+      if (campo === 'inicioCursado') continue
+      if ((valores[campo] ?? '') === aISO(ciclo[campo])) {
+        calculado.current[campo] = valores[campo]
+      }
+    }
+    // Sólo al montar: después manda lo que vaya escribiendo la persona.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /**
+   * Cambiar la unidad o el tipo también recalcula. Es la trampa más fácil de
+   * pisar al cargar un período: poner primero la fecha —con Educación elegida,
+   * que es lo que viene por defecto— y recién después cambiar a Posgrado. Sin
+   * esto, las fechas quedaban vacías y no había forma obvia de completarlas.
+   */
+  useEffect(() => {
+    const caja = ref.current
+    const form = caja?.closest('form')
+    if (!caja || !form) return
+
+    const alCambiar = (e: Event) => {
+      const destino = e.target as HTMLElement | null
+      const nombre = destino?.getAttribute('name')
+      if (nombre !== 'tipo' && nombre !== 'unidadId') return
+      const inicio = caja.querySelector<HTMLInputElement>('[name="inicioCursado"]')?.value
+      // El selector de tipo se rearma al cambiar la unidad: se espera un cuadro.
+      if (inicio) setTimeout(() => completar(inicio), 0)
+    }
+
+    form.addEventListener('change', alCambiar)
+    return () => form.removeEventListener('change', alCambiar)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div ref={ref} className="fila-campos fechas">
