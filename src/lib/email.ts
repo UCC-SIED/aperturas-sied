@@ -6,8 +6,19 @@ import { Resend } from 'resend'
  * de prueba `onboarding@resend.dev` sólo entrega ahí, así que no hace falta
  * verificar el dominio institucional en DNS. Por eso el sistema no le escribe
  * a los usuarios: no les llegaría.
+ *
+ * `SIED_EMAIL` permite apuntarlo a otra dirección. Sirve para dos cosas: probar
+ * que el envío funciona contra una casilla propia, y el caso en que la cuenta
+ * de Resend esté a nombre de otro correo — ahí el aviso hay que mandarlo a ése
+ * o no llega a ninguna parte, porque el remitente de prueba lo descarta en
+ * silencio.
+ *
+ * Se lee en cada llamada y no al cargar el módulo, para que un cambio de
+ * entorno no dependa de reiniciar el proceso.
  */
-const CASILLA_SIED = 'tecnologia.sied@ucc.edu.ar'
+export function casillaSied(): string {
+  return process.env.SIED_EMAIL?.trim() || 'tecnologia.sied@ucc.edu.ar'
+}
 
 const REMITENTE =
   process.env.RESEND_FROM_EMAIL || 'Gestión de Asignaturas SIED <onboarding@resend.dev>'
@@ -36,7 +47,7 @@ export async function enviarAvisoPedido(
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
     from: REMITENTE,
-    to: CASILLA_SIED,
+    to: casillaSied(),
     subject: `Pedido de contraseña — ${nombre}`,
     html: `
       <p><strong>${escapar(nombre)}</strong> (${escapar(email)}) no puede entrar y pidió

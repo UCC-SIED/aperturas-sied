@@ -45,8 +45,9 @@ El pedido queda registrado en la base sin depender de ningún correo. Además, s
 
 1. Crear una cuenta gratis en [resend.com](https://resend.com) (hasta 3.000 correos/mes).
 2. **API Keys → Create API Key**, copiarla a `RESEND_API_KEY`.
-3. Sin verificar un dominio, Resend sólo entrega a la casilla dueña de la cuenta — que es justo `tecnologia.sied@ucc.edu.ar`, así que alcanza con esto para que el aviso funcione. Verificar un dominio propio (`ucc.edu.ar`, en **Domains → Add Domain**) queda como mejora a futuro si algún día se necesita mandar desde una dirección institucional, pero no es necesario para este flujo.
-4. Sin `RESEND_API_KEY` cargada, el aviso por correo simplemente no sale — el usuario ve la confirmación normal igual y el pedido queda registrado en `/admin`, sin ningún error visible.
+3. Sin verificar un dominio, Resend sólo entrega a la casilla **dueña de la cuenta de Resend**. Si esa cuenta está a nombre de `tecnologia.sied@ucc.edu.ar`, no hay nada más que hacer. Si está a nombre de otro correo, el aviso a `tecnologia.sied` no va a llegar —Resend responde OK y lo descarta en silencio, la misma trampa por la que no funcionaba el flujo anterior—; en ese caso, poné ese correo en `SIED_EMAIL`. Verificar un dominio propio (`ucc.edu.ar`, en **Domains → Add Domain**) libera de la restricción para siempre y queda como mejora a futuro, pero no es necesario para este flujo.
+4. Para probar que el envío realmente funciona, `SIED_EMAIL` acepta cualquier dirección: apuntalo a una casilla tuya, pedí un reinicio y mirá si llega. Sin la variable, el aviso va a `tecnologia.sied@ucc.edu.ar`.
+5. Sin `RESEND_API_KEY` cargada, el aviso por correo simplemente no sale — el usuario ve la confirmación normal igual y el pedido queda registrado en `/admin`, sin ningún error visible.
 
 ## Ingreso con Google
 
