@@ -4,6 +4,8 @@ export type Sesion = {
   email: string
   rol: string
   carreraIds: number[]
+  /** Mientras sea true, sólo puede pasar por /elegir-contrasena. */
+  debeElegirContrasena: boolean
 }
 
 export const ROLES = ['admin', 'sied', 'director', 'unidad', 'consulta'] as const

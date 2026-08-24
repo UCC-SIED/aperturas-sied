@@ -61,9 +61,9 @@ beforeEach(async () => {
   await prisma.usuarioCarrera.create({ data: { usuarioId: uA.id, carreraId: carreraA } })
   await prisma.usuarioCarrera.create({ data: { usuarioId: uB.id, carreraId: carreraB } })
 
-  usuarioA = { id: uA.id, nombre: 'Dir A', email: 'a@ucc.edu.ar', rol: 'director', carreraIds: [carreraA] }
-  usuarioB = { id: uB.id, nombre: 'Dir B', email: 'b@ucc.edu.ar', rol: 'director', carreraIds: [carreraB] }
-  sied = { id: uS.id, nombre: 'SIED', email: 's@ucc.edu.ar', rol: 'sied', carreraIds: [] }
+  usuarioA = { id: uA.id, nombre: 'Dir A', email: 'a@ucc.edu.ar', rol: 'director', carreraIds: [carreraA], debeElegirContrasena: false }
+  usuarioB = { id: uB.id, nombre: 'Dir B', email: 'b@ucc.edu.ar', rol: 'director', carreraIds: [carreraB], debeElegirContrasena: false }
+  sied = { id: uS.id, nombre: 'SIED', email: 's@ucc.edu.ar', rol: 'sied', carreraIds: [], debeElegirContrasena: false }
 })
 
 afterAll(async () => {
