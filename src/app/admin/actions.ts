@@ -6,8 +6,7 @@ import { sesionActual } from '@/lib/sesion'
 import { puedeAdministrar, esCorreoInstitucional, ROLES } from '@/lib/permisos'
 import { hashContrasena } from '@/lib/contrasenas'
 import { sellarPedidos } from '@/lib/pedidos'
-
-const CONTRASENA_MINIMA = 8
+import { CONTRASENA_MINIMA } from '@/lib/credenciales'
 
 async function exigirAdmin() {
   const s = await sesionActual()
