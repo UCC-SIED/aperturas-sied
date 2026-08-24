@@ -346,7 +346,20 @@ th.num { text-align: center; }
   max-width: 70ch;
 }
 
-.grilla-scroll { overflow-x: auto; padding-bottom: var(--e3); }
+/* La grilla se recorre como una planilla: scrollea en los dos ejes dentro de
+   su propia caja, con los nombres de los períodos clavados arriba y la columna
+   de cohortes clavada a la izquierda.
+   Antes tenía sólo `overflow-x: auto`, y eso obliga al eje Y a `auto` también:
+   el encabezado pegajoso quedaba anclado a un contenedor que nunca scrolleaba,
+   así que al bajar por una grilla alta se perdían de vista los períodos y una
+   celda con muchas asignaturas quedaba encerrada sin poder recorrerla. */
+.grilla-scroll {
+  overflow: auto;
+  max-height: calc(100dvh - 220px);
+  min-height: 280px;
+  padding-bottom: var(--e3);
+}
+table.grilla thead th { top: 0; }
 
 table.grilla {
   border-collapse: separate;
@@ -1834,4 +1847,10 @@ table.tabla-seguimiento .agregar-docente input { border-bottom-color: var(--bord
   form.form-seguimiento { display: block; }
   form.form-seguimiento .tabla-scroll { max-height: 65dvh; }
   form.form-seguimiento .barra-guardar { margin-top: var(--e3); }
+}
+
+/* En ventanas bajas la caja de la grilla se quedaba con una franja inútil:
+   ahí conviene que crezca y que scrollee la página. */
+@media (max-height: 700px) {
+  .grilla-scroll { max-height: none; }
 }
