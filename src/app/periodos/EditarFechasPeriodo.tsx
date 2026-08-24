@@ -13,7 +13,6 @@ type ConFechas = {
   aperturaAfi: Date | null
   cierreAfi: Date | null
   cierreAsignatura: Date | null
-  actas: Date | null
 }
 
 /**
@@ -37,7 +36,6 @@ export function EditarFechasPeriodo({ periodo }: { periodo: ConFechas }) {
             aperturaAfi: fmtFechaISO(periodo.aperturaAfi),
             cierreAfi: fmtFechaISO(periodo.cierreAfi),
             cierreAsignatura: fmtFechaISO(periodo.cierreAsignatura),
-            actas: fmtFechaISO(periodo.actas),
           }}
         />
         <Boton enCurso="Guardando">Guardar fechas</Boton>

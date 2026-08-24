@@ -10,6 +10,7 @@ import type { CicloFechas } from './validar'
  */
 
 const DIAS_ANTES_DE_INSCRIBIR = 10
+const DIAS_DE_INSCRIPCION = 7
 const MESES_HASTA_EL_LIMITE_DE_ENTREGAS = 1
 const DIAS_DE_AFI = 20
 const MESES_HASTA_EL_CIERRE = 2
@@ -36,28 +37,24 @@ function sumarMeses(fecha: Date, meses: number): Date {
   return r
 }
 
-/**
- * El ciclo completo a partir del inicio de cursado.
- *
- * El cierre de inscripción y las actas quedan en null: no tienen regla y se
- * completan a mano. Inventarlas sería peor que dejarlas vacías, porque alguien
- * planificaría contra una fecha que nadie decidió.
- */
+/** El ciclo completo a partir del inicio de cursado. */
 export function cicloPosgrado(inicioCursado: Date): CicloFechas {
+  const aperturaInscripcion = sumarDias(inicioCursado, -DIAS_ANTES_DE_INSCRIBIR)
   const finCursado = sumarMeses(inicioCursado, MESES_HASTA_EL_LIMITE_DE_ENTREGAS)
   // El AFI abre al día siguiente de cerrar las entregas previas obligatorias.
   const aperturaAfi = sumarDias(finCursado, 1)
 
   return {
     inicioCursado,
-    aperturaInscripcion: sumarDias(inicioCursado, -DIAS_ANTES_DE_INSCRIBIR),
-    cierreInscripcion: null,
+    aperturaInscripcion,
+    // Siete días de inscripción, que dejan dos días libres antes de que abra
+    // el aula para terminar de configurarla.
+    cierreInscripcion: sumarDias(aperturaInscripcion, DIAS_DE_INSCRIPCION),
     finCursado,
     aperturaAfi,
     // Veinte días de AFI: los diez últimos quedan para reentregas o para que
     // el docente corrija antes de que cierre el aula.
     cierreAfi: sumarDias(aperturaAfi, DIAS_DE_AFI),
     cierreAsignatura: sumarMeses(inicioCursado, MESES_HASTA_EL_CIERRE),
-    actas: null,
   }
 }

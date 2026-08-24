@@ -45,7 +45,7 @@ beforeEach(async () => {
       inicioCursado: new Date(2026, 8, 9), aperturaInscripcion: new Date(2026, 7, 30),
       cierreInscripcion: new Date(2026, 8, 6), finCursado: new Date(2026, 9, 9),
       aperturaAfi: new Date(2026, 9, 10), cierreAfi: new Date(2026, 9, 31),
-      cierreAsignatura: new Date(2026, 10, 9), actas: new Date(2026, 10, 12),
+      cierreAsignatura: new Date(2026, 10, 9),
     },
   })).id
   periodo2 = (await prisma.periodo.create({
@@ -77,7 +77,6 @@ describe('agregar', () => {
     const ap = await prisma.apertura.findFirst({ where: { asignaturaCodigo: 'TRANS1' } })
     expect(ap!.aperturaInscripcion).toEqual(new Date(2026, 7, 30))
     expect(ap!.aperturaAfi).toEqual(new Date(2026, 9, 10))
-    expect(ap!.actas).toEqual(new Date(2026, 10, 12))
   })
 
   it('una transversal ya abierta por otra carrera no se duplica: se suma la cohorte', async () => {

@@ -9,7 +9,6 @@ const ok = {
   aperturaAfi: new Date(2026, 8, 6),
   cierreAfi: new Date(2026, 8, 27),
   cierreAsignatura: new Date(2026, 9, 5),
-  actas: new Date(2026, 9, 8),
 }
 
 describe('validarFechas', () => {
@@ -42,18 +41,13 @@ describe('validarFechas', () => {
     expect(p).toContain('la asignatura cierra antes de que venza el AFI')
   })
 
-  it('detecta actas anteriores al cierre de la asignatura', () => {
-    const p = validarFechas({ ...ok, actas: new Date(2026, 9, 1) })
-    expect(p).toContain('las actas son anteriores al cierre de la asignatura')
-  })
-
   it('detecta años imposibles (typo de carga)', () => {
     expect(validarFechas({ ...ok, inicioCursado: new Date(2062, 7, 5) })).toContain('hay fechas con años imposibles')
-    expect(validarFechas({ ...ok, actas: new Date(2016, 9, 8) })).toContain('hay fechas con años imposibles')
+    expect(validarFechas({ ...ok, cierreAsignatura: new Date(2016, 9, 8) })).toContain('hay fechas con años imposibles')
   })
 
   it('ignora los huecos: faltar una fecha no es incoherencia', () => {
-    expect(validarFechas({ ...ok, aperturaAfi: null, cierreAfi: null, actas: null })).toEqual([])
+    expect(validarFechas({ ...ok, aperturaAfi: null, cierreAfi: null })).toEqual([])
   })
 
   it('acumula varios problemas de la misma fila', () => {

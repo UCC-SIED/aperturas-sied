@@ -12,7 +12,6 @@ export type PeriodoCalendario = {
   aperturaAfi: Date | null
   cierreAfi: Date | null
   cierreAsignatura: Date | null
-  actas: Date | null
 }
 
 function celda(fila: Record<string, unknown>, exactas: string[], contiene?: string): string {
@@ -60,7 +59,6 @@ export function parsePeriodosEducacion(buffer: Buffer): PeriodoCalendario[] {
         aperturaAfi: parseFecha(celda(fila, ['APERTURA DE AFI'])),
         cierreAfi: parseFecha(celda(fila, ['VENCIMIENTO DE AFI', 'VENCIMIENTO DEL AFI', 'CIERRE DE AFI'])),
         cierreAsignatura: parseFecha(celda(fila, ['CIERRE DE ASIGNATURA'])),
-        actas: parseFecha(celda(fila, ['ACTAS'])),
       })
     }
   }

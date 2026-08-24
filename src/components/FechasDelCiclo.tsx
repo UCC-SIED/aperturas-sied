@@ -11,7 +11,6 @@ const CAMPOS = [
   ['aperturaAfi', 'Apertura del AFI'],
   ['cierreAfi', 'Vencimiento del AFI'],
   ['cierreAsignatura', 'Cierre de asignatura'],
-  ['actas', 'Actas'],
 ] as const
 
 type Campo = (typeof CAMPOS)[number][0]

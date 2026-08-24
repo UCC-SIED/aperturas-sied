@@ -35,10 +35,14 @@ describe('ciclo de un período mensual de Posgrado', () => {
     expect(iso(c.cierreAsignatura)).toBe('2027-05-03')
   })
 
-  // No hay regla para estas dos: quedan para completar a mano.
-  it('deja vacías las que no tienen regla', () => {
-    expect(c.cierreInscripcion).toBeNull()
-    expect(c.actas).toBeNull()
+  it('la inscripción cierra a los siete días de abrir', () => {
+    expect(iso(c.cierreInscripcion)).toBe('2027-02-28')
+  })
+
+  // Los dos días son para terminar de configurar el aula antes de que entren.
+  it('deja dos días libres entre el cierre de inscripción y el inicio del cursado', () => {
+    const dias = Math.round((+d('2027-03-03') - +c.cierreInscripcion!) / 86400000) - 1
+    expect(dias).toBe(2)
   })
 
   it('el AFI vence antes de que cierre el aula, con margen para reentregas', () => {
@@ -48,7 +52,10 @@ describe('ciclo de un período mensual de Posgrado', () => {
   })
 
   it('las fechas quedan en orden cronológico', () => {
-    const orden = [c.aperturaInscripcion, d('2027-03-03'), c.finCursado, c.aperturaAfi, c.cierreAfi, c.cierreAsignatura]
+    const orden = [
+      c.aperturaInscripcion, c.cierreInscripcion, d('2027-03-03'),
+      c.finCursado, c.aperturaAfi, c.cierreAfi, c.cierreAsignatura,
+    ]
     for (let i = 1; i < orden.length; i++) {
       expect(+orden[i]!).toBeGreaterThan(+orden[i - 1]!)
     }

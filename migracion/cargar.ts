@@ -60,7 +60,7 @@ export async function cargar(
     orden: p.orden, duracion: null, estadoOrigen: '', periodoNombre: null,
     fechas: {
       inicioCursado: null, aperturaInscripcion: null, cierreInscripcion: null,
-      finCursado: null, aperturaAfi: null, cierreAfi: null, cierreAsignatura: null, actas: null,
+      finCursado: null, aperturaAfi: null, cierreAfi: null, cierreAsignatura: null,
     },
   }))
   // El plan va primero: define el orden. Las filas con período pisan lo demás.
@@ -154,14 +154,14 @@ export async function cargar(
         tipo: p.tipo, mes: p.mes, inicioCursado: p.inicioCursado,
         aperturaInscripcion: p.aperturaInscripcion, cierreInscripcion: p.cierreInscripcion,
         finCursado: p.finCursado, aperturaAfi: p.aperturaAfi, cierreAfi: p.cierreAfi,
-        cierreAsignatura: p.cierreAsignatura, actas: p.actas,
+        cierreAsignatura: p.cierreAsignatura,
       },
       create: {
         unidadId: 'educacion', nombre: p.nombre, tipo: p.tipo, mes: p.mes,
         inicioCursado: p.inicioCursado,
         aperturaInscripcion: p.aperturaInscripcion, cierreInscripcion: p.cierreInscripcion,
         finCursado: p.finCursado, aperturaAfi: p.aperturaAfi, cierreAfi: p.cierreAfi,
-        cierreAsignatura: p.cierreAsignatura, actas: p.actas,
+        cierreAsignatura: p.cierreAsignatura,
       },
     })
   }
@@ -232,14 +232,14 @@ export async function cargar(
         inicioCursado: f.fechas.inicioCursado, aperturaInscripcion: f.fechas.aperturaInscripcion,
         cierreInscripcion: f.fechas.cierreInscripcion, finCursado: f.fechas.finCursado,
         aperturaAfi: f.fechas.aperturaAfi, cierreAfi: f.fechas.cierreAfi,
-        cierreAsignatura: f.fechas.cierreAsignatura, actas: f.fechas.actas,
+        cierreAsignatura: f.fechas.cierreAsignatura,
       },
       create: {
         asignaturaCodigo: f.codigo!, periodoId,
         inicioCursado: f.fechas.inicioCursado, aperturaInscripcion: f.fechas.aperturaInscripcion,
         cierreInscripcion: f.fechas.cierreInscripcion, finCursado: f.fechas.finCursado,
         aperturaAfi: f.fechas.aperturaAfi, cierreAfi: f.fechas.cierreAfi,
-        cierreAsignatura: f.fechas.cierreAsignatura, actas: f.fechas.actas,
+        cierreAsignatura: f.fechas.cierreAsignatura,
       },
     })
     if (f.cohorte) {

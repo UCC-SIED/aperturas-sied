@@ -61,7 +61,6 @@ export async function crearPeriodo(formData: FormData) {
     aperturaAfi: fecha(formData, 'aperturaAfi'),
     cierreAfi: fecha(formData, 'cierreAfi'),
     cierreAsignatura: fecha(formData, 'cierreAsignatura'),
-    actas: fecha(formData, 'actas'),
   }
 
   const problemas = validarFechas(fechas)
@@ -97,7 +96,6 @@ export async function editarPeriodo(periodoId: number, formData: FormData) {
     aperturaAfi: fecha(formData, 'aperturaAfi'),
     cierreAfi: fecha(formData, 'cierreAfi'),
     cierreAsignatura: fecha(formData, 'cierreAsignatura'),
-    actas: fecha(formData, 'actas'),
   }
 
   const problemas = validarFechas(fechas)

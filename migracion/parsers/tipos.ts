@@ -18,6 +18,5 @@ export type FilaAsignatura = {
     aperturaAfi: Date | null
     cierreAfi: Date | null
     cierreAsignatura: Date | null
-    actas: Date | null
   }
 }

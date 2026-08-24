@@ -26,7 +26,6 @@ const CAMPOS_FECHA = [
   ['aperturaAfi', 'Apertura del AFI'],
   ['cierreAfi', 'Vencimiento del AFI'],
   ['cierreAsignatura', 'Cierre de asignatura'],
-  ['actas', 'Actas'],
 ] as const
 
 export default async function Periodo({ params }: { params: Promise<{ id: string }> }) {

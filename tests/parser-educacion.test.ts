@@ -26,7 +26,6 @@ describe('parseEducacion', () => {
     expect(a.unidad).toBe('educacion')
     expect(a.periodoNombre).toBeNull()
     expect(a.fechas.inicioCursado).toEqual(new Date(2025, 4, 7))
-    expect(a.fechas.actas).toEqual(new Date(2025, 6, 5))
     expect(a.fechas.cierreAfi).toEqual(new Date(2025, 5, 26))
     const b = filas.find((x) => x.codigo === '1220084')!
     expect(b.duracion).toBe('Cuatrimestral')

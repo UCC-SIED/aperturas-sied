@@ -6,7 +6,6 @@ export type CicloFechas = {
   aperturaAfi: Date | null
   cierreAfi: Date | null
   cierreAsignatura: Date | null
-  actas: Date | null
 }
 
 const ANIO_MIN = 2020
@@ -36,9 +35,6 @@ export function validarFechas(f: CicloFechas): string[] {
   }
   if (invertido(f.cierreAfi, f.cierreAsignatura)) {
     problemas.push('la asignatura cierra antes de que venza el AFI')
-  }
-  if (invertido(f.cierreAsignatura, f.actas)) {
-    problemas.push('las actas son anteriores al cierre de la asignatura')
   }
 
   const fechas = Object.values(f).filter((d): d is Date => d instanceof Date)

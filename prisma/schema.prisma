@@ -169,7 +169,6 @@ model Periodo {
   aperturaAfi         DateTime?
   cierreAfi           DateTime?
   cierreAsignatura    DateTime?
-  actas               DateTime?
   aperturas           Apertura[]
 
   @@unique([unidadId, nombre])
@@ -188,7 +187,6 @@ model Apertura {
   aperturaAfi         DateTime?
   cierreAfi           DateTime?
   cierreAsignatura    DateTime?
-  actas               DateTime?
   cohortes            AperturaCohorte[]
   docentesTutor       AperturaDocente[]
   avisosDescartados   AvisoDescartado[]

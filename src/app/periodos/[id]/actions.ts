@@ -45,7 +45,6 @@ export async function editarFechasApertura(aperturaId: number, formData: FormDat
     aperturaAfi: fecha(formData, 'aperturaAfi'),
     cierreAfi: fecha(formData, 'cierreAfi'),
     cierreAsignatura: fecha(formData, 'cierreAsignatura'),
-    actas: fecha(formData, 'actas'),
   }
 
   const problemas = validarFechas(fechas)
