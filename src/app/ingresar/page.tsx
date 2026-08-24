@@ -15,7 +15,7 @@ const MENSAJES: Record<string, string> = {
   'sin-alta': 'Tu cuenta todavía no está habilitada en el sistema. Escribile a tecnologia.sied@ucc.edu.ar para que te den de alta.',
   inactivo: 'Tu acceso está dado de baja. Si creés que es un error, escribile a tecnologia.sied@ucc.edu.ar.',
   credenciales: 'Correo o contraseña incorrectos. Revisá que el correo sea el institucional y que no tengas activado Bloq Mayús.',
-  'sin-contrasena': 'Tu cuenta todavía no tiene contraseña definida. Pedile al equipo SIED que te la cargue en Administración.',
+  'sin-contrasena': 'Tu cuenta todavía no tiene contraseña definida. Pedila con el enlace "¿Olvidaste tu contraseña?" de abajo y el equipo SIED te la carga.',
   AccessDenied: 'No se pudo completar el ingreso. Probá de nuevo o escribile a tecnologia.sied@ucc.edu.ar.',
 }
 

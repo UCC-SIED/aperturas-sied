@@ -2,13 +2,10 @@
 
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
-import { generarToken, hashToken } from '@/lib/tokens'
-import { enviarCorreoRecuperacion } from '@/lib/email'
+import { registrarPedido } from '@/lib/pedidos'
+import { enviarAvisoPedido } from '@/lib/email'
 
-const VIGENCIA_HORAS = 2
-
-export type EstadoRecuperacion = { error: string | null }
+export type EstadoPedido = { error: string | null }
 
 async function origen() {
   const h = await headers()
@@ -17,36 +14,30 @@ async function origen() {
 }
 
 /**
- * Nunca revela si el correo existe o no: la pantalla dice lo mismo en los
- * dos casos, para no darle a cualquiera una forma de chequear qué cuentas
- * están dadas de alta.
+ * Deja el pedido y avisa al equipo SIED, que lo resuelve a mano.
  *
- * Next 16 no deja pasar el mensaje de un `throw` al cliente en producción
- * (ver docs/error-handling) — los errores esperados van como valor de
- * retorno, y `useActionState` los muestra del lado del formulario.
+ * El aviso por correo es best-effort a propósito: el pedido ya quedó en la
+ * base, que es lo que mira administración. Si Resend no está configurado o se
+ * cae, el fallo va al log del servidor y no a la cara de alguien que no puede
+ * hacer nada al respecto — antes veía el error crudo "falta RESEND_API_KEY" y
+ * quedaba creyendo que no había pedido nada.
+ *
+ * Nunca revela si el correo existe: la pantalla dice lo mismo en los dos casos.
  */
-export async function solicitarRecuperacion(
-  _prevState: EstadoRecuperacion,
+export async function solicitarPedido(
+  _prevState: EstadoPedido,
   formData: FormData,
-): Promise<EstadoRecuperacion> {
+): Promise<EstadoPedido> {
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
   if (!email) return { error: 'Ingresá tu correo' }
 
-  const u = await prisma.usuario.findUnique({ where: { email } })
-  if (u && u.activo) {
-    const token = generarToken()
-    await prisma.reinicioContrasena.create({
-      data: {
-        usuarioId: u.id,
-        tokenHash: hashToken(token),
-        expira: new Date(Date.now() + VIGENCIA_HORAS * 60 * 60 * 1000),
-      },
-    })
-    const link = `${await origen()}/recuperar/${token}`
+  const usuario = await registrarPedido(email)
+
+  if (usuario) {
     try {
-      await enviarCorreoRecuperacion(email, link)
+      await enviarAvisoPedido(usuario.nombre, usuario.email, `${await origen()}/admin`)
     } catch (e) {
-      return { error: e instanceof Error ? e.message : 'No se pudo enviar el correo' }
+      console.error('No se pudo avisar del pedido de contraseña:', e)
     }
   }
 

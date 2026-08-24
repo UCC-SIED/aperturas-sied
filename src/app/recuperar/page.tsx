@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { IconoCandado, IconoAlerta } from '@/components/iconos'
+import { IconoCandado } from '@/components/iconos'
 import { FormRecuperar } from './FormRecuperar'
 
 export const metadata = { title: 'Recuperar contraseña' }
@@ -9,9 +9,9 @@ export const dynamic = 'force-dynamic'
 export default async function Recuperar({
   searchParams,
 }: {
-  searchParams: Promise<{ enviado?: string; vencido?: string }>
+  searchParams: Promise<{ enviado?: string }>
 }) {
-  const { enviado, vencido } = await searchParams
+  const { enviado } = await searchParams
 
   return (
     <main className="pantalla-ingreso">
@@ -29,8 +29,8 @@ export default async function Recuperar({
         {enviado ? (
           <>
             <p className="bajada-ingreso">
-              Si ese correo está dado de alta en el sistema, te llegó un mail con un link para
-              elegir una contraseña nueva. Vale por 2 horas.
+              Listo. Si ese correo está dado de alta, el equipo SIED ya tiene tu pedido y se
+              va a poner en contacto para darte una contraseña nueva.
             </p>
             <p className="nota-ingreso">
               <Link href="/ingresar">Volver a ingresar</Link>
@@ -38,15 +38,9 @@ export default async function Recuperar({
           </>
         ) : (
           <>
-            {vencido && (
-              <p className="mensaje-error" role="alert">
-                <IconoAlerta />
-                <span>Ese link ya se usó o venció. Pedí uno nuevo.</span>
-              </p>
-            )}
             <p className="bajada-ingreso">
-              Ingresá tu correo institucional y te mandamos un link para elegir una contraseña
-              nueva.
+              Ingresá tu correo institucional y le avisamos al equipo SIED, que te va a
+              cargar una contraseña nueva y te la va a pasar.
             </p>
             <FormRecuperar />
             <p className="nota-ingreso">
