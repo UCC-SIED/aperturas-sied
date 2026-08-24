@@ -189,9 +189,17 @@ Esperado: `Your database is now in sync with your Prisma schema.`
 npx tsc --noEmit
 ```
 
-Esperado: sin salida. Si `tsc` se queja de `reinicios` o de `ReinicioContrasena` en algún
-archivo, es código del flujo viejo que se borra en la tarea 3 — dejalo por ahora **sólo si
-el error está en `src/app/recuperar/`**; cualquier otro archivo hay que arreglarlo acá.
+**Esperado: errores, y sólo en estos tres archivos.** El flujo viejo del token sigue
+referenciando el modelo que acabamos de borrar, y se limpia en la tarea 3 — no lo toques
+acá:
+
+- `src/app/recuperar/actions.ts` (usa `prisma.reinicioContrasena.create`)
+- `src/app/recuperar/[token]/actions.ts`
+- `src/app/recuperar/[token]/page.tsx`
+
+La tarea está bien si **todos** los errores caen en esa lista. Si aparece un error en
+cualquier otro archivo, es algo que rompió este cambio y hay que arreglarlo antes de
+commitear. Anotá en tu reporte la lista exacta de archivos con error.
 
 - [ ] **Paso 7: commit**
 
