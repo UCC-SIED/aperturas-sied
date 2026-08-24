@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { cicloPosgrado } from '@/lib/ciclo'
+import { cicloDelPeriodo } from '@/lib/ciclo'
 
 const CAMPOS = [
   ['aperturaInscripcion', 'Apertura de inscripción'],
@@ -14,6 +14,9 @@ const CAMPOS = [
 ] as const
 
 type Campo = (typeof CAMPOS)[number][0]
+
+/** Las que se escriben a mano y disparan el cálculo, no las que se calculan. */
+const DISPARADORES: Campo[] = ['inicioCursado', 'aperturaAfi']
 
 /** aaaa-mm-dd, que es lo que espera un <input type="date"> y lo que lee el servidor. */
 function aISO(f: Date | null): string {
@@ -28,21 +31,26 @@ function deISO(v: string): Date | null {
 }
 
 /**
- * Las ocho fechas del ciclo. En un período mensual —los de Posgrado— poner el
- * inicio de cursado completa las demás con las reglas del calendario, y todas
- * quedan editables: la regla acierta en el caso normal, pero un cierre que cae
- * entre Navidad y Año Nuevo hay que poder correrlo a mano.
+ * Las siete fechas del ciclo, con las reglas del calendario aplicadas al
+ * cargar y todo editable.
  *
- * Respeta lo que se haya escrito a mano: si el inicio de cursado cambia, sólo
- * recalcula las fechas que todavía tenían el valor que la regla había puesto.
- * Sin eso, corregir el inicio dejaba las demás con las fechas del inicio viejo,
- * o pisaba un cierre que alguien había corrido a propósito.
+ * En un **mensual** —Posgrado— alcanza con el inicio de cursado: las seis
+ * restantes salen de ahí. En un **bimestral** hacen falta dos, el inicio y la
+ * apertura del AFI, porque esa última marca el fin del cursado y no se puede
+ * deducir: los bimestres A y C duran cinco semanas y los B y D, cuatro, y el
+ * sistema sólo guarda el tipo. En un **cuatrimestral** se propone el AFI a las
+ * doce semanas, que es lo que da el calendario real, y se puede corregir.
+ *
+ * Respeta lo escrito a mano: al cambiar un disparador sólo recalcula las
+ * fechas que todavía tenían el valor que la regla había puesto. Sin eso,
+ * corregir el inicio dejaba las demás con las fechas viejas, o pisaba un
+ * cierre que alguien había corrido a propósito.
  */
 export function FechasDelCiclo({
   tipo,
   valores = {},
 }: {
-  /** El tipo elegido en el formulario. Las reglas son sólo de los mensuales. */
+  /** El tipo del período. En el alta lo elige un selector y puede cambiar. */
   tipo?: string
   valores?: Partial<Record<Campo, string>>
 }) {
@@ -50,22 +58,30 @@ export function FechasDelCiclo({
   /** Lo último que puso la regla, para distinguirlo de lo escrito a mano. */
   const calculado = useRef<Partial<Record<Campo, string>>>({})
 
-  /** El tipo que está elegido ahora en el formulario, que puede haber cambiado. */
-  function tipoActual(caja: HTMLDivElement): string | undefined {
-    return caja.closest('form')?.querySelector<HTMLSelectElement>('[name="tipo"]')?.value ?? tipo
-  }
-
-  function completar(inicio: string) {
+  function completar() {
     const caja = ref.current
     if (!caja) return
-    const fecha = deISO(inicio)
-    if (!fecha) return
 
-    // Educación tiene su propio calendario y otras reglas: acá se aplican sólo
-    // las de Posgrado, que son las de los períodos mensuales.
-    if (tipoActual(caja) !== 'mensual') return
+    const leer = (campo: Campo) =>
+      caja.querySelector<HTMLInputElement>(`[name="${campo}"]`)?.value ?? ''
+    const inicio = deISO(leer('inicioCursado'))
+    if (!inicio) return
 
-    const ciclo = cicloPosgrado(fecha)
+    // El tipo se lee del formulario porque en el alta puede cambiar mientras
+    // se carga; en la pantalla de corregir viene fijo por prop.
+    const tipoElegido =
+      caja.closest('form')?.querySelector<HTMLSelectElement>('[name="tipo"]')?.value ?? tipo
+    if (!tipoElegido) return
+
+    // La apertura del AFI, si ya está puesta a mano, manda sobre lo que
+    // propondría la regla: es el dato que en Educación no se puede deducir.
+    const afiEscrito = leer('aperturaAfi')
+    const afiManual =
+      afiEscrito && afiEscrito !== calculado.current.aperturaAfi ? deISO(afiEscrito) : null
+
+    const ciclo = cicloDelPeriodo(tipoElegido, inicio, afiManual)
+    if (!ciclo) return
+
     for (const [campo] of CAMPOS) {
       if (campo === 'inicioCursado') continue
       const input = caja.querySelector<HTMLInputElement>(`[name="${campo}"]`)
@@ -77,6 +93,10 @@ export function FechasDelCiclo({
       if (loEscribioUnaPersona) continue
 
       const nuevo = aISO(ciclo[campo])
+      // Un bimestral sin AFI deja media tabla en null: no se borra lo que ya
+      // hubiera, sólo se deja de proponer.
+      if (!nuevo) continue
+
       input.value = nuevo
       calculado.current[campo] = nuevo
     }
@@ -85,13 +105,14 @@ export function FechasDelCiclo({
   /**
    * Al abrir la pantalla de corregir un período, los campos ya vienen con
    * fechas. Se anota cuáles coinciden con lo que daría la regla, para poder
-   * recalcularlas si después se corrige el inicio: sin esto se las tomaba a
-   * todas por escritas a mano y no se movía ninguna.
+   * recalcularlas si después se corrige un disparador: sin esto se las tomaba
+   * a todas por escritas a mano y no se movía ninguna.
    */
   useEffect(() => {
     const inicio = deISO(valores.inicioCursado ?? '')
-    if (!inicio || tipo !== 'mensual') return
-    const ciclo = cicloPosgrado(inicio)
+    if (!inicio || !tipo) return
+    const ciclo = cicloDelPeriodo(tipo, inicio, deISO(valores.aperturaAfi ?? ''))
+    if (!ciclo) return
     for (const [campo] of CAMPOS) {
       if (campo === 'inicioCursado') continue
       if ((valores[campo] ?? '') === aISO(ciclo[campo])) {
@@ -109,17 +130,14 @@ export function FechasDelCiclo({
    * esto, las fechas quedaban vacías y no había forma obvia de completarlas.
    */
   useEffect(() => {
-    const caja = ref.current
-    const form = caja?.closest('form')
-    if (!caja || !form) return
+    const form = ref.current?.closest('form')
+    if (!form) return
 
     const alCambiar = (e: Event) => {
-      const destino = e.target as HTMLElement | null
-      const nombre = destino?.getAttribute('name')
+      const nombre = (e.target as HTMLElement | null)?.getAttribute('name')
       if (nombre !== 'tipo' && nombre !== 'unidadId') return
-      const inicio = caja.querySelector<HTMLInputElement>('[name="inicioCursado"]')?.value
       // El selector de tipo se rearma al cambiar la unidad: se espera un cuadro.
-      if (inicio) setTimeout(() => completar(inicio), 0)
+      setTimeout(completar, 0)
     }
 
     form.addEventListener('change', alCambiar)
@@ -143,7 +161,7 @@ export function FechasDelCiclo({
             type="date"
             required={campo === 'inicioCursado'}
             defaultValue={valores[campo] ?? ''}
-            onChange={campo === 'inicioCursado' ? (e) => completar(e.currentTarget.value) : undefined}
+            onChange={DISPARADORES.includes(campo) ? completar : undefined}
           />
         </label>
       ))}
