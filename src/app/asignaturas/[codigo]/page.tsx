@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { exigirSesion } from '@/lib/sesion'
+import { textoDeRuta } from '@/lib/rutas'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
@@ -18,8 +19,10 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ codigo: string }> }) {
   const { codigo } = await params
+  const buscado = textoDeRuta(codigo)
+  if (buscado === null) return { title: 'Asignatura' }
   const a = await prisma.asignatura.findUnique({
-    where: { codigo: decodeURIComponent(codigo) },
+    where: { codigo: buscado },
     select: { nombre: true },
   })
   return { title: a?.nombre ?? 'Asignatura' }
@@ -29,8 +32,12 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
   const s = await exigirSesion()
 
   const { codigo } = await params
+  // Una dirección mal armada no llega a la base: contesta que no existe.
+  const buscado = textoDeRuta(codigo)
+  if (buscado === null) notFound()
+
   const a = await prisma.asignatura.findUnique({
-    where: { codigo: decodeURIComponent(codigo) },
+    where: { codigo: buscado },
     include: {
       planItems: { include: { carrera: { include: { unidad: true } } }, orderBy: { orden: 'asc' } },
       aperturas: { include: { periodo: true, cohortes: { include: { cohorte: { include: { carrera: true } } } } }, orderBy: { inicioCursado: 'asc' } },

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { exigirSesion } from '@/lib/sesion'
+import { idNumerico } from '@/lib/rutas'
 import { carrerasVisibles, puedeEditarProduccion } from '@/lib/permisos'
 import { fmtFecha, fmtFechaISO } from '@/lib/formato'
 import { joinDocentes } from '@/lib/docentes'
@@ -14,7 +15,9 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const p = await prisma.periodo.findUnique({ where: { id: Number(id) }, select: { nombre: true } })
+  const numero = idNumerico(id)
+  if (numero === null) return { title: 'Período' }
+  const p = await prisma.periodo.findUnique({ where: { id: numero }, select: { nombre: true } })
   return { title: p?.nombre ?? 'Período' }
 }
 
@@ -32,8 +35,12 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
   const s = await exigirSesion()
 
   const { id } = await params
+  // Una dirección inventada no llega a la base: contesta que no existe.
+  const numero = idNumerico(id)
+  if (numero === null) notFound()
+
   const periodo = await prisma.periodo.findUnique({
-    where: { id: Number(id) },
+    where: { id: numero },
     include: {
       aperturas: {
         include: {
