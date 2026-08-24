@@ -52,7 +52,7 @@ async function anotar(
 function fechasDe(p: {
   inicioCursado: Date; aperturaInscripcion: Date | null; cierreInscripcion: Date | null
   finCursado: Date | null; aperturaAfi: Date | null; cierreAfi: Date | null
-  cierreAsignatura: Date | null; actas: Date | null
+  cierreAsignatura: Date | null
 }) {
   return {
     inicioCursado: p.inicioCursado,
@@ -62,7 +62,6 @@ function fechasDe(p: {
     aperturaAfi: p.aperturaAfi,
     cierreAfi: p.cierreAfi,
     cierreAsignatura: p.cierreAsignatura,
-    actas: p.actas,
   }
 }
 

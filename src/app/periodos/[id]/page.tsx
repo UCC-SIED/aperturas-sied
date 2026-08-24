@@ -26,7 +26,6 @@ const CAMPOS_FECHA = [
   ['aperturaAfi', 'Apertura del AFI'],
   ['cierreAfi', 'Vencimiento del AFI'],
   ['cierreAsignatura', 'Cierre de asignatura'],
-  ['actas', 'Actas'],
 ] as const
 
 export default async function Periodo({ params }: { params: Promise<{ id: string }> }) {
@@ -164,8 +163,10 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                           <form action={editarFechasApertura.bind(null, ap.id)} className="fila-campos fechas">
                             {CAMPOS_FECHA.map(([campo, etiqueta]) => (
                               <label key={campo} htmlFor={`${campo}_${ap.id}`}>
-                                {etiqueta}
-                                {campo === 'inicioCursado' && <span className="requerido"> *</span>}
+                                <span>
+                                  {etiqueta}
+                                  {campo === 'inicioCursado' && <span className="requerido"> *</span>}
+                                </span>
                                 <input
                                   id={`${campo}_${ap.id}`}
                                   name={campo}

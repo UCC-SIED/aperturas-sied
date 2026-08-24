@@ -18,16 +18,27 @@ export async function guardarSeguimiento(carreraId: number, formData: FormData) 
 
   const items = await prisma.planItem.findMany({
     where: { carreraId },
-    include: { asignatura: { include: { docentes: { orderBy: { orden: 'asc' } } } } },
+    include: {
+      asignatura: {
+        include: {
+          docentes: { orderBy: { orden: 'asc' } },
+          // Los seminarios optativos se editan en la misma tabla pero no
+          // tienen PlanItem propio: sin esto, sus filas no se guardarían.
+          variantes: { include: { docentes: { orderBy: { orden: 'asc' } } } },
+        },
+      },
+    },
   })
 
+  const asignaturas = items.flatMap((i) => [i.asignatura, ...i.asignatura.variantes])
+
   const cambios = calcularCambios(
-    items.map((i) => ({
-      codigo: i.asignatura.codigo,
-      estado: i.asignatura.estado,
-      docentes: i.asignatura.docentes.map((d) => d.nombre),
-      asesor: i.asignatura.asesor,
-      observaciones: i.asignatura.observaciones,
+    asignaturas.map((a) => ({
+      codigo: a.codigo,
+      estado: a.estado,
+      docentes: a.docentes.map((d) => d.nombre),
+      asesor: a.asesor,
+      observaciones: a.observaciones,
     })),
     formData,
   )
@@ -52,7 +63,7 @@ export async function guardarSeguimiento(carreraId: number, formData: FormData) 
         })
       }
     }
-    const nombre = items.find((i) => i.asignatura.codigo === c.codigo)?.asignatura.nombre ?? c.codigo
+    const nombre = asignaturas.find((a) => a.codigo === c.codigo)?.nombre ?? c.codigo
     await prisma.cambio.create({
       data: {
         usuarioId: s.id,

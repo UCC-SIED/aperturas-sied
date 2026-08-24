@@ -9,7 +9,7 @@ const fila = (extra: Partial<FilaAsignatura>): FilaAsignatura => ({
   orden: 1, duracion: null, estadoOrigen: '5.FINALIZADA', periodoNombre: 'Mensual_Test_2026',
   fechas: { inicioCursado: new Date(2026, 7, 5), aperturaInscripcion: new Date(2026, 6, 26),
     cierreInscripcion: null, finCursado: null, aperturaAfi: null, cierreAfi: null,
-    cierreAsignatura: null, actas: null },
+    cierreAsignatura: null },
   ...extra,
 })
 
@@ -92,12 +92,12 @@ describe('cargar', () => {
         inicioCursado: new Date(2026, 2, 4), aperturaInscripcion: new Date(2026, 1, 23),
         cierreInscripcion: new Date(2026, 2, 1), finCursado: new Date(2026, 3, 25),
         aperturaAfi: new Date(2026, 3, 9), cierreAfi: new Date(2026, 3, 23),
-        cierreAsignatura: new Date(2026, 3, 29), actas: new Date(2026, 4, 2) },
+        cierreAsignatura: new Date(2026, 3, 29) },
       { nombre: 'Cuatrimestral A', tipo: 'cuatrimestral' as const, mes: 'Marzo',
         inicioCursado: new Date(2026, 2, 4), aperturaInscripcion: new Date(2026, 1, 23),
         cierreInscripcion: new Date(2026, 2, 1), finCursado: new Date(2026, 5, 13),
         aperturaAfi: new Date(2026, 4, 28), cierreAfi: new Date(2026, 5, 11),
-        cierreAsignatura: new Date(2026, 5, 17), actas: new Date(2026, 5, 20) },
+        cierreAsignatura: new Date(2026, 5, 17) },
     ]
     const base = fila({}).fechas
     const b = fila({ unidad: 'educacion', carrera: 'ED CAL', codigo: 'EDU100', nombre: 'UNA BIMESTRAL',
@@ -113,7 +113,6 @@ describe('cargar', () => {
     // el período trae su ciclo completo, base para calcular las fechas de cada aula
     const bimA = periodos.find((p) => p.nombre === 'Bimestre A')!
     expect(bimA.aperturaAfi).toEqual(new Date(2026, 3, 9))
-    expect(bimA.actas).toEqual(new Date(2026, 4, 2))
     // cada asignatura cayó en el período de su duración
     const ap = await prisma.apertura.findMany({ include: { periodo: true } })
     expect(ap.find((a) => a.asignaturaCodigo === 'EDU100')!.periodo.nombre).toBe('Bimestre A')

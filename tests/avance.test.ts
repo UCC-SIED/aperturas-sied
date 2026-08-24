@@ -1,7 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { resumirAvance } from '@/lib/avance'
 
-const asigs = (estados: string[]) => estados.map((estado, i) => ({ codigo: `C${i}`, estado }))
+/** Asignaturas comunes: ninguna es variante de otra. */
+const asigs = (estados: string[]) =>
+  estados.map((estado, i) => ({
+    codigo: `C${i}`,
+    estado,
+    principalCodigo: null,
+    variantesRequeridas: 1,
+  }))
 
 describe('resumirAvance', () => {
   it('cuenta por etapa y calcula el porcentaje de finalizadas', () => {

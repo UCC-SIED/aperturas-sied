@@ -55,7 +55,6 @@ export async function GET() {
         'Apertura AFI': fmtFecha(ap.aperturaAfi),
         'Vencimiento AFI': fmtFecha(ap.cierreAfi),
         'Cierre de asignatura': fmtFecha(ap.cierreAsignatura),
-        Actas: fmtFecha(ap.actas),
       })
     }
   }

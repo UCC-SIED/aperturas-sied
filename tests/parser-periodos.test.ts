@@ -31,7 +31,6 @@ describe('parsePeriodosEducacion', () => {
     expect(bimA.cierreAfi).toEqual(new Date(2026, 3, 23))
     expect(bimA.finCursado).toEqual(new Date(2026, 3, 25))
     expect(bimA.cierreAsignatura).toEqual(new Date(2026, 3, 29))
-    expect(bimA.actas).toEqual(new Date(2026, 4, 2))
   })
 
   it('distingue bimestral de cuatrimestral aunque arranquen el mismo día', () => {
@@ -48,7 +47,6 @@ describe('parsePeriodosEducacion', () => {
     const b = p.find((x) => x.nombre === 'Cuatrimestal B')!
     expect(b.tipo).toBe('cuatrimestral')
     expect(b.aperturaInscripcion).toBeNull()
-    expect(b.actas).toBeNull()
     expect(b.cierreAsignatura).toEqual(new Date(2026, 8, 16))
   })
 

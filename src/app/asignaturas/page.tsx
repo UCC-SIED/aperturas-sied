@@ -20,10 +20,24 @@ export default async function Asignaturas({ searchParams }: { searchParams: Prom
     where: {
       AND: [
         q ? { OR: [{ codigo: { contains: q } }, { nombre: { contains: q } }] } : {},
-        visibles ? { planItems: { some: { carreraId: { in: visibles } } } } : {},
+        // Un seminario optativo no tiene plan propio: pertenece al de su
+        // principal, así que se filtra por ahí o no lo vería nadie.
+        visibles
+          ? {
+              OR: [
+                { planItems: { some: { carreraId: { in: visibles } } } },
+                { principal: { planItems: { some: { carreraId: { in: visibles } } } } },
+              ],
+            }
+          : {},
       ],
     },
-    include: { planItems: { include: { carrera: true } }, aperturas: true, docentes: { orderBy: { orden: 'asc' } } },
+    include: {
+      planItems: { include: { carrera: true } },
+      aperturas: true,
+      docentes: { orderBy: { orden: 'asc' } },
+      principal: true,
+    },
     orderBy: { nombre: 'asc' },
     take: 300,
   })
@@ -70,11 +84,18 @@ export default async function Asignaturas({ searchParams }: { searchParams: Prom
                   <td>
                     <Link href={`/asignaturas/${encodeURIComponent(a.codigo)}`}>{a.nombre}</Link>
                     {a.planItems.length > 1 && <small> · transversal</small>}
+                    {a.principal && <small> · seminario optativo</small>}
                   </td>
                   <td><EstadoBadge estado={a.estado} /></td>
                   <td>{joinDocentes(a.docentes.map((d) => d.nombre)) || '—'}</td>
                   <td>{a.asesor ?? '—'}</td>
-                  <td><small>{a.planItems.map((p) => p.carrera.nombre).join(' · ') || '—'}</small></td>
+                  <td>
+                    <small>
+                      {a.principal
+                        ? `Depende de ${a.principal.nombre}`
+                        : a.planItems.map((p) => p.carrera.nombre).join(' · ') || '—'}
+                    </small>
+                  </td>
                   <td className="num">{a.aperturas.length}</td>
                 </tr>
               ))}

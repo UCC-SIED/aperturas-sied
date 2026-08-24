@@ -54,24 +54,48 @@ export default async function Produccion({
           planItems: true,
           aperturas: { include: { periodo: true } },
           docentes: { orderBy: { orden: 'asc' } },
+          // Los seminarios optativos no tienen PlanItem propio: cuelgan de su
+          // principal, así que se traen desde acá o no aparecerían nunca.
+          variantes: {
+            include: {
+              planItems: true,
+              aperturas: { include: { periodo: true } },
+              docentes: { orderBy: { orden: 'asc' } },
+            },
+            orderBy: { codigo: 'asc' },
+          },
         },
       },
     },
     orderBy: [{ orden: 'asc' }, { asignaturaCodigo: 'asc' }],
   })
 
-  const avance = resumirAvance(plan.map((p) => p.asignatura))
+  const avance = resumirAvance(
+    plan.flatMap((p) => [p.asignatura, ...p.asignatura.variantes]),
+  )
   const hoy = new Date()
 
+  // Una fila por asignatura, con sus seminarios optativos justo debajo: así se
+  // edita el estado de cada uno sin salir de la tabla.
+  const filas = plan.flatMap((p) => [
+    { orden: p.orden, asignatura: p.asignatura, esVariante: false },
+    ...p.asignatura.variantes.map((v) => ({
+      orden: null,
+      asignatura: v,
+      esVariante: true,
+    })),
+  ])
+
   const busqueda = normalizarBusqueda(q)
-  const visibles = plan.filter((p) => {
+  const visibles = filas.filter((f) => {
+    const a = f.asignatura
     const coincide =
       !busqueda ||
-      normalizarBusqueda(p.asignatura.nombre).includes(busqueda) ||
-      normalizarBusqueda(p.asignatura.codigo).includes(busqueda) ||
-      p.asignatura.docentes.some((d) => normalizarBusqueda(d.nombre).includes(busqueda)) ||
-      normalizarBusqueda(p.asignatura.asesor ?? '').includes(busqueda)
-    const delEstado = !filtroEstado || p.asignatura.estado === filtroEstado
+      normalizarBusqueda(a.nombre).includes(busqueda) ||
+      normalizarBusqueda(a.codigo).includes(busqueda) ||
+      a.docentes.some((d) => normalizarBusqueda(d.nombre).includes(busqueda)) ||
+      normalizarBusqueda(a.asesor ?? '').includes(busqueda)
+    const delEstado = !filtroEstado || a.estado === filtroEstado
     return coincide && delEstado
   })
 
@@ -167,9 +191,10 @@ export default async function Produccion({
                   .filter((ap) => ap.aperturaInscripcion && ap.aperturaInscripcion >= hoy)
                   .sort((x, y) => x.aperturaInscripcion!.getTime() - y.aperturaInscripcion!.getTime())[0]
                 return (
-                  <tr key={p.id}>
+                  <tr key={a.codigo} className={p.esVariante ? 'es-variante' : undefined}>
                     <td className="col-orden">{p.orden ?? '—'}</td>
                     <td className="col-asignatura">
+                      {p.esVariante && <span className="marca-variante">Optativo</span>}
                       <Link href={`/asignaturas/${encodeURIComponent(a.codigo)}`}>{a.nombre}</Link>
                       <small>
                         {a.codigo}

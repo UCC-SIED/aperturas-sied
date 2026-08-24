@@ -44,7 +44,6 @@ export function parsePosgrado(buffer: Buffer): FilaAsignatura[] {
           aperturaAfi: parseFecha(celda(fila, ['APERTURA DE AFI'])),
           cierreAfi: parseFecha(celda(fila, ['CIERRE DE AFI', 'VENCIMIENTO DEL AFI'])),
           cierreAsignatura: parseFecha(celda(fila, ['CIERRE DE ASIGNATURA'])),
-          actas: parseFecha(celda(fila, ['ACTAS'])),
         },
       })
     }
