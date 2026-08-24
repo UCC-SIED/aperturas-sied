@@ -1894,3 +1894,28 @@ table.tabla-seguimiento .estado-badge {
   margin: 0;
   font-weight: 600;
 }
+
+/* La provisoria se muestra una sola vez y hay que poder leerla y dictarla sin
+   equivocarse: monoespaciada, grande y separada del resto. */
+.provisoria {
+  background: var(--verde-fondo);
+  border: 1px solid #bfe0d0;
+  border-radius: var(--radio);
+  padding: var(--e4);
+  margin: 0 0 var(--e4);
+  max-width: 560px;
+}
+.provisoria p { margin: 0 0 var(--e3); font-size: 13.5px; color: var(--verde); }
+.provisoria code {
+  display: block;
+  background: #fff;
+  border: 1px solid #bfe0d0;
+  color: var(--texto);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  padding: var(--e3);
+  border-radius: var(--radio-chico);
+  user-select: all;
+}
+.provisoria .nota { margin: var(--e3) 0 0; font-size: 12px; color: var(--texto-suave); }

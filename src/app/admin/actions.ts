@@ -6,7 +6,7 @@ import { exigirSesionActiva } from '@/lib/sesion'
 import { puedeAdministrar, esCorreoInstitucional, ROLES } from '@/lib/permisos'
 import { hashContrasena } from '@/lib/contrasenas'
 import { sellarPedidos } from '@/lib/pedidos'
-import { CONTRASENA_MINIMA } from '@/lib/credenciales'
+import { CONTRASENA_MINIMA, generarProvisoria } from '@/lib/credenciales'
 
 async function exigirAdmin() {
   const s = await exigirSesionActiva()
@@ -18,28 +18,40 @@ async function anotar(usuarioId: number, detalle: string) {
   await prisma.cambio.create({ data: { usuarioId, accion: 'gestion_usuarios', detalle } })
 }
 
-export async function crearUsuario(formData: FormData) {
+export type EstadoAlta = { error: string | null; provisoria?: string; nombre?: string }
+
+/**
+ * Devuelve la provisoria en lugar de lanzar, porque hay que mostrarla una sola
+ * vez en pantalla. No puede viajar en la URL: quedaría en el historial del
+ * navegador y en los logs del servidor.
+ */
+export async function crearUsuario(
+  _prevState: EstadoAlta,
+  formData: FormData,
+): Promise<EstadoAlta> {
   const admin = await exigirAdmin()
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
   const nombre = String(formData.get('nombre') ?? '').trim()
   const rol = String(formData.get('rol') ?? '')
-  const contrasena = String(formData.get('contrasena') ?? '')
 
   if (!esCorreoInstitucional(email)) {
-    throw new Error('El correo tiene que ser del dominio de la universidad (@ucc.edu.ar)')
+    return { error: 'El correo tiene que ser del dominio de la universidad (@ucc.edu.ar)' }
   }
-  if (!nombre) throw new Error('Poné el nombre de la persona o del área')
-  if (!(ROLES as readonly string[]).includes(rol)) throw new Error('Rol inválido')
-  if (contrasena.length < CONTRASENA_MINIMA) {
-    throw new Error(`La contraseña tiene que tener al menos ${CONTRASENA_MINIMA} caracteres`)
-  }
+  if (!nombre) return { error: 'Poné el nombre de la persona o del área' }
+  if (!(ROLES as readonly string[]).includes(rol)) return { error: 'Rol inválido' }
 
   const existente = await prisma.usuario.findUnique({ where: { email } })
-  if (existente) throw new Error(`Ya existe un usuario con el correo ${email}`)
+  if (existente) return { error: `Ya existe un usuario con el correo ${email}` }
 
-  await prisma.usuario.create({ data: { email, nombre, rol, passwordHash: hashContrasena(contrasena) } })
+  const provisoria = generarProvisoria()
+  await prisma.usuario.create({
+    // debeElegirContrasena queda en true por el valor por defecto del modelo.
+    data: { email, nombre, rol, passwordHash: hashContrasena(provisoria) },
+  })
   await anotar(admin.id, `Alta de usuario: ${nombre} (${email}) como ${rol}`)
   revalidatePath('/admin')
+
+  return { error: null, provisoria, nombre }
 }
 
 export async function establecerContrasena(usuarioId: number, formData: FormData) {
@@ -52,7 +64,12 @@ export async function establecerContrasena(usuarioId: number, formData: FormData
   const u = await prisma.usuario.findUnique({ where: { id: usuarioId } })
   if (!u) throw new Error('Usuario inexistente')
 
-  await prisma.usuario.update({ where: { id: usuarioId }, data: { passwordHash: hashContrasena(contrasena) } })
+  await prisma.usuario.update({
+    where: { id: usuarioId },
+    // Vuelve a marcar: esta contraseña la eligió administración, así que tiene
+    // que dejar de servir en cuanto la persona entre.
+    data: { passwordHash: hashContrasena(contrasena), debeElegirContrasena: true },
+  })
   // Fijarle la contraseña ES resolver el pedido: si hubiera que marcarlo
   // aparte, la lista se llenaría de pedidos ya atendidos.
   await sellarPedidos(usuarioId)
