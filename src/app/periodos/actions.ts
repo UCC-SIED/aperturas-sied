@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
 import { exigirSesionActiva } from '@/lib/sesion'
-import { puedeEditarProduccion } from '@/lib/permisos'
+import { puedeAdministrar } from '@/lib/permisos'
 import { validarFechas, tipoValidoParaUnidad } from '@/lib/validar'
 
 const TIPOS = ['mensual', 'bimestral', 'cuatrimestral'] as const
@@ -17,10 +17,15 @@ function fecha(form: FormData, campo: string): Date | null {
   return new Date(a, m - 1, d)
 }
 
+/**
+ * El calendario de períodos lo maneja Administración y nadie más: cada período
+ * fija las fechas de todo lo que se planifique adentro, así que moverlo o
+ * borrarlo arrastra el trabajo de todas las direcciones.
+ */
 async function exigirPermiso() {
   const s = await exigirSesionActiva()
-  if (!puedeEditarProduccion(s)) {
-    throw new Error('Sólo el equipo SIED define el calendario de períodos')
+  if (!puedeAdministrar(s)) {
+    throw new Error('Sólo Administración define el calendario de períodos')
   }
   return s
 }

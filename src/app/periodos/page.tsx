@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { exigirSesion } from '@/lib/sesion'
-import { carrerasVisibles, puedeEditarProduccion } from '@/lib/permisos'
+import { carrerasVisibles, puedeAdministrar } from '@/lib/permisos'
 import { fmtFecha } from '@/lib/formato'
 import { estadoPeriodo } from '@/lib/estado-periodo'
 import { Boton } from '@/components/Boton'
 import { SelectorUnidadTipo } from '@/components/SelectorUnidadTipo'
+import { FechasDelCiclo } from '@/components/FechasDelCiclo'
+import { EditarFechasPeriodo } from './EditarFechasPeriodo'
 import { crearPeriodo, borrarPeriodo } from './actions'
 
 const ESTADO_LABEL = { proximo: 'Próximo', en_curso: 'En curso', cerrado: 'cerrado' } as const
@@ -14,22 +16,13 @@ export const metadata = { title: 'Períodos' }
 
 export const dynamic = 'force-dynamic'
 
-const CAMPOS_FECHA = [
-  ['aperturaInscripcion', 'Apertura de inscripción'],
-  ['cierreInscripcion', 'Cierre de inscripción'],
-  ['inicioCursado', 'Inicio de cursado'],
-  ['finCursado', 'Límite de entregas'],
-  ['aperturaAfi', 'Apertura del AFI'],
-  ['cierreAfi', 'Vencimiento del AFI'],
-  ['cierreAsignatura', 'Cierre de asignatura'],
-  ['actas', 'Actas'],
-] as const
-
 export default async function Periodos() {
   const s = await exigirSesion()
 
   const visibles = carrerasVisibles(s)
-  const editable = puedeEditarProduccion(s)
+  // El calendario lo maneja Administración: cargar, corregir y borrar períodos
+  // arrastra el trabajo planificado por todas las direcciones.
+  const editable = puedeAdministrar(s)
   const filtroAperturas = visibles
     ? { cohortes: { some: { cohorte: { carreraId: { in: visibles } } } } }
     : {}
@@ -81,20 +74,7 @@ export default async function Periodos() {
               <SelectorUnidadTipo unidades={unidades} />
             </div>
 
-            <div className="fila-campos fechas">
-              {CAMPOS_FECHA.map(([campo, etiqueta]) => (
-                <label key={campo} htmlFor={campo}>
-                  {etiqueta}
-                  {campo === 'inicioCursado' && <span className="requerido"> *</span>}
-                  <input
-                    id={campo}
-                    name={campo}
-                    type="date"
-                    required={campo === 'inicioCursado'}
-                  />
-                </label>
-              ))}
-            </div>
+            <FechasDelCiclo />
 
             <Boton enCurso="Creando período">Crear período</Boton>
           </form>
@@ -106,7 +86,7 @@ export default async function Periodos() {
           Todavía no hay períodos cargados.
           {editable
             ? ' Cargá el primero con el formulario de arriba: sin períodos, las direcciones no tienen dónde ubicar las asignaturas.'
-            : ' El equipo SIED todavía no cargó el calendario.'}
+            : ' Administración todavía no cargó el calendario.'}
         </p>
       ) : (
         nombresUnidades.map((u) => (
@@ -116,7 +96,8 @@ export default async function Periodos() {
               <thead>
                 <tr>
                   <th>Período</th><th>Tipo</th><th>Inscripción</th><th>Cursado</th>
-                  <th>AFI</th><th>Cierre</th><th className="num">Asignaturas</th><th></th>
+                  <th>AFI</th><th>Cierre</th><th className="num">Asignaturas</th>
+                  {editable && <th></th>}<th></th>
                 </tr>
               </thead>
               <tbody>
@@ -131,6 +112,9 @@ export default async function Periodos() {
                     <td>{fmtFecha(p.aperturaAfi)}</td>
                     <td>{fmtFecha(p.cierreAsignatura)}</td>
                     <td className="num">{p._count.aperturas}</td>
+                    {editable && (
+                      <td><EditarFechasPeriodo periodo={p} /></td>
+                    )}
                     <td>
                       {(() => {
                         const estado = estadoPeriodo(p.inicioCursado, p.cierreAsignatura, hoy)

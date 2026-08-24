@@ -226,7 +226,7 @@ export default async function Planificar({
       ) : !periodosTodos.length ? (
         <p className="vacio">
           No hay períodos cargados para {carrera.unidad.nombre}. Los períodos definen
-          las fechas del ciclo (inscripción, cursado, AFI, cierre) y los carga el equipo SIED;
+          las fechas del ciclo (inscripción, cursado, AFI, cierre) y los carga Administración;
           sin ellos no hay dónde ubicar las asignaturas.
         </p>
       ) : (

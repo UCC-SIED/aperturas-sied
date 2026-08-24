@@ -1960,3 +1960,13 @@ table.tabla-seguimiento tr.es-variante .col-asignatura a { font-weight: 500; }
   color: var(--azul-claro);
   margin-right: var(--e1);
 }
+
+/* Corregir las fechas de un período: plegado, para no llenar la fila. */
+.editar-fechas-periodo > summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--azul);
+}
+.editar-fechas-periodo[open] > summary { margin-bottom: var(--e3); }
+.editar-fechas-periodo .form-periodo { min-width: 520px; }
