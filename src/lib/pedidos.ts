@@ -1,3 +1,4 @@
+import type { PedidoContrasena, Usuario } from '@prisma/client'
 import { prisma } from './db'
 
 /**
@@ -49,7 +50,7 @@ export async function sellarPedidos(usuarioId: number): Promise<void> {
 }
 
 /** Lo que ve administración: lo pendiente, lo que espera desde más tiempo primero. */
-export async function pedidosPendientes() {
+export async function pedidosPendientes(): Promise<(PedidoContrasena & { usuario: Usuario })[]> {
   return prisma.pedidoContrasena.findMany({
     where: { resuelto: null },
     include: { usuario: true },
