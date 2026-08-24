@@ -154,6 +154,29 @@ Hace falta porque Vercel borra los archivos del servidor en cada despliegue: si 
 
 Para mirar los datos con una interfaz gráfica: `npx prisma studio`.
 
+## Herramientas de consola
+
+Dos scripts para cosas que no se pueden hacer desde la interfaz. Los dos leen
+`DATABASE_URL` de `.env.produccion` y se niegan a correr si apunta a un archivo
+SQLite. Antes de usarlos, `npm run db:nube && npx prisma generate`; al terminar,
+`npm run db:local && npx prisma generate`.
+
+**`scripts/inventario-produccion.mjs`** — sólo lectura. Muestra qué hay cargado:
+aperturas por período, cohortes por carrera, cuánto seguimiento de producción
+está tocado y los totales de la estructura. Útil antes de decidir cualquier
+limpieza.
+
+**`scripts/contrasena-de-emergencia.mjs`** — le fija una contraseña a un usuario
+escribiendo directo en la base. Existe para un solo caso: que nadie con rol de
+administración pueda entrar, y por lo tanto no haya quién atienda un pedido
+desde `/admin`. Es un círculo del que no se sale por la interfaz. Pide la
+contraseña por teclado, no la guarda en ningún archivo, y deja el cambio
+anotado en la bitácora.
+
+**La forma de no necesitar el segundo es tener siempre más de una persona con
+rol Administración.** Con dos, cualquier pedido de contraseña tiene quién lo
+resuelva.
+
 ## Despliegue (Supabase + Vercel)
 
 Las dos cuentas son gratuitas y se entra con GitHub.
