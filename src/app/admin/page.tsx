@@ -96,7 +96,9 @@ export default async function Admin() {
       <form action={crearUsuario} className="ficha alta-usuario">
         <label htmlFor="nombre">
           Nombre
-          <input id="nombre" name="nombre" placeholder="Dirección de Empresas" required />
+          {/* Sin ejemplo: acá va tanto una persona como un área, y "Dirección
+              de Empresas" hacía creer que sólo se daban de alta direcciones. */}
+          <input id="nombre" name="nombre" required />
         </label>
         <label htmlFor="email">
           Correo institucional
