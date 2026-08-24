@@ -5,6 +5,8 @@ import { prisma } from '@/lib/db'
 import { exigirSesionActiva } from '@/lib/sesion'
 import { puedeAdministrar } from '@/lib/permisos'
 import { validarFechas, tipoValidoParaUnidad } from '@/lib/validar'
+import { comoResultado } from '@/lib/accion'
+import type { EstadoAccion } from '@/lib/estado-accion'
 
 const TIPOS = ['mensual', 'bimestral', 'cuatrimestral'] as const
 
@@ -30,102 +32,119 @@ async function exigirPermiso() {
   return s
 }
 
-export async function crearPeriodo(formData: FormData) {
-  const s = await exigirPermiso()
+export async function crearPeriodo(
+  _prevState: EstadoAccion,
+  formData: FormData,
+): Promise<EstadoAccion> {
+  return comoResultado(async () => {
+    const s = await exigirPermiso()
 
-  const nombre = String(formData.get('nombre') ?? '').trim()
-  const unidadId = String(formData.get('unidadId') ?? '')
-  const tipo = String(formData.get('tipo') ?? '')
-  const inicioCursado = fecha(formData, 'inicioCursado')
+    const nombre = String(formData.get('nombre') ?? '').trim()
+    const unidadId = String(formData.get('unidadId') ?? '')
+    const tipo = String(formData.get('tipo') ?? '')
+    const inicioCursado = fecha(formData, 'inicioCursado')
 
-  if (!nombre) throw new Error('Poné un nombre para el período')
-  if (!(TIPOS as readonly string[]).includes(tipo)) throw new Error('Tipo de período inválido')
-  if (!inicioCursado) throw new Error('La fecha de inicio de cursado es obligatoria')
+    if (!nombre) throw new Error('Poné un nombre para el período')
+    if (!(TIPOS as readonly string[]).includes(tipo)) throw new Error('Tipo de período inválido')
+    if (!inicioCursado) throw new Error('La fecha de inicio de cursado es obligatoria')
 
-  const unidad = await prisma.unidad.findUnique({ where: { id: unidadId } })
-  if (!unidad) throw new Error('Unidad inexistente')
-  if (!tipoValidoParaUnidad(unidadId, tipo)) {
-    throw new Error(`${unidad.nombre} no abre períodos de tipo "${tipo}"`)
-  }
+    const unidad = await prisma.unidad.findUnique({ where: { id: unidadId } })
+    if (!unidad) throw new Error('Unidad inexistente')
+    if (!tipoValidoParaUnidad(unidadId, tipo)) {
+      throw new Error(`${unidad.nombre} no abre períodos de tipo "${tipo}"`)
+    }
 
-  const yaExiste = await prisma.periodo.findUnique({
-    where: { unidadId_nombre: { unidadId, nombre } },
+    const yaExiste = await prisma.periodo.findUnique({
+      where: { unidadId_nombre: { unidadId, nombre } },
+    })
+    if (yaExiste) throw new Error(`Ya hay un período llamado "${nombre}" en ${unidad.nombre}`)
+
+    const fechas = {
+      inicioCursado,
+      aperturaInscripcion: fecha(formData, 'aperturaInscripcion'),
+      cierreInscripcion: fecha(formData, 'cierreInscripcion'),
+      finCursado: fecha(formData, 'finCursado'),
+      aperturaAfi: fecha(formData, 'aperturaAfi'),
+      cierreAfi: fecha(formData, 'cierreAfi'),
+      cierreAsignatura: fecha(formData, 'cierreAsignatura'),
+    }
+
+    const problemas = validarFechas(fechas)
+    if (problemas.length) {
+      throw new Error(`Revisá las fechas: ${problemas.join('; ')}`)
+    }
+
+    await prisma.periodo.create({ data: { nombre, unidadId, tipo, ...fechas } })
+    await prisma.cambio.create({
+      data: {
+        usuarioId: s.id,
+        accion: 'creo_periodo',
+        detalle: `Nuevo período ${nombre} (${unidad.nombre}, ${tipo})`,
+      },
+    })
+    revalidatePath('/', 'layout')
   })
-  if (yaExiste) throw new Error(`Ya hay un período llamado "${nombre}" en ${unidad.nombre}`)
-
-  const fechas = {
-    inicioCursado,
-    aperturaInscripcion: fecha(formData, 'aperturaInscripcion'),
-    cierreInscripcion: fecha(formData, 'cierreInscripcion'),
-    finCursado: fecha(formData, 'finCursado'),
-    aperturaAfi: fecha(formData, 'aperturaAfi'),
-    cierreAfi: fecha(formData, 'cierreAfi'),
-    cierreAsignatura: fecha(formData, 'cierreAsignatura'),
-  }
-
-  const problemas = validarFechas(fechas)
-  if (problemas.length) {
-    throw new Error(`Revisá las fechas: ${problemas.join('; ')}`)
-  }
-
-  await prisma.periodo.create({ data: { nombre, unidadId, tipo, ...fechas } })
-  await prisma.cambio.create({
-    data: {
-      usuarioId: s.id,
-      accion: 'creo_periodo',
-      detalle: `Nuevo período ${nombre} (${unidad.nombre}, ${tipo})`,
-    },
-  })
-  revalidatePath('/', 'layout')
 }
 
-export async function editarPeriodo(periodoId: number, formData: FormData) {
-  const s = await exigirPermiso()
+export async function editarPeriodo(
+  periodoId: number,
+  _prevState: EstadoAccion,
+  formData: FormData,
+): Promise<EstadoAccion> {
+  return comoResultado(async () => {
+    const s = await exigirPermiso()
 
-  const periodo = await prisma.periodo.findUnique({ where: { id: periodoId } })
-  if (!periodo) throw new Error('Período inexistente')
+    const periodo = await prisma.periodo.findUnique({ where: { id: periodoId } })
+    if (!periodo) throw new Error('Período inexistente')
 
-  const inicioCursado = fecha(formData, 'inicioCursado')
-  if (!inicioCursado) throw new Error('La fecha de inicio de cursado es obligatoria')
+    const inicioCursado = fecha(formData, 'inicioCursado')
+    if (!inicioCursado) throw new Error('La fecha de inicio de cursado es obligatoria')
 
-  const fechas = {
-    inicioCursado,
-    aperturaInscripcion: fecha(formData, 'aperturaInscripcion'),
-    cierreInscripcion: fecha(formData, 'cierreInscripcion'),
-    finCursado: fecha(formData, 'finCursado'),
-    aperturaAfi: fecha(formData, 'aperturaAfi'),
-    cierreAfi: fecha(formData, 'cierreAfi'),
-    cierreAsignatura: fecha(formData, 'cierreAsignatura'),
-  }
+    const fechas = {
+      inicioCursado,
+      aperturaInscripcion: fecha(formData, 'aperturaInscripcion'),
+      cierreInscripcion: fecha(formData, 'cierreInscripcion'),
+      finCursado: fecha(formData, 'finCursado'),
+      aperturaAfi: fecha(formData, 'aperturaAfi'),
+      cierreAfi: fecha(formData, 'cierreAfi'),
+      cierreAsignatura: fecha(formData, 'cierreAsignatura'),
+    }
 
-  const problemas = validarFechas(fechas)
-  if (problemas.length) throw new Error(`Revisá las fechas: ${problemas.join('; ')}`)
+    const problemas = validarFechas(fechas)
+    if (problemas.length) throw new Error(`Revisá las fechas: ${problemas.join('; ')}`)
 
-  await prisma.periodo.update({ where: { id: periodoId }, data: fechas })
-  await prisma.cambio.create({
-    data: { usuarioId: s.id, accion: 'edito_periodo', detalle: `Fechas de ${periodo.nombre} actualizadas` },
+    await prisma.periodo.update({ where: { id: periodoId }, data: fechas })
+    await prisma.cambio.create({
+      data: { usuarioId: s.id, accion: 'edito_periodo', detalle: `Fechas de ${periodo.nombre} actualizadas` },
+    })
+    revalidatePath('/', 'layout')
   })
-  revalidatePath('/', 'layout')
 }
 
-export async function borrarPeriodo(periodoId: number) {
-  const s = await exigirPermiso()
+export async function borrarPeriodo(
+  periodoId: number,
+  _prevState: EstadoAccion,
+  _formData: FormData,
+): Promise<EstadoAccion> {
+  return comoResultado(async () => {
+    const s = await exigirPermiso()
 
-  const periodo = await prisma.periodo.findUnique({
-    where: { id: periodoId },
-    include: { _count: { select: { aperturas: true } } },
-  })
-  if (!periodo) throw new Error('Período inexistente')
-  if (periodo._count.aperturas > 0) {
-    throw new Error(
-      `${periodo.nombre} tiene ${periodo._count.aperturas} asignatura(s) planificada(s). ` +
-      'Quitalas primero desde el planificador.',
-    )
-  }
+    const periodo = await prisma.periodo.findUnique({
+      where: { id: periodoId },
+      include: { _count: { select: { aperturas: true } } },
+    })
+    if (!periodo) throw new Error('Período inexistente')
+    if (periodo._count.aperturas > 0) {
+      throw new Error(
+        `${periodo.nombre} tiene ${periodo._count.aperturas} asignatura(s) planificada(s). ` +
+        'Quitalas primero desde el planificador.',
+      )
+    }
 
-  await prisma.periodo.delete({ where: { id: periodoId } })
-  await prisma.cambio.create({
-    data: { usuarioId: s.id, accion: 'borro_periodo', detalle: `Período ${periodo.nombre} eliminado` },
+    await prisma.periodo.delete({ where: { id: periodoId } })
+    await prisma.cambio.create({
+      data: { usuarioId: s.id, accion: 'borro_periodo', detalle: `Período ${periodo.nombre} eliminado` },
+    })
+    revalidatePath('/', 'layout')
   })
-  revalidatePath('/', 'layout')
 }

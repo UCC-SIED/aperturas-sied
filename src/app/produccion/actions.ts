@@ -5,12 +5,19 @@ import { prisma } from '@/lib/db'
 import { exigirSesionActiva } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { calcularCambios } from '@/lib/seguimiento'
+import { comoResultado } from '@/lib/accion'
+import type { EstadoAccion } from '@/lib/estado-accion'
 
 /**
  * Guarda de una vez lo que se editó en la tabla de seguimiento de una carrera.
  * Sólo escribe las filas que realmente cambiaron.
  */
-export async function guardarSeguimiento(carreraId: number, formData: FormData) {
+export async function guardarSeguimiento(
+  carreraId: number,
+  _prevState: EstadoAccion,
+  formData: FormData,
+): Promise<EstadoAccion> {
+  return comoResultado(async () => {
   const s = await exigirSesionActiva()
   if (!puedeEditarProduccion(s)) {
     throw new Error('Sólo el equipo SIED edita el estado de producción')
@@ -76,4 +83,5 @@ export async function guardarSeguimiento(carreraId: number, formData: FormData) 
   }
 
   revalidatePath('/', 'layout')
+  })
 }

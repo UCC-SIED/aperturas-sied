@@ -5,6 +5,7 @@ import { puedeAdministrar, ROLES, ROL_LABELS, ROL_DESCRIPCIONES } from '@/lib/pe
 import { fmtFechaHora } from '@/lib/formato'
 import { pedidosPendientes } from '@/lib/pedidos'
 import { Boton } from '@/components/Boton'
+import { FormConError } from '@/components/FormConError'
 import { CONTRASENA_MINIMA } from '@/lib/credenciales'
 import {
   cambiarRol, alternarActivo, asignarCarreras, asignarUnidad,
@@ -69,7 +70,7 @@ export default async function Admin() {
                   <td><small>{p.usuario.email}</small></td>
                   <td><small>{fmtFechaHora(p.creado)}</small></td>
                   <td>
-                    <form action={establecerContrasena.bind(null, p.usuarioId)} className="en-linea">
+                    <FormConError action={establecerContrasena.bind(null, p.usuarioId)} className="en-linea">
                       <input
                         name="contrasena"
                         type="text"
@@ -79,12 +80,12 @@ export default async function Admin() {
                         aria-label={`Contraseña nueva para ${p.usuario.nombre}`}
                       />
                       <Boton enCurso="Guardando">Guardar</Boton>
-                    </form>
+                    </FormConError>
                   </td>
                   <td>
-                    <form action={descartarPedido.bind(null, p.id)}>
+                    <FormConError action={descartarPedido.bind(null, p.id)}>
                       <Boton className="quitar" enCurso="Descartando">Descartar</Boton>
-                    </form>
+                    </FormConError>
                   </td>
                 </tr>
               ))}
@@ -126,7 +127,7 @@ export default async function Admin() {
               </td>
               <td><small>{u.email}</small></td>
               <td>
-                <form action={cambiarRol.bind(null, u.id)} className="en-linea">
+                <FormConError action={cambiarRol.bind(null, u.id)} className="en-linea">
                   {/* key=rol: fuerza a remontar el select cuando cambia, si no
                       el navegador se queda mostrando la opción vieja. */}
                   <select key={u.rol} name="rol" defaultValue={u.rol} aria-label={`Rol de ${u.nombre}`}>
@@ -135,7 +136,7 @@ export default async function Admin() {
                     ))}
                   </select>
                   <Boton enCurso="…">Cambiar</Boton>
-                </form>
+                </FormConError>
               </td>
               <td>
                 {u.rol === 'director' ? (
@@ -145,7 +146,7 @@ export default async function Admin() {
                         ? u.carreras.map((c) => c.carrera.nombre).join(' · ')
                         : 'sin carreras asignadas'}
                     </summary>
-                    <form action={asignarCarreras.bind(null, u.id)} className="lista-carreras">
+                    <FormConError action={asignarCarreras.bind(null, u.id)} className="lista-carreras">
                       {carreras.map((c) => (
                         <label key={c.id}>
                           <input
@@ -158,12 +159,12 @@ export default async function Admin() {
                         </label>
                       ))}
                       <Boton enCurso="Guardando">Guardar carreras</Boton>
-                    </form>
+                    </FormConError>
                   </details>
                 ) : u.rol === 'unidad' ? (
                   <details className="carreras-de">
                     <summary>{u.unidad ? `Todas · ${u.unidad.nombre}` : 'sin unidad asignada'}</summary>
-                    <form action={asignarUnidad.bind(null, u.id)} className="en-linea">
+                    <FormConError action={asignarUnidad.bind(null, u.id)} className="en-linea">
                       <select key={u.unidadId ?? ''} name="unidadId" defaultValue={u.unidadId ?? ''} aria-label={`Unidad de ${u.nombre}`}>
                         <option value="" disabled>Elegir unidad...</option>
                         {unidades.map((un) => (
@@ -171,7 +172,7 @@ export default async function Admin() {
                         ))}
                       </select>
                       <Boton enCurso="Guardando">Guardar</Boton>
-                    </form>
+                    </FormConError>
                   </details>
                 ) : (
                   <small>todas</small>
@@ -180,7 +181,7 @@ export default async function Admin() {
               <td>
                 <details className="carreras-de">
                   <summary>{u.passwordHash ? 'definida' : 'sin definir'} · cambiar</summary>
-                  <form action={establecerContrasena.bind(null, u.id)} className="en-linea">
+                  <FormConError action={establecerContrasena.bind(null, u.id)} className="en-linea">
                     <input
                       name="contrasena"
                       type="text"
@@ -190,18 +191,18 @@ export default async function Admin() {
                       aria-label={`Contraseña nueva para ${u.nombre}`}
                     />
                     <Boton enCurso="Guardando">Guardar</Boton>
-                  </form>
+                  </FormConError>
                 </details>
               </td>
               <td>
                 {u.id === s.id ? (
                   <span className="urgencia urg-preparar">Activo</span>
                 ) : (
-                  <form action={alternarActivo.bind(null, u.id)}>
+                  <FormConError action={alternarActivo.bind(null, u.id)}>
                     <Boton className={u.activo ? 'quitar' : undefined} enCurso="…">
                       {u.activo ? 'Dar de baja' : 'Reactivar'}
                     </Boton>
-                  </form>
+                  </FormConError>
                 )}
               </td>
             </tr>

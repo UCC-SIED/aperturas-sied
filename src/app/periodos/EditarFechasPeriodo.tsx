@@ -1,5 +1,6 @@
 import { fmtFechaISO } from '@/lib/formato'
 import { Boton } from '@/components/Boton'
+import { FormConError } from '@/components/FormConError'
 import { FechasDelCiclo } from '@/components/FechasDelCiclo'
 import { editarPeriodo } from './actions'
 
@@ -25,7 +26,7 @@ export function EditarFechasPeriodo({ periodo }: { periodo: ConFechas }) {
   return (
     <details className="editar-fechas-periodo">
       <summary>Fechas</summary>
-      <form action={editarPeriodo.bind(null, periodo.id)} className="form-periodo">
+      <FormConError action={editarPeriodo.bind(null, periodo.id)} className="form-periodo">
         <FechasDelCiclo
           tipo={periodo.tipo}
           valores={{
@@ -39,7 +40,7 @@ export function EditarFechasPeriodo({ periodo }: { periodo: ConFechas }) {
           }}
         />
         <Boton enCurso="Guardando">Guardar fechas</Boton>
-      </form>
+      </FormConError>
     </details>
   )
 }

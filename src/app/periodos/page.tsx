@@ -5,6 +5,7 @@ import { carrerasVisibles, puedeAdministrar } from '@/lib/permisos'
 import { fmtFecha } from '@/lib/formato'
 import { estadoPeriodo } from '@/lib/estado-periodo'
 import { Boton } from '@/components/Boton'
+import { FormConError } from '@/components/FormConError'
 import { SelectorUnidadTipo } from '@/components/SelectorUnidadTipo'
 import { FechasDelCiclo } from '@/components/FechasDelCiclo'
 import { EditarFechasPeriodo } from './EditarFechasPeriodo'
@@ -65,7 +66,7 @@ export default async function Periodos() {
       {editable && (
         <details className="alta-periodo" open={!periodos.length}>
           <summary>Cargar un período</summary>
-          <form action={crearPeriodo} className="ficha form-periodo">
+          <FormConError action={crearPeriodo} className="ficha form-periodo">
             <div className="fila-campos">
               <label htmlFor="nombre">
                 Nombre
@@ -77,7 +78,7 @@ export default async function Periodos() {
             <FechasDelCiclo />
 
             <Boton enCurso="Creando período">Crear período</Boton>
-          </form>
+          </FormConError>
         </details>
       )}
 
@@ -126,9 +127,9 @@ export default async function Periodos() {
                         )
                       })()}
                       {editable && p._count.aperturas === 0 && (
-                        <form action={borrarPeriodo.bind(null, p.id)} className="en-linea">
+                        <FormConError action={borrarPeriodo.bind(null, p.id)} className="en-linea">
                           <Boton className="quitar" enCurso="…">Borrar</Boton>
-                        </form>
+                        </FormConError>
                       )}
                     </td>
                   </tr>

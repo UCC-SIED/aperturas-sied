@@ -7,6 +7,8 @@ import { puedeAdministrar, esCorreoInstitucional, ROLES } from '@/lib/permisos'
 import { hashContrasena } from '@/lib/contrasenas'
 import { sellarPedidos } from '@/lib/pedidos'
 import { CONTRASENA_MINIMA, generarProvisoria } from '@/lib/credenciales'
+import { comoResultado } from '@/lib/accion'
+import type { EstadoAccion } from '@/lib/estado-accion'
 
 async function exigirAdmin() {
   const s = await exigirSesionActiva()
@@ -54,112 +56,148 @@ export async function crearUsuario(
   return { error: null, provisoria, nombre }
 }
 
-export async function establecerContrasena(usuarioId: number, formData: FormData) {
-  const admin = await exigirAdmin()
-  const contrasena = String(formData.get('contrasena') ?? '')
-  if (contrasena.length < CONTRASENA_MINIMA) {
-    throw new Error(`La contraseña tiene que tener al menos ${CONTRASENA_MINIMA} caracteres`)
-  }
+export async function establecerContrasena(
+  usuarioId: number,
+  _prevState: EstadoAccion,
+  formData: FormData,
+): Promise<EstadoAccion> {
+  return comoResultado(async () => {
+    const admin = await exigirAdmin()
+    const contrasena = String(formData.get('contrasena') ?? '')
+    if (contrasena.length < CONTRASENA_MINIMA) {
+      throw new Error(`La contraseña tiene que tener al menos ${CONTRASENA_MINIMA} caracteres`)
+    }
 
-  const u = await prisma.usuario.findUnique({ where: { id: usuarioId } })
-  if (!u) throw new Error('Usuario inexistente')
+    const u = await prisma.usuario.findUnique({ where: { id: usuarioId } })
+    if (!u) throw new Error('Usuario inexistente')
 
-  await prisma.usuario.update({
-    where: { id: usuarioId },
-    // Vuelve a marcar: esta contraseña la eligió administración, así que tiene
-    // que dejar de servir en cuanto la persona entre.
-    data: { passwordHash: hashContrasena(contrasena), debeElegirContrasena: true },
+    await prisma.usuario.update({
+      where: { id: usuarioId },
+      // Vuelve a marcar: esta contraseña la eligió administración, así que tiene
+      // que dejar de servir en cuanto la persona entre.
+      data: { passwordHash: hashContrasena(contrasena), debeElegirContrasena: true },
+    })
+    // Fijarle la contraseña ES resolver el pedido: si hubiera que marcarlo
+    // aparte, la lista se llenaría de pedidos ya atendidos.
+    await sellarPedidos(usuarioId)
+    await anotar(admin.id, `${u.nombre}: se le definió una contraseña nueva`)
+    revalidatePath('/admin')
   })
-  // Fijarle la contraseña ES resolver el pedido: si hubiera que marcarlo
-  // aparte, la lista se llenaría de pedidos ya atendidos.
-  await sellarPedidos(usuarioId)
-  await anotar(admin.id, `${u.nombre}: se le definió una contraseña nueva`)
-  revalidatePath('/admin')
 }
 
-export async function cambiarRol(usuarioId: number, formData: FormData) {
-  const admin = await exigirAdmin()
-  const rol = String(formData.get('rol') ?? '')
-  if (!(ROLES as readonly string[]).includes(rol)) throw new Error('Rol inválido')
+export async function cambiarRol(
+  usuarioId: number,
+  _prevState: EstadoAccion,
+  formData: FormData,
+): Promise<EstadoAccion> {
+  return comoResultado(async () => {
+    const admin = await exigirAdmin()
+    const rol = String(formData.get('rol') ?? '')
+    if (!(ROLES as readonly string[]).includes(rol)) throw new Error('Rol inválido')
 
-  const u = await prisma.usuario.findUnique({ where: { id: usuarioId } })
-  if (!u) throw new Error('Usuario inexistente')
-  if (u.id === admin.id && rol !== 'admin') {
-    throw new Error('No podés quitarte a vos mismo el rol de administración')
-  }
+    const u = await prisma.usuario.findUnique({ where: { id: usuarioId } })
+    if (!u) throw new Error('Usuario inexistente')
+    if (u.id === admin.id && rol !== 'admin') {
+      throw new Error('No podés quitarte a vos mismo el rol de administración')
+    }
 
-  const data: { rol: string; unidadId?: null } = { rol }
-  // Un usuario que deja de ser director no conserva sus carreras puntuales,
-  // y uno que deja de ser "unidad" no conserva la unidad que planificaba entera.
-  if (rol !== 'director') {
+    const data: { rol: string; unidadId?: null } = { rol }
+    // Un usuario que deja de ser director no conserva sus carreras puntuales,
+    // y uno que deja de ser "unidad" no conserva la unidad que planificaba entera.
+    if (rol !== 'director') {
+      await prisma.usuarioCarrera.deleteMany({ where: { usuarioId } })
+    }
+    if (rol !== 'unidad') data.unidadId = null
+
+    await prisma.usuario.update({ where: { id: usuarioId }, data })
+    await anotar(admin.id, `${u.nombre}: rol ${u.rol} → ${rol}`)
+    revalidatePath('/admin')
+  })
+}
+
+export async function alternarActivo(
+  usuarioId: number,
+  _prevState: EstadoAccion,
+  _formData: FormData,
+): Promise<EstadoAccion> {
+  return comoResultado(async () => {
+    const admin = await exigirAdmin()
+    const u = await prisma.usuario.findUnique({ where: { id: usuarioId } })
+    if (!u) throw new Error('Usuario inexistente')
+    if (u.id === admin.id) throw new Error('No podés darte de baja a vos mismo')
+
+    await prisma.usuario.update({ where: { id: usuarioId }, data: { activo: !u.activo } })
+    await anotar(admin.id, `${u.nombre}: ${u.activo ? 'baja' : 'alta'} de acceso`)
+    revalidatePath('/admin')
+  })
+}
+
+export async function asignarCarreras(
+  usuarioId: number,
+  _prevState: EstadoAccion,
+  formData: FormData,
+): Promise<EstadoAccion> {
+  return comoResultado(async () => {
+    const admin = await exigirAdmin()
+    const u = await prisma.usuario.findUnique({ where: { id: usuarioId } })
+    if (!u) throw new Error('Usuario inexistente')
+
+    const ids = formData.getAll('carreraId').map(Number).filter(Boolean)
+
     await prisma.usuarioCarrera.deleteMany({ where: { usuarioId } })
-  }
-  if (rol !== 'unidad') data.unidadId = null
+    for (const carreraId of ids) {
+      await prisma.usuarioCarrera.create({ data: { usuarioId, carreraId } })
+    }
 
-  await prisma.usuario.update({ where: { id: usuarioId }, data })
-  await anotar(admin.id, `${u.nombre}: rol ${u.rol} → ${rol}`)
-  revalidatePath('/admin')
-}
-
-export async function alternarActivo(usuarioId: number) {
-  const admin = await exigirAdmin()
-  const u = await prisma.usuario.findUnique({ where: { id: usuarioId } })
-  if (!u) throw new Error('Usuario inexistente')
-  if (u.id === admin.id) throw new Error('No podés darte de baja a vos mismo')
-
-  await prisma.usuario.update({ where: { id: usuarioId }, data: { activo: !u.activo } })
-  await anotar(admin.id, `${u.nombre}: ${u.activo ? 'baja' : 'alta'} de acceso`)
-  revalidatePath('/admin')
-}
-
-export async function asignarCarreras(usuarioId: number, formData: FormData) {
-  const admin = await exigirAdmin()
-  const u = await prisma.usuario.findUnique({ where: { id: usuarioId } })
-  if (!u) throw new Error('Usuario inexistente')
-
-  const ids = formData.getAll('carreraId').map(Number).filter(Boolean)
-
-  await prisma.usuarioCarrera.deleteMany({ where: { usuarioId } })
-  for (const carreraId of ids) {
-    await prisma.usuarioCarrera.create({ data: { usuarioId, carreraId } })
-  }
-
-  const nombres = await prisma.carrera.findMany({ where: { id: { in: ids } } })
-  await anotar(
-    admin.id,
-    `${u.nombre}: carreras → ${nombres.map((c) => c.nombre).join(', ') || 'ninguna'}`,
-  )
-  revalidatePath('/admin')
+    const nombres = await prisma.carrera.findMany({ where: { id: { in: ids } } })
+    await anotar(
+      admin.id,
+      `${u.nombre}: carreras → ${nombres.map((c) => c.nombre).join(', ') || 'ninguna'}`,
+    )
+    revalidatePath('/admin')
+  })
 }
 
 /** Sólo para rol "unidad": qué unidad académica planifica entera. */
-export async function asignarUnidad(usuarioId: number, formData: FormData) {
-  const admin = await exigirAdmin()
-  const u = await prisma.usuario.findUnique({ where: { id: usuarioId } })
-  if (!u) throw new Error('Usuario inexistente')
+export async function asignarUnidad(
+  usuarioId: number,
+  _prevState: EstadoAccion,
+  formData: FormData,
+): Promise<EstadoAccion> {
+  return comoResultado(async () => {
+    const admin = await exigirAdmin()
+    const u = await prisma.usuario.findUnique({ where: { id: usuarioId } })
+    if (!u) throw new Error('Usuario inexistente')
 
-  const unidadId = String(formData.get('unidadId') ?? '') || null
-  const unidad = unidadId ? await prisma.unidad.findUnique({ where: { id: unidadId } }) : null
-  if (unidadId && !unidad) throw new Error('Unidad inexistente')
+    const unidadId = String(formData.get('unidadId') ?? '') || null
+    const unidad = unidadId ? await prisma.unidad.findUnique({ where: { id: unidadId } }) : null
+    if (unidadId && !unidad) throw new Error('Unidad inexistente')
 
-  await prisma.usuario.update({ where: { id: usuarioId }, data: { unidadId } })
-  await anotar(admin.id, `${u.nombre}: unidad → ${unidad?.nombre ?? 'ninguna'}`)
-  revalidatePath('/admin')
+    await prisma.usuario.update({ where: { id: usuarioId }, data: { unidadId } })
+    await anotar(admin.id, `${u.nombre}: unidad → ${unidad?.nombre ?? 'ninguna'}`)
+    revalidatePath('/admin')
+  })
 }
 
 /**
  * Cierra un pedido sin tocar la contraseña: para lo que no corresponda
  * atender, o cuando la persona ya se acomodó por otro lado.
  */
-export async function descartarPedido(pedidoId: number) {
-  const admin = await exigirAdmin()
-  const pedido = await prisma.pedidoContrasena.findUnique({
-    where: { id: pedidoId },
-    include: { usuario: true },
-  })
-  if (!pedido) throw new Error('Pedido inexistente')
+export async function descartarPedido(
+  pedidoId: number,
+  _prevState: EstadoAccion,
+  _formData: FormData,
+): Promise<EstadoAccion> {
+  return comoResultado(async () => {
+    const admin = await exigirAdmin()
+    const pedido = await prisma.pedidoContrasena.findUnique({
+      where: { id: pedidoId },
+      include: { usuario: true },
+    })
+    if (!pedido) throw new Error('Pedido inexistente')
 
-  await sellarPedidos(pedido.usuarioId)
-  await anotar(admin.id, `${pedido.usuario.nombre}: se descartó el pedido de contraseña`)
-  revalidatePath('/admin')
+    await sellarPedidos(pedido.usuarioId)
+    await anotar(admin.id, `${pedido.usuario.nombre}: se descartó el pedido de contraseña`)
+    revalidatePath('/admin')
+  })
 }

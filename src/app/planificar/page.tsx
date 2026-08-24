@@ -6,6 +6,7 @@ import { armarGrilla, type AperturaGrilla } from '@/lib/grilla'
 import { estadoPeriodo } from '@/lib/estado-periodo'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
 import { Boton } from '@/components/Boton'
+import { FormConError } from '@/components/FormConError'
 import { SelectAutoSubmit } from '@/components/SelectAutoSubmit'
 import { IconoCompartida } from '@/components/iconos'
 import { EditorDocentes } from '@/components/EditorDocentes'
@@ -187,7 +188,7 @@ export default async function Planificar({
                   {otras.join(', ')} en <strong>{ap.periodo.nombre}</strong>. Sumar tu cohorte
                   no crea una apertura nueva, se une a la que ya existe.
                 </p>
-                <form action={agregarApertura.bind(null, carrera.id)} className="en-linea">
+                <FormConError action={agregarApertura.bind(null, carrera.id)} className="en-linea">
                   <input type="hidden" name="codigo" value={ap.asignaturaCodigo} />
                   <input type="hidden" name="periodoId" value={ap.periodoId} />
                   <select name="cohorteId" defaultValue="" required aria-label={`Cohorte que suma ${ap.asignatura.nombre}`}>
@@ -197,14 +198,14 @@ export default async function Planificar({
                     ))}
                   </select>
                   <Boton enCurso="Sumando">Sumar esta cohorte</Boton>
-                </form>
+                </FormConError>
               </div>
-              <form action={descartarAviso.bind(null, carrera.id)}>
+              <FormConError action={descartarAviso.bind(null, carrera.id)}>
                 <input type="hidden" name="aperturaId" value={ap.id} />
                 <button type="submit" className="cerrar-aviso" aria-label={`No sumarme a ${ap.asignatura.nombre}`}>
                   ×
                 </button>
-              </form>
+              </FormConError>
             </div>
           ))}
         </div>
@@ -217,10 +218,10 @@ export default async function Planificar({
             avanza junta por el plan; el planificador arma una fila por cada una.
           </p>
           {editable && (
-            <form action={crearCohorte.bind(null, carrera.id)} className="alta-cohorte">
+            <FormConError action={crearCohorte.bind(null, carrera.id)} className="alta-cohorte">
               <input name="nombre" placeholder="Nombre de la cohorte, por ejemplo COHORTE 2026" required />
               <Boton enCurso="Creando">Crear cohorte</Boton>
-            </form>
+            </FormConError>
           )}
         </div>
       ) : !periodosTodos.length ? (
@@ -308,7 +309,7 @@ export default async function Planificar({
                                       ? `Docente tutor: ${ap.docentesTutor.join(' / ')}`
                                       : 'Asignar docente tutor'}
                                   </summary>
-                                  <form action={editarDocentesTutorApertura.bind(null, carrera.id)} className="fila-campos">
+                                  <FormConError action={editarDocentesTutorApertura.bind(null, carrera.id)} className="fila-campos">
                                     <input type="hidden" name="aperturaId" value={ap.id} />
                                     <EditorDocentes
                                       name="docentesTutor"
@@ -316,7 +317,7 @@ export default async function Planificar({
                                       etiqueta={`docente tutor de ${ap.asignatura.nombre}`}
                                     />
                                     <Boton enCurso="Guardando">Guardar</Boton>
-                                  </form>
+                                  </FormConError>
                                 </details>
                               ) : (
                                 ap.docentesTutor.length > 0 && (
@@ -325,7 +326,7 @@ export default async function Planificar({
                               )}
                               {editable && (
                                 <div className="celda-acciones">
-                                  <form action={moverApertura.bind(null, carrera.id)}>
+                                  <FormConError action={moverApertura.bind(null, carrera.id)}>
                                     <input type="hidden" name="aperturaId" value={ap.id} />
                                     <select name="destinoId" defaultValue="" aria-label={`Mover ${ap.asignatura.nombre}`}>
                                       <option value="" disabled>Mover a...</option>
@@ -334,20 +335,20 @@ export default async function Planificar({
                                       ))}
                                     </select>
                                     <Boton enCurso="Moviendo">Mover</Boton>
-                                  </form>
-                                  <form action={quitarApertura.bind(null, carrera.id)}>
+                                  </FormConError>
+                                  <FormConError action={quitarApertura.bind(null, carrera.id)}>
                                     <input type="hidden" name="aperturaId" value={ap.id} />
                                     <Boton className="quitar" enCurso="Quitando" aria-label={`Quitar ${ap.asignatura.nombre}`}>
                                       Quitar
                                     </Boton>
-                                  </form>
+                                  </FormConError>
                                 </div>
                               )}
                             </div>
                           ))}
 
                           {editable ? (
-                            <form action={agregarApertura.bind(null, carrera.id)} className="alta-celda">
+                            <FormConError action={agregarApertura.bind(null, carrera.id)} className="alta-celda">
                               <input type="hidden" name="periodoId" value={p.id} />
                               <input type="hidden" name="cohorteId" value={co.id} />
                               <select name="codigo" defaultValue="" aria-label={`Agregar asignatura a ${co.nombre} en ${p.nombre}`}>
@@ -363,7 +364,7 @@ export default async function Planificar({
                                 })}
                               </select>
                               <Boton enCurso="Agregando">Agregar</Boton>
-                            </form>
+                            </FormConError>
                           ) : (
                             !enCelda.length && <span className="celda-vacia">—</span>
                           )}
@@ -379,10 +380,10 @@ export default async function Planificar({
           </div>
 
           {editable && (
-            <form action={crearCohorte.bind(null, carrera.id)} className="alta-cohorte">
+            <FormConError action={crearCohorte.bind(null, carrera.id)} className="alta-cohorte">
               <input name="nombre" placeholder="Agregar otra cohorte, por ejemplo COHORTE 2027" required />
               <Boton enCurso="Creando">Crear cohorte</Boton>
-            </form>
+            </FormConError>
           )}
         </>
       )}

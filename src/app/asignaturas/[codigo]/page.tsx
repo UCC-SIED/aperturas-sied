@@ -11,6 +11,7 @@ import { IconoCompartida } from '@/components/iconos'
 import { EditorDocentes } from '@/components/EditorDocentes'
 import { EstadoBadge } from '@/components/EstadoBadge'
 import { Boton } from '@/components/Boton'
+import { FormConError } from '@/components/FormConError'
 import {
   actualizarAsignatura, crearVariante, definirVariantesRequeridas, desvincularVariante,
 } from './actions'
@@ -86,7 +87,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
 
       <h2>Producción</h2>
       {editable ? (
-        <form className="ficha" action={actualizarAsignatura.bind(null, a.codigo)}>
+        <FormConError className="ficha" action={actualizarAsignatura.bind(null, a.codigo)}>
           <label htmlFor="estado">
             Estado
             <select id="estado" name="estado" defaultValue={a.estado}>
@@ -97,8 +98,8 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
           </label>
           <label>Docente <EditorDocentes name="docente" iniciales={a.docentes.map((d) => d.nombre)} etiqueta={a.nombre} /></label>
           <label>Asesor <input name="asesor" defaultValue={a.asesor ?? ''} /></label>
-          <button type="submit">Guardar</button>
-        </form>
+          <Boton>Guardar</Boton>
+        </FormConError>
       ) : (
         <table>
           <tbody>
@@ -145,9 +146,9 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
                     <td><EstadoBadge estado={v.estado} /></td>
                     {editable && (
                       <td>
-                        <form action={desvincularVariante.bind(null, v.codigo)}>
+                        <FormConError action={desvincularVariante.bind(null, v.codigo)}>
                           <Boton className="quitar" enCurso="Desvinculando">Desvincular</Boton>
-                        </form>
+                        </FormConError>
                       </td>
                     )}
                   </tr>
@@ -158,7 +159,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
 
           {editable && (
             <>
-              <form action={crearVariante.bind(null, a.codigo)} className="ficha alta-variante">
+              <FormConError action={crearVariante.bind(null, a.codigo)} className="ficha alta-variante">
                 <label htmlFor="codigo">
                   Código
                   <input id="codigo" name="codigo" placeholder="EP00501" required />
@@ -168,10 +169,10 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
                   <input id="nombre" name="nombre" required />
                 </label>
                 <Boton enCurso="Agregando">Agregar seminario</Boton>
-              </form>
+              </FormConError>
 
               {a.variantes.length > 1 && (
-                <form action={definirVariantesRequeridas.bind(null, a.codigo)} className="en-linea cuantas-hacen-falta">
+                <FormConError action={definirVariantesRequeridas.bind(null, a.codigo)} className="en-linea cuantas-hacen-falta">
                   <label htmlFor="variantesRequeridas">Hacen falta</label>
                   <input
                     id="variantesRequeridas"
@@ -183,7 +184,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
                     key={a.variantesRequeridas}
                   />
                   <Boton enCurso="Guardando">Guardar</Boton>
-                </form>
+                </FormConError>
               )}
             </>
           )}

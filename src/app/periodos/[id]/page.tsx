@@ -7,6 +7,7 @@ import { carrerasVisibles, puedeEditarProduccion } from '@/lib/permisos'
 import { fmtFecha, fmtFechaISO } from '@/lib/formato'
 import { joinDocentes } from '@/lib/docentes'
 import { Boton } from '@/components/Boton'
+import { FormConError } from '@/components/FormConError'
 import { EditorDocentes } from '@/components/EditorDocentes'
 import { EstadoBadge } from '@/components/EstadoBadge'
 import { editarFechasApertura, editarDocentesApertura } from './actions'
@@ -148,14 +149,14 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                       {editable ? (
                         <details className="editar-docente-tutor">
                           <summary>{joinDocentes(ap.docentesTutor.map((d) => d.nombre)) || 'Asignar'}</summary>
-                          <form action={editarDocentesApertura.bind(null, ap.id)} className="fila-campos">
+                          <FormConError action={editarDocentesApertura.bind(null, ap.id)} className="fila-campos">
                             <EditorDocentes
                               name="docentesTutor"
                               iniciales={ap.docentesTutor.map((d) => d.nombre)}
                               etiqueta="docente tutor de esta apertura"
                             />
                             <Boton enCurso="Guardando">Guardar</Boton>
-                          </form>
+                          </FormConError>
                         </details>
                       ) : (
                         joinDocentes(ap.docentesTutor.map((d) => d.nombre)) || '—'
@@ -167,7 +168,7 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                       <td>
                         <details className="editar-fechas-apertura">
                           <summary>Editar</summary>
-                          <form action={editarFechasApertura.bind(null, ap.id)} className="fila-campos fechas">
+                          <FormConError action={editarFechasApertura.bind(null, ap.id)} className="fila-campos fechas">
                             {CAMPOS_FECHA.map(([campo, etiqueta]) => (
                               <label key={campo} htmlFor={`${campo}_${ap.id}`}>
                                 <span>
@@ -184,7 +185,7 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                               </label>
                             ))}
                             <Boton enCurso="Guardando">Guardar fechas</Boton>
-                          </form>
+                          </FormConError>
                           <p className="nota-excepcion">
                             Corrige sólo esta apertura, no el período — para cuando la producción
                             se atrasa y arranca unos días después que el resto.

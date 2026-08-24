@@ -9,6 +9,7 @@ import { fmtFecha } from '@/lib/formato'
 import { normalizarBusqueda } from '@/lib/texto'
 import { EditorDocentes } from '@/components/EditorDocentes'
 import { BarraGuardar } from '@/components/BarraGuardar'
+import { FormConError } from '@/components/FormConError'
 import { SelectAutoSubmit } from '@/components/SelectAutoSubmit'
 import { BuscadorAutoLimpia } from '@/components/BuscadorAutoLimpia'
 import { IconoDescarga } from '@/components/iconos'
@@ -170,7 +171,7 @@ export default async function Produccion({
         })}
       </div>
 
-      <form action={guardarSeguimiento.bind(null, carrera.id)} className="form-seguimiento">
+      <FormConError action={guardarSeguimiento.bind(null, carrera.id)} className="form-seguimiento">
         <div className="tabla-scroll">
           <table className="tabla-seguimiento">
             <thead>
@@ -269,7 +270,7 @@ export default async function Produccion({
         </div>
 
         <BarraGuardar nota={`Se guardan todas las filas de ${carrera.nombre} que hayas modificado.`} />
-      </form>
+      </FormConError>
     </main>
   )
 }
