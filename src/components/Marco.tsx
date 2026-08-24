@@ -3,11 +3,19 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-/** La pantalla de ingreso se muestra sola: sin barra ni navegación detrás. */
-const SIN_MARCO = ['/ingresar']
+/**
+ * Pantallas que se muestran solas: sin barra ni navegación detrás. Son las
+ * de antes de tener sesión, donde la barra sólo ofrece enlaces que van a
+ * rebotar al ingreso.
+ *
+ * Se compara por prefijo porque `/recuperar/<token>` es una ruta dinámica:
+ * con igualdad exacta la pantalla de contraseña nueva quedaba con la barra
+ * azul arriba y la tarjeta descentrada.
+ */
+const SIN_MARCO = ['/ingresar', '/recuperar']
 
 function suelta(pathname: string): boolean {
-  return SIN_MARCO.includes(pathname)
+  return SIN_MARCO.some((r) => pathname === r || pathname.startsWith(`${r}/`))
 }
 
 /** Barra superior. Desaparece en las pantallas que se muestran solas. */
