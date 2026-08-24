@@ -90,19 +90,33 @@ model Cambio {
 }
 
 model Asignatura {
-  codigo        String     @id
-  nombre        String
-  catedra       String?
-  cargaHoraria  Int?
-  asesor        String?
-  estado        String     @default("sin_novedad")
+  codigo              String    @id
+  nombre              String
+  catedra             String?
+  cargaHoraria        Int?
+  asesor              String?
+  estado              String    @default("sin_novedad")
   /// Notas del seguimiento: por qué está trabada, qué falta, con quién se habló.
-  observaciones String?
+  observaciones       String?
   /// Cuándo se tocó el estado por última vez, para detectar seguimientos viejos.
-  estadoDesde   DateTime?
-  docentes      AsignaturaDocente[]
-  planItems     PlanItem[]
-  aperturas     Apertura[]
+  estadoDesde         DateTime?
+  /// El seminario del plan que esta variante ayuda a cubrir. Null en las
+  /// asignaturas comunes. Una variante no tiene PlanItem propio: pertenece al
+  /// plan a través de su principal, y por eso no engorda el total del panel.
+  principalCodigo     String?
+  /// onDelete: SetNull y no Cascade — borrar el seminario del plan no puede
+  /// llevarse puesta la producción ya cargada de sus variantes.
+  principal           Asignatura?  @relation("Variantes", fields: [principalCodigo], references: [codigo], onDelete: SetNull, onUpdate: Cascade)
+  variantes           Asignatura[] @relation("Variantes")
+  /// Cuántas variantes hacen falta para dar por cubierto este lugar del plan.
+  /// Sólo significa algo en un principal, y depende de la carga horaria de
+  /// cada seminario: a veces alcanza con uno, a veces hacen falta los tres.
+  variantesRequeridas Int       @default(1)
+  docentes            AsignaturaDocente[]
+  planItems           PlanItem[]
+  aperturas           Apertura[]
+
+  @@index([principalCodigo])
 }
 
 /// Una asignatura puede tener más de un docente a cargo; cada uno es su

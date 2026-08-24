@@ -57,7 +57,7 @@ export default async function Planificar({
   const [plan, cohortes, periodosTodos] = await Promise.all([
     prisma.planItem.findMany({
       where: { carreraId: carrera.id },
-      include: { asignatura: true },
+      include: { asignatura: { include: { variantes: { orderBy: { codigo: 'asc' } } } } },
       orderBy: [{ orden: 'asc' }, { asignaturaCodigo: 'asc' }],
     }),
     prisma.cohorte.findMany({ where: { carreraId: carrera.id }, orderBy: { nombre: 'asc' } }),
@@ -65,6 +65,20 @@ export default async function Planificar({
       where: { unidadId: carrera.unidadId },
       orderBy: { inicioCursado: 'asc' },
     }),
+  ])
+
+  // Lo que se puede abrir como aula: cada lugar del plan y, colgando de él, sus
+  // seminarios optativos. Lo que se monta es el seminario concreto, no el
+  // lugar del plan, así que las variantes tienen que estar en la lista.
+  const abribles = plan.flatMap((item) => [
+    {
+      codigo: item.asignaturaCodigo,
+      etiqueta: `${item.orden != null ? `${item.orden}. ` : ''}${item.asignatura.nombre}`,
+    },
+    ...item.asignatura.variantes.map((v) => ({
+      codigo: v.codigo,
+      etiqueta: `${item.orden != null ? `${item.orden}. ` : ''}${item.asignatura.nombre} — ${v.nombre}`,
+    })),
   ])
 
   // Por defecto sólo se ven los períodos más cercanos a hoy, para que precargar
@@ -251,7 +265,7 @@ export default async function Planificar({
               </thead>
               <tbody>
                 {cohortes.map((co) => {
-                  const sinAbrir = plan.filter((item) => !grilla.yaCursa(co.id, item.asignaturaCodigo).length)
+                  const sinAbrir = abribles.filter((item) => !grilla.yaCursa(co.id, item.codigo).length)
                   return (
                   <tr key={co.id}>
                     <th scope="row" className="col-cohorte">
@@ -262,9 +276,8 @@ export default async function Planificar({
                           <summary>{sinAbrir.length} sin abrir todavía</summary>
                           <ul>
                             {sinAbrir.map((item) => (
-                              <li key={item.id}>
-                                {item.orden != null ? `${item.orden}. ` : ''}
-                                {item.asignatura.nombre}
+                              <li key={item.codigo}>
+                                {item.etiqueta}
                               </li>
                             ))}
                           </ul>
@@ -339,12 +352,11 @@ export default async function Planificar({
                               <input type="hidden" name="cohorteId" value={co.id} />
                               <select name="codigo" defaultValue="" aria-label={`Agregar asignatura a ${co.nombre} en ${p.nombre}`}>
                                 <option value="" disabled>Elegir asignatura...</option>
-                                {plan.map((item) => {
-                                  const cursadaEn = grilla.yaCursa(co.id, item.asignaturaCodigo)
+                                {abribles.map((item) => {
+                                  const cursadaEn = grilla.yaCursa(co.id, item.codigo)
                                   return (
-                                    <option key={item.id} value={item.asignaturaCodigo}>
-                                      {item.orden != null ? `${item.orden}. ` : ''}
-                                      {item.asignatura.nombre}
+                                    <option key={item.codigo} value={item.codigo}>
+                                      {item.etiqueta}
                                       {cursadaEn.length ? ` — ya en ${cursadaEn.join(', ')}` : ''}
                                     </option>
                                   )

@@ -1919,3 +1919,44 @@ table.tabla-seguimiento .estado-badge {
   user-select: all;
 }
 .provisoria .nota { margin: var(--e3) 0 0; font-size: 12px; color: var(--texto-suave); }
+
+/* ------------------------------------------------- seminarios optativos */
+
+/* El alta de un seminario optativo: código corto, nombre largo, botón al lado. */
+form.ficha.alta-variante {
+  grid-template-columns: 140px 1fr auto;
+  align-items: end;
+  max-width: none;
+  gap: var(--e3);
+}
+form.ficha.alta-variante button { align-self: end; white-space: nowrap; }
+
+.cuantas-hacen-falta {
+  margin-top: var(--e3);
+  font-size: 13px;
+  color: var(--texto-suave);
+}
+.cuantas-hacen-falta label { font-weight: 600; }
+.cuantas-hacen-falta input {
+  width: 64px;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-chico);
+  padding: 3px var(--e2);
+  font-size: 13px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* En el seguimiento, una variante se sangra bajo su seminario para que se lea
+   la pertenencia sin tener que abrir la ficha. */
+table.tabla-seguimiento tr.es-variante .col-asignatura { padding-left: var(--e5); }
+table.tabla-seguimiento tr.es-variante .col-asignatura a { font-weight: 500; }
+.marca-variante {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  color: var(--azul-claro);
+  margin-right: var(--e1);
+}

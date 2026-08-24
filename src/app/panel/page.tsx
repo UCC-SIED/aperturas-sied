@@ -21,7 +21,9 @@ export default async function Panel() {
     where: visibles ? { id: { in: visibles } } : undefined,
     include: {
       unidad: true,
-      planItems: { include: { asignatura: true } },
+      // Las variantes vienen con su principal: no tienen PlanItem propio, así
+      // que si no se traen acá el conteo no las vería nunca.
+      planItems: { include: { asignatura: { include: { variantes: true } } } },
     },
     orderBy: [{ unidadId: 'asc' }, { nombre: 'asc' }],
   })
@@ -45,10 +47,13 @@ export default async function Panel() {
     .map((u) => periodos.find((p) => p.unidadId === u)!)
     .filter(Boolean)
 
-  const global = resumirAvance(
-    carreras.flatMap((c) => c.planItems.map((p) => p.asignatura))
-      .filter((a, i, arr) => arr.findIndex((x) => x.codigo === a.codigo) === i),
-  )
+  // Una transversal aparece en varias carreras y es un solo lugar del plan,
+  // así que se deduplica por código antes de contar.
+  const conVariantes = carreras
+    .flatMap((c) => c.planItems.flatMap((p) => [p.asignatura, ...p.asignatura.variantes]))
+    .filter((a, i, arr) => arr.findIndex((x) => x.codigo === a.codigo) === i)
+
+  const global = resumirAvance(conVariantes)
 
   return (
     <main>
@@ -108,7 +113,9 @@ export default async function Panel() {
         </thead>
         <tbody>
           {carreras.map((c) => {
-            const a = resumirAvance(c.planItems.map((p) => p.asignatura))
+            const a = resumirAvance(
+              c.planItems.flatMap((p) => [p.asignatura, ...p.asignatura.variantes]),
+            )
             return (
               <tr key={c.id}>
                 <td><Link href={`/planificar?carrera=${c.id}`}>{c.nombre}</Link></td>
