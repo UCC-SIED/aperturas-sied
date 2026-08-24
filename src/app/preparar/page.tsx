@@ -5,6 +5,7 @@ import { sesionActual } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { IconoCompartida } from '@/components/iconos'
 import { EstadoBadge } from '@/components/EstadoBadge'
+import { SelectAutoSubmit } from '@/components/SelectAutoSubmit'
 
 export const metadata = { title: 'Aulas a preparar' }
 
@@ -93,16 +94,15 @@ export default async function Preparar({
       <form className="filtros-seguimiento">
         <label htmlFor="periodo">
           Período
-          <select id="periodo" name="periodo" defaultValue={periodoParam ?? ''}>
+          <SelectAutoSubmit id="periodo" name="periodo" defaultValue={periodoParam ?? ''}>
             <option value="">Todos los próximos</option>
             {periodos.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.nombre} · {p.unidad.nombre} ({p._count.aperturas})
               </option>
             ))}
-          </select>
+          </SelectAutoSubmit>
         </label>
-        <button type="submit">Ver</button>
       </form>
 
       {!items.length ? (

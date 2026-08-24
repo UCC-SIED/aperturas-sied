@@ -144,7 +144,7 @@ export default async function Produccion({
         })}
       </div>
 
-      <form action={guardarSeguimiento.bind(null, carrera.id)}>
+      <form action={guardarSeguimiento.bind(null, carrera.id)} className="form-seguimiento">
         <div className="tabla-scroll">
           <table className="tabla-seguimiento">
             <thead>

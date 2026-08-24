@@ -7,6 +7,7 @@ import { armarGrilla, type AperturaGrilla } from '@/lib/grilla'
 import { estadoPeriodo } from '@/lib/estado-periodo'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
 import { Boton } from '@/components/Boton'
+import { SelectAutoSubmit } from '@/components/SelectAutoSubmit'
 import { IconoCompartida } from '@/components/iconos'
 import { EditorDocentes } from '@/components/EditorDocentes'
 import {
@@ -153,12 +154,11 @@ export default async function Planificar({
         {carreras.length > 1 && (
           <form className="selector-carrera">
             <label htmlFor="carrera">Carrera</label>
-            <select id="carrera" name="carrera" defaultValue={String(carrera.id)}>
+            <SelectAutoSubmit id="carrera" name="carrera" defaultValue={String(carrera.id)}>
               {carreras.map((c) => (
                 <option key={c.id} value={c.id}>{c.nombre}</option>
               ))}
-            </select>
-            <button type="submit">Ver</button>
+            </SelectAutoSubmit>
           </form>
         )}
       </div>
@@ -248,6 +248,7 @@ export default async function Planificar({
                       <small>inscripción {fmtFecha(p.aperturaInscripcion)}</small>
                     </th>
                   ))}
+                  <th className="relleno" aria-hidden />
                 </tr>
               </thead>
               <tbody>
@@ -359,6 +360,7 @@ export default async function Planificar({
                         </td>
                       )
                     })}
+                    <td className="relleno" aria-hidden />
                   </tr>
                   )
                 })}

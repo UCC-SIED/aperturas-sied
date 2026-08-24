@@ -352,8 +352,24 @@ table.grilla {
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
-  min-width: 900px;
+  /* Al revés de lo que parece: el 100% heredado manda cuando hay pocos
+     períodos (y la columna de relleno se come el sobrante), y este min-width
+     manda cuando hay muchos, para que desborde y scrollee .grilla-scroll en
+     lugar de comprimir las columnas. */
+  min-width: max-content;
   box-shadow: none;
+  border: none;
+  background: none;
+}
+
+/* Con table-layout fijo el ancho sobrante se reparte entre las columnas: una
+   carrera con un solo período terminaba con la columna de cohortes en 428px
+   (declaramos 130) y la celda en 789px, con el select de "Elegir asignatura"
+   ocupando media pantalla. Esta columna sin contenido se come el sobrante y
+   deja que cada período conserve sus 240px. */
+table.grilla .relleno {
+  width: auto;
+  padding: 0;
   border: none;
   background: none;
 }
@@ -982,16 +998,26 @@ table.tabla-seguimiento td { padding: var(--e1) var(--e2); }
 
 table.tabla-seguimiento input {
   width: 100%;
+  /* Una raya al pie, siempre visible: en transparente total no había forma de
+     saber que la celda se puede escribir sin pasarle el mouse por encima,
+     columna por columna. */
   border: 1px solid transparent;
-  border-radius: var(--radio-chico);
+  border-bottom-color: var(--borde);
+  border-radius: var(--radio-chico) var(--radio-chico) 0 0;
   padding: 4px var(--e2);
   font-size: 12px;
   background: transparent;
   color: var(--texto);
   transition: border-color var(--transicion), background var(--transicion);
 }
-table.tabla-seguimiento input:hover { border-color: var(--borde); background: #fff; }
-table.tabla-seguimiento input:focus { border-color: var(--azul-claro); background: #fff; outline: none; }
+table.tabla-seguimiento input:hover { border-color: var(--borde-fuerte); background: #fff; }
+table.tabla-seguimiento input:focus {
+  border-color: var(--azul);
+  border-radius: var(--radio-chico);
+  background: #fff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(44, 160, 218, .18);
+}
 table.tabla-seguimiento input::placeholder { color: var(--texto-suave); opacity: .6; }
 
 table.tabla-asignaturas { min-width: 1080px; table-layout: fixed; }
@@ -1763,3 +1789,49 @@ td input[name='contrasena'] {
   box-shadow: 0 -2px 10px rgba(168, 104, 0, .12);
 }
 .barra-guardar .pendiente { color: var(--ambar); }
+
+/* La tabla de seguimiento tiene decenas de filas y se edita celda por celda:
+   sin el encabezado a la vista no se sabe si la columna es "Asesor" u
+   "Observaciones". El sticky de thead no servía porque .tabla-scroll ya es
+   contenedor de scroll (overflow-x: auto obliga al eje Y a auto), así que
+   ahora la caja scrollea también en vertical y el encabezado pega ahí. */
+/* La pantalla ocupa el alto de la ventana y la única parte que scrollea es la
+   tabla: así el encabezado de columnas queda pegado arriba, los filtros y los
+   chips de estado quedan a la vista, y la barra de guardar abajo — sin dos
+   barras de scroll compitiendo. */
+main.seguimiento {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 52px - var(--e5) - var(--e6));
+  min-height: 420px;
+}
+main.seguimiento .encabezado,
+main.seguimiento .filtros-seguimiento,
+main.seguimiento .resumen-estados { flex: 0 0 auto; }
+
+form.form-seguimiento {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+form.form-seguimiento .tabla-scroll {
+  flex: 1 1 auto;
+  min-height: 120px;
+  overflow: auto;
+}
+form.form-seguimiento .tabla-seguimiento thead th { top: 0; }
+form.form-seguimiento .barra-guardar { flex: 0 0 auto; margin-top: var(--e3); }
+
+/* Lo mismo para el editor de docentes, que vive en esas celdas. */
+table.tabla-seguimiento .agregar-docente input { border-bottom-color: var(--borde); }
+
+/* En ventanas bajas o angostas el alto fijo dejaba la tabla en una franja de
+   120px. Ahí conviene que la página scrollee como siempre y que la caja se
+   quede con una porción de la ventana, para no perder el encabezado pegado. */
+@media (max-height: 700px), (max-width: 900px) {
+  main.seguimiento { height: auto; min-height: 0; display: block; }
+  form.form-seguimiento { display: block; }
+  form.form-seguimiento .tabla-scroll { max-height: 65dvh; }
+  form.form-seguimiento .barra-guardar { margin-top: var(--e3); }
+}
