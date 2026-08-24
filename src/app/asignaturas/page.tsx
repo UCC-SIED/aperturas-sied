@@ -1,7 +1,6 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesion } from '@/lib/sesion'
 import { carrerasVisibles } from '@/lib/permisos'
 import { joinDocentes } from '@/lib/docentes'
 import { EstadoBadge } from '@/components/EstadoBadge'
@@ -12,8 +11,7 @@ export const metadata = { title: 'Asignaturas' }
 export const dynamic = 'force-dynamic'
 
 export default async function Asignaturas({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  const s = await sesionActual()
-  if (!s) redirect('/ingresar')
+  const s = await exigirSesion()
 
   const { q = '' } = await searchParams
   const visibles = carrerasVisibles(s)

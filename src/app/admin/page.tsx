@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesion } from '@/lib/sesion'
 import { puedeAdministrar, ROLES, ROL_LABELS, ROL_DESCRIPCIONES } from '@/lib/permisos'
 import { fmtFechaHora } from '@/lib/formato'
 import { pedidosPendientes } from '@/lib/pedidos'
@@ -15,8 +15,7 @@ export const metadata = { title: 'Administración' }
 export const dynamic = 'force-dynamic'
 
 export default async function Admin() {
-  const s = await sesionActual()
-  if (!s) redirect('/ingresar')
+  const s = await exigirSesion()
   if (!puedeAdministrar(s)) redirect('/panel')
 
   const [usuarios, carreras, unidades, cambios, pedidos] = await Promise.all([

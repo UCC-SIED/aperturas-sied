@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesion } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
@@ -23,8 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ codigo: s
 }
 
 export default async function Asignatura({ params }: { params: Promise<{ codigo: string }> }) {
-  const s = await sesionActual()
-  if (!s) redirect('/ingresar')
+  const s = await exigirSesion()
 
   const { codigo } = await params
   const a = await prisma.asignatura.findUnique({

@@ -1,7 +1,6 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesion } from '@/lib/sesion'
 import { puedeEditarCarrera, puedeEditarProduccion, carrerasVisibles } from '@/lib/permisos'
 import { armarGrilla, type AperturaGrilla } from '@/lib/grilla'
 import { estadoPeriodo } from '@/lib/estado-periodo'
@@ -27,8 +26,7 @@ export default async function Planificar({
 }: {
   searchParams: Promise<{ carrera?: string; todos?: string }>
 }) {
-  const s = await sesionActual()
-  if (!s) redirect('/ingresar')
+  const s = await exigirSesion()
 
   const visibles = carrerasVisibles(s)
   const carreras = await prisma.carrera.findMany({

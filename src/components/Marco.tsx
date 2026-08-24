@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation'
  * de antes de tener sesión, donde la barra sólo ofrece enlaces que van a
  * rebotar al ingreso.
  */
-const SIN_MARCO = ['/ingresar', '/recuperar']
+const SIN_MARCO = ['/ingresar', '/recuperar', '/elegir-contrasena']
 
 function suelta(pathname: string): boolean {
   return SIN_MARCO.some((r) => pathname === r || pathname.startsWith(`${r}/`))

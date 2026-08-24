@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesion } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { ESTADOS, ESTADO_LABELS } from '@/lib/estados'
 import { resumirAvance } from '@/lib/avance'
@@ -24,8 +24,7 @@ export default async function Produccion({
 }: {
   searchParams: Promise<{ carrera?: string; q?: string; estado?: string }>
 }) {
-  const s = await sesionActual()
-  if (!s) redirect('/ingresar')
+  const s = await exigirSesion()
   if (!puedeEditarProduccion(s)) redirect('/panel')
 
   const { carrera: carreraParam, q = '', estado: filtroEstado = '' } = await searchParams
