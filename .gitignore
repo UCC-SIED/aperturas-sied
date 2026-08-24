@@ -55,3 +55,6 @@ prisma/test.db
 
 # impeccable: consentimiento y config local del hook
 .impeccable/config.local.json
+
+# Scratch del ejecutor de planes por subagentes
+.superpowers/

@@ -32,33 +32,35 @@ model Carrera {
 /// sied = todo · director = planifica sus carreras · unidad = planifica
 /// todas las carreras de su unidad académica · consulta = sólo mira.
 model Usuario {
-  id           Int              @id @default(autoincrement())
-  email        String           @unique
-  nombre       String
-  rol          String           @default("consulta")
-  activo       Boolean          @default(true)
+  id                Int                @id @default(autoincrement())
+  email             String             @unique
+  nombre            String
+  rol               String             @default("consulta")
+  activo            Boolean            @default(true)
   /// Hash con sal (scrypt), nunca la contraseña en texto plano. Null hasta
   /// que administración le defina una.
-  passwordHash String?
+  passwordHash      String?
   /// Sólo para rol "unidad": qué unidad académica planifica entera.
-  unidadId     String?
-  unidad       Unidad?          @relation(fields: [unidadId], references: [id])
-  carreras     UsuarioCarrera[]
-  cambios      Cambio[]
-  reinicios    ReinicioContrasena[]
+  unidadId          String?
+  unidad            Unidad?            @relation(fields: [unidadId], references: [id])
+  carreras          UsuarioCarrera[]
+  cambios           Cambio[]
+  pedidosContrasena PedidoContrasena[]
 }
 
-/// Un pedido de "olvidé mi contraseña": el link que se manda por correo
-/// vale una sola vez y vence a las dos horas. Se guarda el hash del token,
-/// nunca el token en sí — igual que la contraseña.
-model ReinicioContrasena {
-  id        Int      @id @default(autoincrement())
+/// Un pedido de "no puedo entrar", que el equipo SIED resuelve a mano desde
+/// /admin. No hay token ni link: la contraseña la fija una persona y se la
+/// comunica por fuera del sistema, porque el remitente de prueba de Resend
+/// sólo entrega a la casilla del SIED.
+model PedidoContrasena {
+  id        Int       @id @default(autoincrement())
   usuarioId Int
-  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  tokenHash String   @unique
-  expira    DateTime
-  usado     Boolean  @default(false)
-  creado    DateTime @default(now())
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  creado    DateTime  @default(now())
+  /// Null mientras está pendiente. Se sella al fijar la contraseña o al descartarlo.
+  resuelto  DateTime?
+
+  @@index([usuarioId])
 }
 
 model UsuarioCarrera {

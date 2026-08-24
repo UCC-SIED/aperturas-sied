@@ -3,12 +3,12 @@
 import { useActionState } from 'react'
 import { Boton } from '@/components/Boton'
 import { IconoAlerta } from '@/components/iconos'
-import { solicitarRecuperacion, type EstadoRecuperacion } from './actions'
+import { solicitarPedido, type EstadoPedido } from './actions'
 
-const ESTADO_INICIAL: EstadoRecuperacion = { error: null }
+const ESTADO_INICIAL: EstadoPedido = { error: null }
 
 export function FormRecuperar() {
-  const [estado, accion] = useActionState(solicitarRecuperacion, ESTADO_INICIAL)
+  const [estado, accion] = useActionState(solicitarPedido, ESTADO_INICIAL)
 
   return (
     <form action={accion} className="form-ingreso">
@@ -32,7 +32,7 @@ export function FormRecuperar() {
           autoFocus
         />
       </div>
-      <Boton className="boton-principal" enCurso="Enviando">Mandar link</Boton>
+      <Boton className="boton-principal" enCurso="Enviando">Pedir contraseña nueva</Boton>
     </form>
   )
 }

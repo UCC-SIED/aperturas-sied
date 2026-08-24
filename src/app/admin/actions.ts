@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { puedeAdministrar, esCorreoInstitucional, ROLES } from '@/lib/permisos'
 import { hashContrasena } from '@/lib/contrasenas'
+import { sellarPedidos } from '@/lib/pedidos'
 
 const CONTRASENA_MINIMA = 8
 
@@ -53,6 +54,9 @@ export async function establecerContrasena(usuarioId: number, formData: FormData
   if (!u) throw new Error('Usuario inexistente')
 
   await prisma.usuario.update({ where: { id: usuarioId }, data: { passwordHash: hashContrasena(contrasena) } })
+  // Fijarle la contraseña ES resolver el pedido: si hubiera que marcarlo
+  // aparte, la lista se llenaría de pedidos ya atendidos.
+  await sellarPedidos(usuarioId)
   await anotar(admin.id, `${u.nombre}: se le definió una contraseña nueva`)
   revalidatePath('/admin')
 }
@@ -124,5 +128,22 @@ export async function asignarUnidad(usuarioId: number, formData: FormData) {
 
   await prisma.usuario.update({ where: { id: usuarioId }, data: { unidadId } })
   await anotar(admin.id, `${u.nombre}: unidad → ${unidad?.nombre ?? 'ninguna'}`)
+  revalidatePath('/admin')
+}
+
+/**
+ * Cierra un pedido sin tocar la contraseña: para lo que no corresponda
+ * atender, o cuando la persona ya se acomodó por otro lado.
+ */
+export async function descartarPedido(pedidoId: number) {
+  const admin = await exigirAdmin()
+  const pedido = await prisma.pedidoContrasena.findUnique({
+    where: { id: pedidoId },
+    include: { usuario: true },
+  })
+  if (!pedido) throw new Error('Pedido inexistente')
+
+  await sellarPedidos(pedido.usuarioId)
+  await anotar(admin.id, `${pedido.usuario.nombre}: se descartó el pedido de contraseña`)
   revalidatePath('/admin')
 }
