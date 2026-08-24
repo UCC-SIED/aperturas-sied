@@ -3,9 +3,11 @@ import { prisma } from '@/lib/db'
 import { sesionActual } from '@/lib/sesion'
 import { puedeAdministrar, ROLES, ROL_LABELS, ROL_DESCRIPCIONES } from '@/lib/permisos'
 import { fmtFechaHora } from '@/lib/formato'
+import { pedidosPendientes } from '@/lib/pedidos'
 import { Boton } from '@/components/Boton'
 import {
-  crearUsuario, cambiarRol, alternarActivo, asignarCarreras, asignarUnidad, establecerContrasena,
+  crearUsuario, cambiarRol, alternarActivo, asignarCarreras, asignarUnidad,
+  establecerContrasena, descartarPedido,
 } from './actions'
 
 export const metadata = { title: 'Administración' }
@@ -17,7 +19,7 @@ export default async function Admin() {
   if (!s) redirect('/ingresar')
   if (!puedeAdministrar(s)) redirect('/panel')
 
-  const [usuarios, carreras, unidades, cambios] = await Promise.all([
+  const [usuarios, carreras, unidades, cambios, pedidos] = await Promise.all([
     prisma.usuario.findMany({
       include: { carreras: { include: { carrera: true } }, unidad: true },
       orderBy: [{ activo: 'desc' }, { rol: 'asc' }, { nombre: 'asc' }],
@@ -30,6 +32,7 @@ export default async function Admin() {
       orderBy: { fecha: 'desc' },
       take: 10,
     }),
+    pedidosPendientes(),
   ])
 
   return (
@@ -43,6 +46,51 @@ export default async function Admin() {
           </p>
         </div>
       </div>
+
+      {pedidos.length > 0 && (
+        <>
+          <h2>Pedidos de contraseña ({pedidos.length})</h2>
+          <p className="sub">
+            Gente que no puede entrar. Fijale una contraseña acá y pasásela por fuera del
+            sistema: el pedido se cierra solo al guardarla.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Quién</th><th>Correo</th><th>Lo pidió</th>
+                <th>Contraseña nueva</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {pedidos.map((p) => (
+                <tr key={p.id}>
+                  <td>{p.usuario.nombre}</td>
+                  <td><small>{p.usuario.email}</small></td>
+                  <td><small>{fmtFechaHora(p.creado)}</small></td>
+                  <td>
+                    <form action={establecerContrasena.bind(null, p.usuarioId)} className="en-linea">
+                      <input
+                        name="contrasena"
+                        type="text"
+                        placeholder="mínimo 8 caracteres"
+                        required
+                        minLength={8}
+                        aria-label={`Contraseña nueva para ${p.usuario.nombre}`}
+                      />
+                      <Boton enCurso="Guardando">Guardar</Boton>
+                    </form>
+                  </td>
+                  <td>
+                    <form action={descartarPedido.bind(null, p.id)}>
+                      <Boton className="quitar" enCurso="Descartando">Descartar</Boton>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
 
       <h2>Dar de alta</h2>
       <form action={crearUsuario} className="ficha alta-usuario">
