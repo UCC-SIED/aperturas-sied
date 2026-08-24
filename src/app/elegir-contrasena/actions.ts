@@ -17,6 +17,12 @@ export async function elegir(
   const s = await sesionActual()
   if (!s) redirect('/ingresar')
 
+  // La pantalla ya filtra por la marca (page.tsx redirige si no está puesta),
+  // pero una server action se puede disparar sin pasar por ahí: alguien con
+  // una sesión ajena abierta podría fijarle una contraseña nueva sin conocer
+  // la actual. Repetir el chequeo acá es la segunda puerta que evita eso.
+  if (!s.debeElegirContrasena) redirect('/')
+
   const nueva = String(formData.get('contrasena') ?? '')
   const repetir = String(formData.get('repetir') ?? '')
   if (nueva !== repetir) return { error: 'Las dos contraseñas no coinciden' }

@@ -27,8 +27,9 @@ export function FormAlta({ roles }: { roles: { valor: string; etiqueta: string }
           </p>
           <code>{estado.provisoria}</code>
           <p className="nota">
-            No queda guardada en ningún lado. Si cerrás esta pantalla sin copiarla, hay que
-            generarle una nueva desde la columna Contraseña de la tabla de abajo.
+            No queda guardada en ningún lado. Si se pierde, en la columna Contraseña de la
+            tabla de abajo se le puede fijar una a mano; igual va a tener que elegir la suya
+            al entrar.
           </p>
         </div>
       )}
