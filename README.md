@@ -37,16 +37,16 @@ Los permisos se gestionan desde **`/admin`**, sin tocar código. `npm run usuari
 
 ## Ingreso
 
-Mientras no esté configurado Google (ver más abajo), se entra con **correo y contraseña**. La primera se la carga administración desde `/admin`; después, si alguien se la olvida, puede recuperarla sola desde **"¿Olvidaste tu contraseña?"** en `/ingresar` — le llega un link por correo, válido dos horas, para elegir una nueva. Los permisos funcionan igual en los dos modos de ingreso.
+Mientras no esté configurado Google (ver más abajo), se entra con **correo y contraseña**. La primera se la carga administración desde `/admin`; después, si alguien se la olvida, pide el reinicio desde **"¿Olvidaste tu contraseña?"** en `/ingresar` — eso deja un pedido registrado en `/admin`, donde el equipo SIED le fija una contraseña nueva y se la comunica por fuera del sistema (teléfono, mensaje, en persona). Los permisos funcionan igual en los dos modos de ingreso.
 
-### Recuperar contraseña (configurar el envío de correo)
+### Pedido de contraseña (configurar el aviso por correo)
 
-El link de recuperación se manda con [Resend](https://resend.com) — no usa el SMTP de la universidad ni ninguna cuenta de correo existente.
+El pedido queda registrado en la base sin depender de ningún correo. Además, se manda un aviso por [Resend](https://resend.com) a `tecnologia.sied@ucc.edu.ar` para que el equipo se entere sin tener que entrar a `/admin` a revisar — no usa el SMTP de la universidad ni ninguna cuenta de correo existente, y si falla, el pedido no se pierde: queda igual en `/admin`.
 
 1. Crear una cuenta gratis en [resend.com](https://resend.com) (hasta 3.000 correos/mes).
 2. **API Keys → Create API Key**, copiarla a `RESEND_API_KEY`.
-3. Sin verificar un dominio, Resend sólo entrega a la casilla dueña de la cuenta — sirve para probar el flujo, pero no para que le llegue a cualquier usuario real. Para eso, en **Domains → Add Domain** cargar `ucc.edu.ar` (o el dominio que se use para enviar) y sumar los registros DNS que pide Resend; una vez verificado, `RESEND_FROM_EMAIL` puede ser una dirección de ese dominio, por ejemplo `Gestión de Asignaturas SIED <no-responder@ucc.edu.ar>`.
-4. Sin `RESEND_API_KEY` cargada, pedir la recuperación tira error en vez de mandar nada — no hay un modo "silencioso" a medio configurar.
+3. Sin verificar un dominio, Resend sólo entrega a la casilla dueña de la cuenta — que es justo `tecnologia.sied@ucc.edu.ar`, así que alcanza con esto para que el aviso funcione. Verificar un dominio propio (`ucc.edu.ar`, en **Domains → Add Domain**) queda como mejora a futuro si algún día se necesita mandar desde una dirección institucional, pero no es necesario para este flujo.
+4. Sin `RESEND_API_KEY` cargada, el aviso por correo simplemente no sale — el usuario ve la confirmación normal igual y el pedido queda registrado en `/admin`, sin ningún error visible.
 
 ## Ingreso con Google
 

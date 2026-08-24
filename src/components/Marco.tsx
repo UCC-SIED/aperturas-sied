@@ -7,10 +7,6 @@ import { usePathname } from 'next/navigation'
  * Pantallas que se muestran solas: sin barra ni navegación detrás. Son las
  * de antes de tener sesión, donde la barra sólo ofrece enlaces que van a
  * rebotar al ingreso.
- *
- * Se compara por prefijo porque `/recuperar/<token>` es una ruta dinámica:
- * con igualdad exacta la pantalla de contraseña nueva quedaba con la barra
- * azul arriba y la tarjeta descentrada.
  */
 const SIN_MARCO = ['/ingresar', '/recuperar']
 
