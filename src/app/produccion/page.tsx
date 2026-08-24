@@ -175,7 +175,13 @@ export default async function Produccion({
                       </small>
                     </td>
                     <td>
+                      {/* key=estado: fuerza a remontar el select cuando el guardado
+                          devuelve un estado nuevo. Sin esto React no toca el valor
+                          mostrado de un campo no controlado, y la fila quedaba con
+                          el color del estado nuevo pero la opción vieja en la lista:
+                          parecía que el cambio no se había guardado. */}
                       <select
+                        key={a.estado}
                         name={`estado_${a.codigo}`}
                         defaultValue={a.estado}
                         className={`select-estado est-${a.estado}`}
