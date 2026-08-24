@@ -2,13 +2,13 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesionActiva } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { parseDocentes } from '@/lib/docentes'
 
 export async function actualizarAsignatura(codigo: string, formData: FormData) {
-  const s = await sesionActual()
+  const s = await exigirSesionActiva()
   if (!puedeEditarProduccion(s)) {
     throw new Error('Sólo el equipo SIED edita el estado de producción')
   }
@@ -36,7 +36,7 @@ export async function actualizarAsignatura(codigo: string, formData: FormData) {
   if (previa.estado !== estado) {
     await prisma.cambio.create({
       data: {
-        usuarioId: s!.id,
+        usuarioId: s.id,
         accion: 'cambio_estado',
         detalle: `${previa.nombre}: ${ESTADO_LABELS[previa.estado as Estado]} → ${ESTADO_LABELS[estado as Estado]}`,
         asignaturaCodigo: codigo,

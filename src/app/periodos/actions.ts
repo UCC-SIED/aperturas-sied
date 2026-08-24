@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesionActiva } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { validarFechas, tipoValidoParaUnidad } from '@/lib/validar'
 
@@ -18,11 +18,11 @@ function fecha(form: FormData, campo: string): Date | null {
 }
 
 async function exigirPermiso() {
-  const s = await sesionActual()
+  const s = await exigirSesionActiva()
   if (!puedeEditarProduccion(s)) {
     throw new Error('Sólo el equipo SIED define el calendario de períodos')
   }
-  return s!
+  return s
 }
 
 export async function crearPeriodo(formData: FormData) {

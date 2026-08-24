@@ -2,16 +2,16 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesionActiva } from '@/lib/sesion'
 import { puedeAdministrar, esCorreoInstitucional, ROLES } from '@/lib/permisos'
 import { hashContrasena } from '@/lib/contrasenas'
 import { sellarPedidos } from '@/lib/pedidos'
 import { CONTRASENA_MINIMA } from '@/lib/credenciales'
 
 async function exigirAdmin() {
-  const s = await sesionActual()
+  const s = await exigirSesionActiva()
   if (!puedeAdministrar(s)) throw new Error('Sólo administración puede gestionar usuarios')
-  return s!
+  return s
 }
 
 async function anotar(usuarioId: number, detalle: string) {

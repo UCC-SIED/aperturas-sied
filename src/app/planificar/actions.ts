@@ -2,13 +2,13 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
-import { sesionActual } from '@/lib/sesion'
+import { exigirSesionActiva } from '@/lib/sesion'
 import { agregar, quitar, mover, exigirPertenencia } from '@/lib/planificacion'
 import { puedeEditarCarrera } from '@/lib/permisos'
 import { parseDocentes } from '@/lib/docentes'
 
 export async function agregarApertura(carreraId: number, formData: FormData) {
-  const s = await sesionActual()
+  const s = await exigirSesionActiva()
   const codigo = String(formData.get('codigo') ?? '')
   const periodoId = Number(formData.get('periodoId'))
   const cohorteId = formData.get('cohorteId') ? Number(formData.get('cohorteId')) : null
@@ -18,13 +18,13 @@ export async function agregarApertura(carreraId: number, formData: FormData) {
 }
 
 export async function quitarApertura(carreraId: number, formData: FormData) {
-  const s = await sesionActual()
+  const s = await exigirSesionActiva()
   await quitar(prisma, s, carreraId, Number(formData.get('aperturaId')))
   revalidatePath('/', 'layout')
 }
 
 export async function moverApertura(carreraId: number, formData: FormData) {
-  const s = await sesionActual()
+  const s = await exigirSesionActiva()
   const destinoId = Number(formData.get('destinoId'))
   if (!destinoId) throw new Error('Elegí el período de destino')
   await mover(prisma, s, carreraId, Number(formData.get('aperturaId')), destinoId)
@@ -37,7 +37,7 @@ export async function moverApertura(carreraId: number, formData: FormData) {
  * y el cambio se ve igual para todas (es el mismo dato).
  */
 export async function editarDocentesTutorApertura(carreraId: number, formData: FormData) {
-  const s = await sesionActual()
+  const s = await exigirSesionActiva()
   if (!puedeEditarCarrera(s, carreraId)) {
     throw new Error('No tenés permiso para planificar esta carrera')
   }
@@ -50,7 +50,7 @@ export async function editarDocentesTutorApertura(carreraId: number, formData: F
     },
   })
   if (!apertura) throw new Error('Apertura inexistente')
-  exigirPertenencia(s!, carreraId, apertura)
+  exigirPertenencia(s, carreraId, apertura)
 
   const docentes = parseDocentes(String(formData.get('docentesTutor') ?? ''))
 
@@ -62,7 +62,7 @@ export async function editarDocentesTutorApertura(carreraId: number, formData: F
   }
   await prisma.cambio.create({
     data: {
-      usuarioId: s!.id,
+      usuarioId: s.id,
       accion: 'edito_docente_tutor',
       detalle: `Docente tutor de ${apertura.asignatura.nombre} en esta apertura`,
       asignaturaCodigo: apertura.asignaturaCodigo,
@@ -74,7 +74,7 @@ export async function editarDocentesTutorApertura(carreraId: number, formData: F
 
 /** El director cerró el aviso de "podés sumarte" sin sumar su cohorte. */
 export async function descartarAviso(carreraId: number, formData: FormData) {
-  const s = await sesionActual()
+  const s = await exigirSesionActiva()
   if (!puedeEditarCarrera(s, carreraId)) {
     throw new Error('No tenés permiso para planificar esta carrera')
   }
@@ -91,7 +91,7 @@ export async function descartarAviso(carreraId: number, formData: FormData) {
 
 /** Una cohorte nueva empieza sin nada planificado: es una fila vacía en la grilla. */
 export async function crearCohorte(carreraId: number, formData: FormData) {
-  const s = await sesionActual()
+  const s = await exigirSesionActiva()
   if (!puedeEditarCarrera(s, carreraId)) {
     throw new Error('No tenés permiso para planificar esta carrera')
   }
@@ -105,7 +105,7 @@ export async function crearCohorte(carreraId: number, formData: FormData) {
 
   await prisma.cohorte.create({ data: { carreraId, nombre } })
   await prisma.cambio.create({
-    data: { usuarioId: s!.id, accion: 'creo_cohorte', detalle: `Nueva cohorte: ${nombre}`, carreraId },
+    data: { usuarioId: s.id, accion: 'creo_cohorte', detalle: `Nueva cohorte: ${nombre}`, carreraId },
   })
   revalidatePath('/', 'layout')
 }
