@@ -991,7 +991,18 @@ a.chip-estado:hover { border-color: var(--azul); background: var(--superficie-2)
 .chip-estado.total { background: var(--azul); border-color: var(--azul); }
 .chip-estado.total .n, .chip-estado.total .l { color: #fff; }
 
-.tabla-scroll { overflow-x: auto; }
+/* Las tablas anchas se recorren dentro de su propia caja, en los dos ejes, con
+   el encabezado de columnas clavado arriba.
+   Antes era sólo `overflow-x: auto`, y eso obliga al eje Y a `auto` también: el
+   `top: 52px` que heredan las tablas quedaba anclado a un contenedor que nunca
+   scrolleaba, así que el encabezado se iba de pantalla igual y con la página a
+   media altura se veía cruzado con las filas. */
+.tabla-scroll {
+  overflow: auto;
+  max-height: calc(100dvh - 260px);
+  min-height: 320px;
+}
+.tabla-scroll table thead th { top: 0; }
 
 table.tabla-seguimiento { min-width: 1130px; table-layout: fixed; }
 table.tabla-seguimiento th.col-orden, table.tabla-seguimiento td.col-orden {
@@ -1853,4 +1864,18 @@ table.tabla-seguimiento .agregar-docente input { border-bottom-color: var(--bord
    ahí conviene que crezca y que scrollee la página. */
 @media (max-height: 700px) {
   .grilla-scroll { max-height: none; }
+}
+
+/* Un sello de estado no puede desbordar su columna: "Construcción de contenido"
+   mide más que los 140px de la celda y con nowrap se montaba sobre la columna
+   de al lado. Que baje de línea. */
+table.tabla-asignaturas .estado-badge,
+table.tabla-seguimiento .estado-badge {
+  white-space: normal;
+}
+
+/* En ventanas bajas la caja se queda con una franja inútil: mejor que crezca y
+   que scrollee la página, como en la grilla de Planificar. */
+@media (max-height: 700px) {
+  .tabla-scroll { max-height: none; min-height: 0; }
 }
