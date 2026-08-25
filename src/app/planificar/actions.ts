@@ -4,8 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
 import { exigirSesionActiva } from '@/lib/sesion'
 import { agregar, quitar, mover, exigirPertenencia } from '@/lib/planificacion'
-import { puedeEditarCarrera } from '@/lib/permisos'
-import { parseDocentes } from '@/lib/docentes'
+import { puedeEditarCarrera, puedeValidarDocentes } from '@/lib/permisos'
+import { parseDocentes, mismoGrupoDeDocentes } from '@/lib/docentes'
 import { comoResultado } from '@/lib/accion'
 import type { EstadoAccion } from '@/lib/estado-accion'
 
@@ -72,12 +72,20 @@ export async function editarDocentesTutorApertura(
       include: {
         asignatura: { include: { planItems: true } },
         cohortes: { include: { cohorte: true } },
+        docentesTutor: true,
       },
     })
     if (!apertura) throw new Error('Apertura inexistente')
     exigirPertenencia(s, carreraId, apertura)
 
     const docentes = parseDocentes(String(formData.get('docentesTutor') ?? ''))
+
+    // Si el grupo cambió, lo que se había validado ya no aplica: era sobre
+    // esas personas puntuales.
+    const anteriores = apertura.docentesTutor.map((d) => d.nombre)
+    if (!mismoGrupoDeDocentes(anteriores, docentes)) {
+      await prisma.apertura.update({ where: { id: aperturaId }, data: { docenteTutorValidado: false } })
+    }
 
     await prisma.aperturaDocente.deleteMany({ where: { aperturaId } })
     if (docentes.length) {
@@ -143,6 +151,42 @@ export async function crearCohorte(
     await prisma.cohorte.create({ data: { carreraId, nombre } })
     await prisma.cambio.create({
       data: { usuarioId: s.id, accion: 'creo_cohorte', detalle: `Nueva cohorte: ${nombre}`, carreraId },
+    })
+    revalidatePath('/', 'layout')
+  })
+}
+
+/**
+ * Prende o apaga la validación del grupo de docentes tutores de esta
+ * apertura. Exclusivo de Unidad Académica y Administración: ni siquiera el
+ * equipo SIED, que suele cargar estos mismos datos, puede tocarla.
+ */
+export async function alternarValidacionDocenteTutor(
+  aperturaId: number,
+  _prevState: EstadoAccion,
+  _formData: FormData,
+): Promise<EstadoAccion> {
+  return comoResultado(async () => {
+    const s = await exigirSesionActiva()
+    if (!puedeValidarDocentes(s)) {
+      throw new Error('Sólo Unidad Académica o Administración pueden validar')
+    }
+
+    const apertura = await prisma.apertura.findUnique({
+      where: { id: aperturaId },
+      include: { asignatura: true },
+    })
+    if (!apertura) throw new Error('Apertura inexistente')
+
+    const nuevoValor = !apertura.docenteTutorValidado
+    await prisma.apertura.update({ where: { id: aperturaId }, data: { docenteTutorValidado: nuevoValor } })
+    await prisma.cambio.create({
+      data: {
+        usuarioId: s.id,
+        accion: 'valido_docente_tutor',
+        detalle: `${apertura.asignatura.nombre}: docente tutor ${nuevoValor ? 'validado' : 'desvalidado'}`,
+        asignaturaCodigo: apertura.asignaturaCodigo,
+      },
     })
     revalidatePath('/', 'layout')
   })
