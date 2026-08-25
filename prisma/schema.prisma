@@ -44,6 +44,17 @@ model Usuario {
   /// una contraseña propia. Arranca en true porque la provisoria del alta la
   /// conoce administración: tiene que dejar de servir en cuanto entre.
   debeElegirContrasena Boolean            @default(true)
+  /// Cuenta los intentos de ingreso seguidos con la contraseña mal. Se resetea
+  /// a 0 apenas entra bien, para que equivocarse una vez no acumule para
+  /// siempre — sólo importan los fallos consecutivos recientes.
+  intentosFallidos     Int                @default(0)
+  /// Cuántas veces ya se bloqueó esta cuenta por demasiados intentos. No baja
+  /// solo: crece la espera cada vez (1, 5, 15 minutos), para que reintentar
+  /// automáticamente salga cada vez más caro.
+  nivelBloqueo         Int                @default(0)
+  /// Mientras esté en el futuro, ni la contraseña correcta entra. Null cuando
+  /// no hay ningún bloqueo activo.
+  bloqueadoHasta       DateTime?
   /// Sólo para rol "unidad": qué unidad académica planifica entera.
   unidadId             String?
   unidad               Unidad?            @relation(fields: [unidadId], references: [id])

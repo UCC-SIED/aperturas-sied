@@ -27,10 +27,17 @@ async function entrarConGoogle() {
 export default async function Ingresar({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; minutos?: string }>
 }) {
-  const { error } = await searchParams
+  const { error, minutos } = await searchParams
   const conGoogle = googleActivo()
+
+  const mensaje =
+    error === 'bloqueado'
+      ? `Demasiados intentos fallidos. Probá de nuevo en ${minutos ?? 'unos'} ${minutos === '1' ? 'minuto' : 'minutos'}.`
+      : error
+        ? (MENSAJES[error] ?? MENSAJES.AccessDenied)
+        : null
 
   return (
     <main className="pantalla-ingreso">
@@ -49,10 +56,10 @@ export default async function Ingresar({
           Aperturas de aulas y seguimiento de producción en Canvas.
         </p>
 
-        {error && (
+        {mensaje && (
           <p className="mensaje-error" role="alert">
             <IconoAlerta />
-            <span>{MENSAJES[error] ?? MENSAJES.AccessDenied}</span>
+            <span>{mensaje}</span>
           </p>
         )}
 
