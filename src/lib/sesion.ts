@@ -1,10 +1,50 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { createHmac, timingSafeEqual } from 'crypto'
 import { prisma } from './db'
 import { auth } from '@/auth'
 import type { Sesion } from './permisos'
 
 const COOKIE = 'aperturas_usuario'
+
+/**
+ * Sin Google, la cookie es la única prueba de quién es cada uno: hay que
+ * firmarla para que nadie pueda escribir el correo de otra persona a mano y
+ * entrar como esa persona. `AUTH_SECRET` ya es la variable que documenta el
+ * proyecto para cuando se configure Google, así que hace doble uso.
+ */
+function secreto(): string {
+  const s = process.env.AUTH_SECRET
+  if (!s) {
+    throw new Error(
+      'Falta la variable AUTH_SECRET: sin ella no se puede firmar la sesión de forma segura.',
+    )
+  }
+  return s
+}
+
+function firmar(email: string): string {
+  const firma = createHmac('sha256', secreto()).update(email).digest('base64url')
+  return `${Buffer.from(email, 'utf8').toString('base64url')}.${firma}`
+}
+
+/** El correo si la firma es válida, o null si la cookie fue manipulada o quedó de un formato viejo. */
+function verificar(valor: string): string | null {
+  const [emailB64, firma] = valor.split('.')
+  if (!emailB64 || !firma) return null
+
+  let email: string
+  try {
+    email = Buffer.from(emailB64, 'base64url').toString('utf8')
+  } catch {
+    return null
+  }
+
+  const esperada = Buffer.from(createHmac('sha256', secreto()).update(email).digest('base64url'))
+  const recibida = Buffer.from(firma)
+  if (esperada.length !== recibida.length || !timingSafeEqual(esperada, recibida)) return null
+  return email
+}
 
 /** Con Google configurado, la identidad sale de ahí y no del selector local. */
 export function googleActivo(): boolean {
@@ -23,7 +63,7 @@ export function googleActivo(): boolean {
 export async function sesionActual(): Promise<Sesion | null> {
   const email = googleActivo()
     ? (await auth())?.user?.email?.toLowerCase()
-    : (await cookies()).get(COOKIE)?.value
+    : verificar((await cookies()).get(COOKIE)?.value ?? '')
 
   if (!email) return null
 
@@ -51,7 +91,7 @@ export async function sesionActual(): Promise<Sesion | null> {
 
 /** Sólo se usa en el modo local sin Google. */
 export async function iniciarSesion(email: string) {
-  ;(await cookies()).set(COOKIE, email, {
+  ;(await cookies()).set(COOKIE, firmar(email), {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',

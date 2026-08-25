@@ -39,6 +39,8 @@ Los permisos se gestionan desde **`/admin`**, sin tocar código. `npm run usuari
 
 Mientras no esté configurado Google (ver más abajo), se entra con **correo y contraseña**. La primera se la carga administración desde `/admin`; después, si alguien se la olvida, pide el reinicio desde **"¿Olvidaste tu contraseña?"** en `/ingresar` — eso deja un pedido registrado en `/admin`, donde el equipo SIED le fija una contraseña nueva y se la comunica por fuera del sistema (teléfono, mensaje, en persona). Los permisos funcionan igual en los dos modos de ingreso.
 
+Este modo necesita **`AUTH_SECRET`** cargada (ver más abajo cómo generarla), incluso sin Google: sirve para firmar la cookie de sesión, así nadie puede escribir el correo de otra persona a mano y entrar como ella. Sin esa variable, el ingreso con contraseña no funciona.
+
 ### Pedido de contraseña (configurar el aviso por correo)
 
 El pedido queda registrado en la base sin depender de ningún correo. Además, se manda un aviso por [Resend](https://resend.com) a `tecnologia.sied@ucc.edu.ar` para que el equipo se entere sin tener que entrar a `/admin` a revisar — no usa el SMTP de la universidad ni ninguna cuenta de correo existente, y si falla, el pedido no se pierde: queda igual en `/admin`.
