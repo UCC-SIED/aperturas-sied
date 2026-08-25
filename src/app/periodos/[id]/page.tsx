@@ -10,6 +10,7 @@ import { Boton } from '@/components/Boton'
 import { FormConError } from '@/components/FormConError'
 import { EditorDocentes } from '@/components/EditorDocentes'
 import { EstadoBadge } from '@/components/EstadoBadge'
+import { MarcaValidado } from '@/components/MarcaValidado'
 import { editarFechasApertura, editarDocentesApertura } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -148,7 +149,10 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                     <td>
                       {editable ? (
                         <details className="editar-docente-tutor">
-                          <summary>{joinDocentes(ap.docentesTutor.map((d) => d.nombre)) || 'Asignar'}</summary>
+                          <summary>
+                            {joinDocentes(ap.docentesTutor.map((d) => d.nombre)) || 'Asignar'}
+                            {ap.docenteTutorValidado && ' ✓'}
+                          </summary>
                           <FormConError action={editarDocentesApertura.bind(null, ap.id)} className="fila-campos">
                             <EditorDocentes
                               name="docentesTutor"
@@ -159,7 +163,10 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                           </FormConError>
                         </details>
                       ) : (
-                        joinDocentes(ap.docentesTutor.map((d) => d.nombre)) || '—'
+                        <>
+                          {joinDocentes(ap.docentesTutor.map((d) => d.nombre)) || '—'}
+                          {ap.docenteTutorValidado && <MarcaValidado />}
+                        </>
                       )}
                     </td>
                     <td>{ap.asignatura.asesor ?? '—'}</td>
