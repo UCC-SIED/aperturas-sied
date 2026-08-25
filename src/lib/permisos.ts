@@ -57,6 +57,15 @@ export function puedeAdministrar(s: Sesion | null): boolean {
   return s?.rol === 'admin'
 }
 
+/**
+ * Deja constancia de que se revisó un docente tutor o un grupo de
+ * contenidistas y son correctos. Exclusivo de estos dos roles — ni siquiera
+ * el equipo SIED, que carga la mayoría de estos datos, puede validarlos.
+ */
+export function puedeValidarDocentes(s: Sesion | null): boolean {
+  return s?.rol === 'unidad' || s?.rol === 'admin'
+}
+
 export function esSoloLectura(s: Sesion | null): boolean {
   return !s || s.rol === 'consulta'
 }

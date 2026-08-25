@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   puedeEditarCarrera, puedeEditarProduccion, esSoloLectura, carrerasVisibles,
-  puedeAdministrar, esCorreoInstitucional,
+  puedeAdministrar, esCorreoInstitucional, puedeValidarDocentes,
 } from '@/lib/permisos'
 
 const admin = { id: 0, nombre: 'Admin', email: 'tecnologia.sied@ucc.edu.ar', rol: 'admin', carreraIds: [], debeElegirContrasena: false }
@@ -94,5 +94,25 @@ describe('esCorreoInstitucional', () => {
     expect(esCorreoInstitucional('alguien@otraucc.edu.ar')).toBe(false)
     expect(esCorreoInstitucional('')).toBe(false)
     expect(esCorreoInstitucional(null)).toBe(false)
+  })
+})
+
+describe('puedeValidarDocentes', () => {
+  it('unidad académica y administración pueden validar', () => {
+    expect(puedeValidarDocentes(unidad)).toBe(true)
+    expect(puedeValidarDocentes(admin)).toBe(true)
+  })
+
+  it('ni siquiera el equipo SIED puede validar', () => {
+    expect(puedeValidarDocentes(sied)).toBe(false)
+  })
+
+  it('dirección de carrera y consulta tampoco pueden', () => {
+    expect(puedeValidarDocentes(dir)).toBe(false)
+    expect(puedeValidarDocentes(consulta)).toBe(false)
+  })
+
+  it('sin sesión no se puede', () => {
+    expect(puedeValidarDocentes(null)).toBe(false)
   })
 })
