@@ -126,6 +126,9 @@ model Asignatura {
   docentes            AsignaturaDocente[]
   planItems           PlanItem[]
   aperturas           Apertura[]
+  /// Unidad Académica (o Administración) confirmó el grupo de contenidistas de
+  /// esta asignatura, sean uno o varios. Se apaga solo si esa lista cambia.
+  contenidistasValidados Boolean @default(false)
 
   @@index([principalCodigo])
 }
@@ -201,6 +204,10 @@ model Apertura {
   cohortes            AperturaCohorte[]
   docentesTutor       AperturaDocente[]
   avisosDescartados   AvisoDescartado[]
+  /// Unidad Académica (o Administración) confirmó que el o los docentes tutores
+  /// son correctos para esta apertura puntual. Se apaga solo si esa lista cambia
+  /// (se agrega, saca o renombra a alguien).
+  docenteTutorValidado Boolean @default(false)
 
   @@unique([asignaturaCodigo, periodoId])
 }
