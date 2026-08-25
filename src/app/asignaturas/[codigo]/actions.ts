@@ -3,9 +3,9 @@
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
 import { exigirSesionActiva } from '@/lib/sesion'
-import { puedeEditarProduccion } from '@/lib/permisos'
+import { puedeEditarProduccion, puedeValidarDocentes } from '@/lib/permisos'
 import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
-import { parseDocentes } from '@/lib/docentes'
+import { parseDocentes, mismoGrupoDeDocentes } from '@/lib/docentes'
 import { comoResultado } from '@/lib/accion'
 import type { EstadoAccion } from '@/lib/estado-accion'
 
@@ -23,15 +23,23 @@ export async function actualizarAsignatura(
     const estado = String(formData.get('estado') ?? '')
     if (!(ESTADOS as readonly string[]).includes(estado)) throw new Error('Estado inválido')
 
-    const previa = await prisma.asignatura.findUnique({ where: { codigo } })
+    const previa = await prisma.asignatura.findUnique({
+      where: { codigo },
+      include: { docentes: true },
+    })
     if (!previa) throw new Error('Asignatura inexistente')
 
     const docentes = parseDocentes(String(formData.get('docente') ?? ''))
     const asesor = String(formData.get('asesor') ?? '').trim() || null
 
+    const anteriores = previa.docentes.map((d) => d.nombre)
     await prisma.asignatura.update({
       where: { codigo },
-      data: { estado, asesor },
+      data: {
+        estado,
+        asesor,
+        ...(mismoGrupoDeDocentes(anteriores, docentes) ? {} : { contenidistasValidados: false }),
+      },
     })
     await prisma.asignaturaDocente.deleteMany({ where: { asignaturaCodigo: codigo } })
     if (docentes.length) {
@@ -159,6 +167,38 @@ export async function desvincularVariante(
     await prisma.asignatura.updateMany({
       where: { codigo: v.principalCodigo, variantesRequeridas: { gt: Math.max(quedan, 1) } },
       data: { variantesRequeridas: Math.max(quedan, 1) },
+    })
+    revalidatePath('/', 'layout')
+  })
+}
+
+/**
+ * Prende o apaga la validación del grupo de contenidistas de esta
+ * asignatura. Exclusivo de Unidad Académica y Administración.
+ */
+export async function alternarValidacionContenidistas(
+  codigo: string,
+  _prevState: EstadoAccion,
+  _formData: FormData,
+): Promise<EstadoAccion> {
+  return comoResultado(async () => {
+    const s = await exigirSesionActiva()
+    if (!puedeValidarDocentes(s)) {
+      throw new Error('Sólo Unidad Académica o Administración pueden validar')
+    }
+
+    const a = await prisma.asignatura.findUnique({ where: { codigo } })
+    if (!a) throw new Error('Asignatura inexistente')
+
+    const nuevoValor = !a.contenidistasValidados
+    await prisma.asignatura.update({ where: { codigo }, data: { contenidistasValidados: nuevoValor } })
+    await prisma.cambio.create({
+      data: {
+        usuarioId: s.id,
+        accion: 'valido_contenidistas',
+        detalle: `${a.nombre}: contenidistas ${nuevoValor ? 'validados' : 'desvalidados'}`,
+        asignaturaCodigo: codigo,
+      },
     })
     revalidatePath('/', 'layout')
   })
