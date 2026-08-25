@@ -128,3 +128,21 @@ export function IconoSalir() {
     </svg>
   )
 }
+
+/** Tres líneas horizontales: abrir el menú en pantallas angostas. */
+export function IconoMenu() {
+  return (
+    <svg {...base} className="icono">
+      <path d="M4 12h16M4 6h16M4 18h16" />
+    </svg>
+  )
+}
+
+/** Cruz: cerrar el menú ya abierto. */
+export function IconoCerrar() {
+  return (
+    <svg {...base} className="icono">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}

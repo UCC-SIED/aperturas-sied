@@ -199,6 +199,26 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 }
 .sesion .entrar:hover { background: rgba(255, 255, 255, .15); text-decoration: none; }
 
+/* El botón de menú sólo existe para pantallas angostas; en el resto no se
+   ve, y el panel se renderiza "de paso" (display: contents) para que nav y
+   sesión sigan siendo hijos directos del flex de .topbar, como si el botón
+   ni estuviera. */
+.boton-menu {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #fff;
+  padding: var(--e2);
+  border-radius: var(--radio-chico);
+}
+.boton-menu:hover { background: rgba(255, 255, 255, .1); }
+.boton-menu .icono { width: 22px; height: 22px; }
+
+.panel-menu { display: contents; }
+
 .contenido { max-width: 1500px; margin: 0 auto; padding: var(--e5) var(--e5) var(--e6); }
 
 /* -------------------------------------------------------------- tipografía */
@@ -1010,6 +1030,11 @@ a.chip-estado:hover { border-color: var(--azul); background: var(--superficie-2)
   overflow: auto;
   max-height: calc(100dvh - 260px);
   min-height: 320px;
+  /* La sombra del borde derecho avisa que hay más columnas para el costado:
+     esta tabla es más ancha que la pantalla en casi cualquier ventana, y sin
+     una barra de scroll bien visible (el caso típico en el celular) nadie se
+     entera de que se puede deslizar. */
+  box-shadow: inset -10px 0 8px -8px rgba(0, 0, 0, .18);
 }
 .tabla-scroll table thead th { top: 0; }
 
@@ -1530,10 +1555,58 @@ code {
 /* --------------------------------------------------------------- responsive */
 
 @media (max-width: 900px) {
-  .topbar { padding: 0 var(--e3); gap: var(--e3); overflow-x: auto; }
   .contenido { padding: var(--e4) var(--e3) var(--e5); }
   .columna { flex-basis: 85vw; max-height: none; }
   .encabezado-plan { align-items: flex-start; }
+
+  /* La navegación y la sesión no entran junto a la marca en este ancho:
+     antes se recortaban y sólo se llegaba deslizando la barra de costado,
+     sin ningún indicio de que eso fuera posible. Acá se juntan en un panel
+     desplegable, con la marca y el botón de menú como única fila fija. */
+  .topbar { padding: 0 var(--e3); gap: var(--e3); overflow-x: visible; }
+  .boton-menu { display: flex; }
+
+  .panel-menu {
+    display: none;
+    position: absolute;
+    top: 52px;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    background: var(--azul-oscuro);
+    box-shadow: var(--sombra);
+    max-height: calc(100vh - 52px);
+    overflow-y: auto;
+  }
+  .panel-menu.abierto { display: flex; }
+
+  .topbar nav {
+    flex: none;
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    gap: 0;
+  }
+  .topbar nav a {
+    height: auto;
+    padding: var(--e3) var(--e5);
+    border-bottom: 1px solid rgba(255, 255, 255, .1);
+  }
+  /* La marca amarilla de "acá estás parado" se apoya en :hover/altura de la
+     barra horizontal; en una lista vertical el fondo alcanza y sobra. */
+  .topbar nav a.activo::after { display: none; }
+
+  .sesion {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: var(--e3) 0;
+    border-top: 1px solid rgba(255, 255, 255, .15);
+  }
+  .sesion .quien { padding: var(--e2) var(--e5); }
+  .sesion form, .sesion .entrar { margin: var(--e2) var(--e5) 0; }
+  .sesion button { justify-content: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1776,19 +1849,18 @@ form.buscador input, form.buscador button { min-height: 38px; }
 /* --------------------------------------------------------- pantallas chicas */
 
 @media (max-width: 700px) {
-  /* La barra se vuelve una tira que se desliza; la marca queda fija a la
-     izquierda para no perder la referencia al desplazarla. */
-  .topbar { gap: var(--e3); }
-  .topbar .marca { position: sticky; left: 0; background: var(--azul); padding-right: var(--e2); z-index: 2; }
-  .sesion .nombre { display: none; }
-
-  /* Las tablas anchas se deslizan solas en vez de estirar la página entera. */
+  /* Las tablas anchas se deslizan solas en vez de estirar la página entera.
+     La sombra del borde derecho es la única pista de que hay más para el
+     costado: en el celular no hay ninguna barra de scroll visible que lo
+     sugiera sola, y sin esto nadie se entera de que puede deslizar. */
   main > table,
   main > section > table,
-  main > form > table {
+  main > form > table,
+  main > details > table {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
+    box-shadow: var(--sombra), inset -10px 0 8px -8px rgba(0, 0, 0, .18);
   }
   thead th { position: static; }
 
@@ -1951,6 +2023,14 @@ form.ficha.alta-variante {
   gap: var(--e3);
 }
 form.ficha.alta-variante button { align-self: end; white-space: nowrap; }
+
+@media (max-width: 700px) {
+  /* Código (140px) + nombre + botón, las tres fijas, no entran en un
+     celular: el nombre quedaba aplastado contra el botón. Una sola columna
+     apiladas. */
+  form.ficha.alta-variante { grid-template-columns: 1fr; }
+  form.ficha.alta-variante button { justify-self: stretch; }
+}
 
 .cuantas-hacen-falta {
   margin-top: var(--e3);
