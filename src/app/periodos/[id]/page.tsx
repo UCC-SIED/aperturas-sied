@@ -151,7 +151,7 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                         <details className="editar-docente-tutor">
                           <summary>
                             {joinDocentes(ap.docentesTutor.map((d) => d.nombre)) || 'Asignar'}
-                            {ap.docenteTutorValidado && ' ✓'}
+                            {ap.docenteTutorValidado && <MarcaValidado />}
                           </summary>
                           <FormConError action={editarDocentesApertura.bind(null, ap.id)} className="fila-campos">
                             <EditorDocentes

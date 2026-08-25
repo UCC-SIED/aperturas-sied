@@ -311,7 +311,7 @@ export default async function Planificar({
                                     {ap.docentesTutor.length
                                       ? `Docente tutor: ${ap.docentesTutor.join(' / ')}`
                                       : 'Asignar docente tutor'}
-                                    {ap.docenteTutorValidado && ' ✓'}
+                                    {ap.docenteTutorValidado && <MarcaValidado />}
                                   </summary>
                                   <FormConError action={editarDocentesTutorApertura.bind(null, carrera.id)} className="fila-campos">
                                     <input type="hidden" name="aperturaId" value={ap.id} />
