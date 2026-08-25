@@ -439,7 +439,10 @@ table.grilla tbody td {
   vertical-align: top;
 }
 
-table.grilla tbody tr:hover td { background: var(--superficie); }
+/* :not(.relleno): esa columna es a propósito transparente —de ahí se ve el
+   fondo de la página cuando hay pocos períodos—, y sin la exclusión el hover
+   de la fila la pintaba de blanco sólido, prendiéndose de golpe. */
+table.grilla tbody tr:hover td:not(.relleno) { background: var(--superficie); }
 
 .celda-item {
   border: 1px solid var(--borde);
