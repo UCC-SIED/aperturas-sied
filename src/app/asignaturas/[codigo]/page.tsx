@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { exigirSesion } from '@/lib/sesion'
 import { textoDeRuta } from '@/lib/rutas'
-import { puedeEditarProduccion } from '@/lib/permisos'
+import { puedeEditarProduccion, puedeValidarDocentes } from '@/lib/permisos'
 import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
 import { joinDocentes } from '@/lib/docentes'
@@ -12,8 +12,10 @@ import { EditorDocentes } from '@/components/EditorDocentes'
 import { EstadoBadge } from '@/components/EstadoBadge'
 import { Boton } from '@/components/Boton'
 import { FormConError } from '@/components/FormConError'
+import { MarcaValidado } from '@/components/MarcaValidado'
 import {
   actualizarAsignatura, crearVariante, definirVariantesRequeridas, desvincularVariante,
+  alternarValidacionContenidistas,
 } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -50,6 +52,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
   if (!a) notFound()
 
   const editable = puedeEditarProduccion(s)
+  const puedeValidar = puedeValidarDocentes(s)
   const cambios = editable ? await prisma.cambio.findMany({
     where: { asignaturaCodigo: a.codigo },
     include: { usuario: true },
@@ -87,19 +90,32 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
 
       <h2>Producción</h2>
       {editable ? (
-        <FormConError className="ficha" action={actualizarAsignatura.bind(null, a.codigo)}>
-          <label htmlFor="estado">
-            Estado
-            <select id="estado" name="estado" defaultValue={a.estado}>
-              {ESTADOS.map((e) => (
-                <option key={e} value={e}>{ESTADO_LABELS[e as Estado]}</option>
-              ))}
-            </select>
-          </label>
-          <label>Docente <EditorDocentes name="docente" iniciales={a.docentes.map((d) => d.nombre)} etiqueta={a.nombre} /></label>
-          <label>Asesor <input name="asesor" defaultValue={a.asesor ?? ''} /></label>
-          <Boton>Guardar</Boton>
-        </FormConError>
+        <>
+          <FormConError className="ficha" action={actualizarAsignatura.bind(null, a.codigo)}>
+            <label htmlFor="estado">
+              Estado
+              <select id="estado" name="estado" defaultValue={a.estado}>
+                {ESTADOS.map((e) => (
+                  <option key={e} value={e}>{ESTADO_LABELS[e as Estado]}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Docente <EditorDocentes name="docente" iniciales={a.docentes.map((d) => d.nombre)} etiqueta={a.nombre} />
+              {!puedeValidar && a.contenidistasValidados && <MarcaValidado />}
+            </label>
+            <label>Asesor <input name="asesor" defaultValue={a.asesor ?? ''} /></label>
+            <Boton>Guardar</Boton>
+          </FormConError>
+
+          {puedeValidar && (
+            <FormConError action={alternarValidacionContenidistas.bind(null, a.codigo)} className="en-linea">
+              <Boton className={a.contenidistasValidados ? 'quitar' : undefined} enCurso="…">
+                {a.contenidistasValidados ? 'Quitar validación de contenidistas' : 'Validar contenidistas'}
+              </Boton>
+            </FormConError>
+          )}
+        </>
       ) : (
         <table>
           <tbody>
