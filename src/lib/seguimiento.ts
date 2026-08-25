@@ -1,5 +1,5 @@
 import { ESTADOS, ESTADO_LABELS, type Estado } from './estados'
-import { parseDocentes, joinDocentes } from './docentes'
+import { parseDocentes, joinDocentes, mismoGrupoDeDocentes } from './docentes'
 
 export type FilaSeguimiento = {
   codigo: string
@@ -30,14 +30,6 @@ const leer = (v: FormDataEntryValue | null): string | null | undefined => {
   if (v === null) return undefined
   const s = String(v).trim()
   return s === '' ? null : s
-}
-
-/** Mismos nombres, sin importar el orden en que se escribieron. */
-function mismosDocentes(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) return false
-  const x = [...a].sort()
-  const y = [...b].sort()
-  return x.every((v, i) => v === y[i])
 }
 
 /**
@@ -72,7 +64,7 @@ export function calcularCambios(
         `${ESTADO_LABELS[a.estado as Estado] ?? a.estado} → ${ESTADO_LABELS[estado as Estado] ?? estado}`,
       )
     }
-    if (docentes !== undefined && !mismosDocentes(docentes, a.docentes)) {
+    if (docentes !== undefined && !mismoGrupoDeDocentes(docentes, a.docentes)) {
       campos.docentes = docentes
       partes.push(docentes.length ? `docentes: ${joinDocentes(docentes)}` : 'se quitaron los docentes')
     }

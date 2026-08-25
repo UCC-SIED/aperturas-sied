@@ -69,6 +69,10 @@ export async function guardarSeguimiento(
           data: docentes.map((nombre, orden) => ({ asignaturaCodigo: c.codigo, nombre, orden })),
         })
       }
+      await prisma.asignatura.update({
+        where: { codigo: c.codigo },
+        data: { contenidistasValidados: false },
+      })
     }
     const nombre = asignaturas.find((a) => a.codigo === c.codigo)?.nombre ?? c.codigo
     await prisma.cambio.create({

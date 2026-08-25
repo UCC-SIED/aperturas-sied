@@ -323,7 +323,7 @@ export default async function Planificar({
                                     <Boton enCurso="Guardando">Guardar</Boton>
                                   </FormConError>
                                   {puedeValidar && (
-                                    <FormConError action={alternarValidacionDocenteTutor.bind(null, ap.id)}>
+                                    <FormConError action={alternarValidacionDocenteTutor.bind(null, carrera.id, ap.id)}>
                                       <Boton className={ap.docenteTutorValidado ? 'quitar' : undefined} enCurso="…">
                                         {ap.docenteTutorValidado ? 'Quitar validación' : 'Validar docente tutor'}
                                       </Boton>

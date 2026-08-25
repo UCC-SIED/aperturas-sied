@@ -162,6 +162,7 @@ export async function crearCohorte(
  * equipo SIED, que suele cargar estos mismos datos, puede tocarla.
  */
 export async function alternarValidacionDocenteTutor(
+  carreraId: number,
   aperturaId: number,
   _prevState: EstadoAccion,
   _formData: FormData,
@@ -171,12 +172,19 @@ export async function alternarValidacionDocenteTutor(
     if (!puedeValidarDocentes(s)) {
       throw new Error('Sólo Unidad Académica o Administración pueden validar')
     }
+    if (!puedeEditarCarrera(s, carreraId)) {
+      throw new Error('No tenés permiso para planificar esta carrera')
+    }
 
     const apertura = await prisma.apertura.findUnique({
       where: { id: aperturaId },
-      include: { asignatura: true },
+      include: {
+        asignatura: { include: { planItems: true } },
+        cohortes: { include: { cohorte: true } },
+      },
     })
     if (!apertura) throw new Error('Apertura inexistente')
+    exigirPertenencia(s, carreraId, apertura)
 
     const nuevoValor = !apertura.docenteTutorValidado
     await prisma.apertura.update({ where: { id: aperturaId }, data: { docenteTutorValidado: nuevoValor } })
