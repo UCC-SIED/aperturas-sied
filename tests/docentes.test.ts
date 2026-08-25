@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseDocentes, joinDocentes } from '@/lib/docentes'
+import { parseDocentes, joinDocentes, mismoGrupoDeDocentes } from '@/lib/docentes'
 
 describe('parseDocentes', () => {
   it('separa por barra', () => {
@@ -37,5 +37,31 @@ describe('joinDocentes', () => {
 
   it('lista vacía da texto vacío', () => {
     expect(joinDocentes([])).toBe('')
+  })
+})
+
+describe('mismoGrupoDeDocentes', () => {
+  it('el mismo grupo en el mismo orden es igual', () => {
+    expect(mismoGrupoDeDocentes(['Ana Paz', 'Juan Ruiz'], ['Ana Paz', 'Juan Ruiz'])).toBe(true)
+  })
+
+  it('el mismo grupo en otro orden también es igual', () => {
+    expect(mismoGrupoDeDocentes(['Ana Paz', 'Juan Ruiz'], ['Juan Ruiz', 'Ana Paz'])).toBe(true)
+  })
+
+  it('agregar a alguien es un grupo distinto', () => {
+    expect(mismoGrupoDeDocentes(['Ana Paz'], ['Ana Paz', 'Juan Ruiz'])).toBe(false)
+  })
+
+  it('sacar a alguien es un grupo distinto', () => {
+    expect(mismoGrupoDeDocentes(['Ana Paz', 'Juan Ruiz'], ['Ana Paz'])).toBe(false)
+  })
+
+  it('renombrar a alguien es un grupo distinto', () => {
+    expect(mismoGrupoDeDocentes(['Ana Paz'], ['Ana Paza'])).toBe(false)
+  })
+
+  it('dos listas vacías son el mismo grupo (nadie)', () => {
+    expect(mismoGrupoDeDocentes([], [])).toBe(true)
   })
 })

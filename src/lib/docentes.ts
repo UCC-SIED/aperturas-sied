@@ -22,3 +22,15 @@ export function parseDocentes(texto: string): string[] {
 export function joinDocentes(nombres: string[]): string {
   return nombres.join(' / ')
 }
+
+/**
+ * Si dos listas de docentes son el mismo grupo de personas, sin importar el
+ * orden. La usan las validaciones de Unidad Académica para saber si hay que
+ * apagarlas: lo que se había aprobado era ese grupo puntual.
+ */
+export function mismoGrupoDeDocentes(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  const ordenadosA = [...a].sort()
+  const ordenadosB = [...b].sort()
+  return ordenadosA.every((nombre, i) => nombre === ordenadosB[i])
+}
