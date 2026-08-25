@@ -90,40 +90,44 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
 
       <h2>Producción</h2>
       {editable ? (
-        <>
-          <FormConError className="ficha" action={actualizarAsignatura.bind(null, a.codigo)}>
-            <label htmlFor="estado">
-              Estado
-              <select id="estado" name="estado" defaultValue={a.estado}>
-                {ESTADOS.map((e) => (
-                  <option key={e} value={e}>{ESTADO_LABELS[e as Estado]}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Docente <EditorDocentes name="docente" iniciales={a.docentes.map((d) => d.nombre)} etiqueta={a.nombre} />
-              {!puedeValidar && a.contenidistasValidados && <MarcaValidado />}
-            </label>
-            <label>Asesor <input name="asesor" defaultValue={a.asesor ?? ''} /></label>
-            <Boton>Guardar</Boton>
-          </FormConError>
-
-          {puedeValidar && (
-            <FormConError action={alternarValidacionContenidistas.bind(null, a.codigo)} className="en-linea">
-              <Boton className={a.contenidistasValidados ? 'quitar' : undefined} enCurso="…">
-                {a.contenidistasValidados ? 'Quitar validación de contenidistas' : 'Validar contenidistas'}
-              </Boton>
-            </FormConError>
-          )}
-        </>
+        <FormConError className="ficha" action={actualizarAsignatura.bind(null, a.codigo)}>
+          <label htmlFor="estado">
+            Estado
+            <select id="estado" name="estado" defaultValue={a.estado}>
+              {ESTADOS.map((e) => (
+                <option key={e} value={e}>{ESTADO_LABELS[e as Estado]}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Docente <EditorDocentes name="docente" iniciales={a.docentes.map((d) => d.nombre)} etiqueta={a.nombre} />
+            {!puedeValidar && a.contenidistasValidados && <MarcaValidado />}
+          </label>
+          <label>Asesor <input name="asesor" defaultValue={a.asesor ?? ''} /></label>
+          <Boton>Guardar</Boton>
+        </FormConError>
       ) : (
         <table>
           <tbody>
             <tr><td><strong>Estado</strong></td><td><EstadoBadge estado={a.estado} /></td></tr>
-            <tr><td><strong>Docente</strong></td><td>{joinDocentes(a.docentes.map((d) => d.nombre)) || '—'}</td></tr>
+            <tr>
+              <td><strong>Docente</strong></td>
+              <td>
+                {joinDocentes(a.docentes.map((d) => d.nombre)) || '—'}
+                {!puedeValidar && a.contenidistasValidados && <MarcaValidado />}
+              </td>
+            </tr>
             <tr><td><strong>Asesor</strong></td><td>{a.asesor ?? '—'}</td></tr>
           </tbody>
         </table>
+      )}
+
+      {puedeValidar && (
+        <FormConError action={alternarValidacionContenidistas.bind(null, a.codigo)} className="en-linea">
+          <Boton className={a.contenidistasValidados ? 'quitar' : undefined} enCurso="…">
+            {a.contenidistasValidados ? 'Quitar validación de contenidistas' : 'Validar contenidistas'}
+          </Boton>
+        </FormConError>
       )}
 
       {a.principal && (
