@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db'
 import { exigirSesionActiva } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { validarFechas } from '@/lib/validar'
-import { parseDocentes } from '@/lib/docentes'
+import { parseDocentes, mismoGrupoDeDocentes } from '@/lib/docentes'
 import { comoResultado } from '@/lib/accion'
 import type { EstadoAccion } from '@/lib/estado-accion'
 
@@ -90,11 +90,16 @@ export async function editarDocentesApertura(
 
     const apertura = await prisma.apertura.findUnique({
       where: { id: aperturaId },
-      include: { asignatura: true },
+      include: { asignatura: true, docentesTutor: true },
     })
     if (!apertura) throw new Error('Apertura inexistente')
 
     const docentes = parseDocentes(String(formData.get('docentesTutor') ?? ''))
+
+    const anteriores = apertura.docentesTutor.map((d) => d.nombre)
+    if (!mismoGrupoDeDocentes(anteriores, docentes)) {
+      await prisma.apertura.update({ where: { id: aperturaId }, data: { docenteTutorValidado: false } })
+    }
 
     await prisma.aperturaDocente.deleteMany({ where: { aperturaId } })
     if (docentes.length) {
