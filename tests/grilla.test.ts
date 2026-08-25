@@ -17,6 +17,7 @@ const ap = (
   cohorteIds,
   carrerasCompartidas: [],
   docentesTutor: [],
+  docenteTutorValidado: false,
   asignatura: { codigo, nombre: `Asignatura ${codigo}`, estado: 'finalizacion' },
   aperturaInscripcion: null,
 })

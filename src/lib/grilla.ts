@@ -18,6 +18,8 @@ export type AperturaGrilla = {
   carrerasCompartidas: string[]
   /** Docente tutor de esta apertura puntual, no el de producción de la asignatura. */
   docentesTutor: string[]
+  /** Si Unidad Académica (o Administración) ya confirmó ese grupo de docentes. */
+  docenteTutorValidado: boolean
   asignatura: { codigo: string; nombre: string; estado: string }
   aperturaInscripcion: Date | null
 }

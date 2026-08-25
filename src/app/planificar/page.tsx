@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { exigirSesion } from '@/lib/sesion'
-import { puedeEditarCarrera, puedeEditarProduccion, carrerasVisibles } from '@/lib/permisos'
+import { puedeEditarCarrera, puedeEditarProduccion, carrerasVisibles, puedeValidarDocentes } from '@/lib/permisos'
 import { armarGrilla, type AperturaGrilla } from '@/lib/grilla'
 import { estadoPeriodo } from '@/lib/estado-periodo'
 import { fmtFecha, fmtFechaHora } from '@/lib/formato'
@@ -10,9 +10,10 @@ import { FormConError } from '@/components/FormConError'
 import { SelectAutoSubmit } from '@/components/SelectAutoSubmit'
 import { IconoCompartida } from '@/components/iconos'
 import { EditorDocentes } from '@/components/EditorDocentes'
+import { MarcaValidado } from '@/components/MarcaValidado'
 import {
   agregarApertura, quitarApertura, moverApertura, crearCohorte, descartarAviso,
-  editarDocentesTutorApertura,
+  editarDocentesTutorApertura, alternarValidacionDocenteTutor,
 } from './actions'
 
 export const metadata = { title: 'Planificar aperturas' }
@@ -52,6 +53,7 @@ export default async function Planificar({
   const carrera = carreras.find((c) => String(c.id) === carreraParam) ?? carreras[0]
   const editable = puedeEditarCarrera(s, carrera.id)
   const puedeVerMovimientos = puedeEditarProduccion(s)
+  const puedeValidar = puedeValidarDocentes(s)
   const mostrarTodos = todosParam === '1'
   const hoy = new Date()
 
@@ -115,6 +117,7 @@ export default async function Planificar({
       a.cohortes.filter((c) => c.cohorte.carreraId !== carrera.id).map((c) => c.cohorte.carrera.nombre),
     )],
     docentesTutor: a.docentesTutor.map((d) => d.nombre),
+    docenteTutorValidado: a.docenteTutorValidado,
     asignatura: { codigo: a.asignatura.codigo, nombre: a.asignatura.nombre, estado: a.asignatura.estado },
     aperturaInscripcion: a.aperturaInscripcion,
   }))
@@ -308,6 +311,7 @@ export default async function Planificar({
                                     {ap.docentesTutor.length
                                       ? `Docente tutor: ${ap.docentesTutor.join(' / ')}`
                                       : 'Asignar docente tutor'}
+                                    {ap.docenteTutorValidado && ' ✓'}
                                   </summary>
                                   <FormConError action={editarDocentesTutorApertura.bind(null, carrera.id)} className="fila-campos">
                                     <input type="hidden" name="aperturaId" value={ap.id} />
@@ -318,10 +322,20 @@ export default async function Planificar({
                                     />
                                     <Boton enCurso="Guardando">Guardar</Boton>
                                   </FormConError>
+                                  {puedeValidar && (
+                                    <FormConError action={alternarValidacionDocenteTutor.bind(null, ap.id)}>
+                                      <Boton className={ap.docenteTutorValidado ? 'quitar' : undefined} enCurso="…">
+                                        {ap.docenteTutorValidado ? 'Quitar validación' : 'Validar docente tutor'}
+                                      </Boton>
+                                    </FormConError>
+                                  )}
                                 </details>
                               ) : (
                                 ap.docentesTutor.length > 0 && (
-                                  <p className="compartida">Docente tutor: {ap.docentesTutor.join(' / ')}</p>
+                                  <p className="compartida">
+                                    Docente tutor: {ap.docentesTutor.join(' / ')}
+                                    {ap.docenteTutorValidado && <MarcaValidado />}
+                                  </p>
                                 )
                               )}
                               {editable && (

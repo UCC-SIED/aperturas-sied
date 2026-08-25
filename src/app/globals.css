@@ -1711,6 +1711,18 @@ h1 .contador { font-size: 14px; font-weight: 500; color: var(--texto-suave); }
 .estado-badge.est-construccion,
 .estado-badge.est-contrato { background: #eaf0fb; color: var(--azul); border-color: #c8d8f2; }
 
+.marca-validado {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--verde);
+  background: var(--verde-fondo);
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+
 /* Las fechas del período en tarjetas: en un párrafo separado por puntos hay
    que leerlo entero para encontrar una sola. */
 .fechas-periodo {
