@@ -378,6 +378,10 @@ th.num { text-align: center; }
   max-height: calc(100dvh - 220px);
   min-height: 280px;
   padding-bottom: var(--e3);
+  /* Con "ver todos" los períodos, esto es bastante más ancho que cualquier
+     pantalla; la sombra del borde derecho es la única pista de que se puede
+     seguir deslizando. */
+  box-shadow: inset -10px 0 8px -8px rgba(0, 0, 0, .18);
 }
 table.grilla thead th { top: 0; }
 
@@ -1514,7 +1518,10 @@ code {
   color: var(--texto);
   line-height: 1.6;
 }
-.chips-docentes button {
+/* .editor-docentes .chips-docentes, no sólo .chips-docentes: dentro de un
+   form.ficha, "form.ficha button" (pensado para el botón de Guardar) tenía
+   más especificidad y le imponía su fondo azul grande a esta "×" chiquita. */
+.editor-docentes .chips-docentes button {
   border: none;
   background: none;
   color: var(--texto-suave);
@@ -1524,7 +1531,7 @@ code {
   padding: 2px 4px;
   border-radius: 50%;
 }
-.chips-docentes button:hover { background: var(--rojo-fondo); color: var(--rojo); }
+.editor-docentes .chips-docentes button:hover { background: var(--rojo-fondo); color: var(--rojo); }
 
 .agregar-docente { display: flex; gap: 3px; }
 .agregar-docente input {
@@ -1869,6 +1876,17 @@ form.buscador input, form.buscador button { min-height: 38px; }
   .fechas-periodo { grid-template-columns: 1fr 1fr; }
   form.buscador { flex-wrap: wrap; }
   form.buscador .caja-busqueda { flex-basis: 100%; max-width: none; }
+
+  /* Botones y selects de 23-25px de alto (Mover, Quitar, Agregar...) son
+     densos a propósito para la pantalla de escritorio, pero con el dedo son
+     difíciles de acertar. Un mínimo más cómodo, sólo acá.
+     Quedan afuera los botones circulares chiquitos (la "×" de un chip de
+     docente, la "×" de cerrar un aviso): son redondos e ínfimos a propósito,
+     y forzarles el alto los deformaba. */
+  main button:not(.chips-docentes button):not(.cerrar-aviso),
+  main select {
+    min-height: 38px;
+  }
 }
 
 /* ------------------------------------------------------- sólo para lectores */
