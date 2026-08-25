@@ -211,7 +211,9 @@ button:disabled { cursor: not-allowed; opacity: .5; }
   background: none;
   border: none;
   color: #fff;
-  padding: var(--e2);
+  /* var(--e3), no --e2: con el ícono de 22px da un área de toque de 46px,
+     más cerca de lo cómodo para el dedo que los 38px de antes. */
+  padding: var(--e3);
   border-radius: var(--radio-chico);
 }
 .boton-menu:hover { background: rgba(255, 255, 255, .1); }
