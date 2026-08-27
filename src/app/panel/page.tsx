@@ -4,15 +4,25 @@ import { exigirSesion } from '@/lib/sesion'
 import { carrerasVisibles } from '@/lib/permisos'
 import { resumirAvance } from '@/lib/avance'
 import { fmtFecha } from '@/lib/formato'
-import { IconoDescarga } from '@/components/iconos'
+import { IconoDescarga, IconoAlerta } from '@/components/iconos'
 import { BarraAvance } from '@/components/BarraAvance'
 
 export const metadata = { title: 'Panel de control' }
 
 export const dynamic = 'force-dynamic'
 
-export default async function Panel() {
+const MENSAJES: Record<string, string> = {
+  'sin-permiso': 'Tu rol no tiene acceso a esa sección.',
+}
+
+export default async function Panel({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
   const s = await exigirSesion()
+  const { error } = await searchParams
+  const mensaje = error ? (MENSAJES[error] ?? null) : null
 
   const visibles = carrerasVisibles(s)
   const hoy = new Date()
@@ -57,6 +67,12 @@ export default async function Panel() {
 
   return (
     <main>
+      {mensaje && (
+        <p className="mensaje-error" role="alert">
+          <IconoAlerta />
+          <span>{mensaje}</span>
+        </p>
+      )}
       <div className="encabezado">
         <div>
           <h1>Panel de control</h1>

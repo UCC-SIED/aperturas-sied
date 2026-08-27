@@ -11,7 +11,8 @@ export default defineConfig({
     fileParallelism: false,
     // Sin esto, un worktree de trabajo (que trae su propia copia de tests/)
     // corre la suite dos veces: la propia y la del worktree anidado.
-    exclude: ['**/node_modules/**', '**/.claude/**'],
+    // *.spec.ts son los E2E de Playwright (tests/**), no de Vitest.
+    exclude: ['**/node_modules/**', '**/.claude/**', 'tests/**/*.spec.ts'],
   },
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
 })

@@ -17,7 +17,7 @@ export default async function Preparar({
   searchParams: Promise<{ periodo?: string }>
 }) {
   const s = await exigirSesion()
-  if (!puedeEditarProduccion(s)) redirect('/panel')
+  if (!puedeEditarProduccion(s)) redirect('/panel?error=sin-permiso')
 
   const hoy = new Date()
   const { periodo: periodoParam } = await searchParams

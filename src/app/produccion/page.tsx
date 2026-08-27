@@ -26,7 +26,7 @@ export default async function Produccion({
   searchParams: Promise<{ carrera?: string; q?: string; estado?: string }>
 }) {
   const s = await exigirSesion()
-  if (!puedeEditarProduccion(s)) redirect('/panel')
+  if (!puedeEditarProduccion(s)) redirect('/panel?error=sin-permiso')
 
   const { carrera: carreraParam, q = '', estado: filtroEstado = '' } = await searchParams
 

@@ -93,7 +93,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
         <FormConError className="ficha" action={actualizarAsignatura.bind(null, a.codigo)}>
           <label htmlFor="estado">
             Estado
-            <select id="estado" name="estado" defaultValue={a.estado}>
+            <select id="estado" name="estado" defaultValue={a.estado} key={a.estado}>
               {ESTADOS.map((e) => (
                 <option key={e} value={e}>{ESTADO_LABELS[e as Estado]}</option>
               ))}

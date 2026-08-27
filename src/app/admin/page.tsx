@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function Admin() {
   const s = await exigirSesion()
-  if (!puedeAdministrar(s)) redirect('/panel')
+  if (!puedeAdministrar(s)) redirect('/panel?error=sin-permiso')
 
   const [usuarios, carreras, unidades, cambios, pedidos] = await Promise.all([
     prisma.usuario.findMany({
