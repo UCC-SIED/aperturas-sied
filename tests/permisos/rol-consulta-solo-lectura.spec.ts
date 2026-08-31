@@ -63,17 +63,18 @@ test.describe('Permisos', () => {
     // 6. Intentar navegar directamente por URL a /admin
     await page.goto('https://aperturas-sied.vercel.app/admin');
 
-    // expect: El acceso es denegado o se redirige fuera de la sección (no simplemente oculta en el menú),
-    // dado que Admin es exclusivo del rol Administración
-    await expect(page).toHaveURL('https://aperturas-sied.vercel.app/panel');
+    // expect: El acceso es denegado y redirige a /panel con el aviso de sin permiso
+    // (no simplemente oculta en el menú), dado que Admin es exclusivo del rol Administración
+    await expect(page).toHaveURL('https://aperturas-sied.vercel.app/panel?error=sin-permiso');
+    await expect(page.getByText('Tu rol no tiene acceso a esa sección.')).toBeVisible();
 
     // 7. Intentar navegar directamente por URL a /produccion y a /preparar
     await page.goto('https://aperturas-sied.vercel.app/produccion');
 
-    // expect: El acceso es denegado o redirigido en ambos casos, dado que son exclusivos de Equipo SIED/Administración
-    await expect(page).toHaveURL('https://aperturas-sied.vercel.app/panel');
+    // expect: El acceso es denegado y redirigido en ambos casos, dado que son exclusivos de Equipo SIED/Administración
+    await expect(page).toHaveURL('https://aperturas-sied.vercel.app/panel?error=sin-permiso');
 
     await page.goto('https://aperturas-sied.vercel.app/preparar');
-    await expect(page).toHaveURL('https://aperturas-sied.vercel.app/panel');
+    await expect(page).toHaveURL('https://aperturas-sied.vercel.app/panel?error=sin-permiso');
   });
 });
