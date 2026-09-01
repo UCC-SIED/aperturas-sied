@@ -2,18 +2,26 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { exigirSesion } from '@/lib/sesion'
 import { puedeAdministrar } from '@/lib/permisos'
+import { normalizarNombre } from '@/lib/docentes'
 import { fmtFechaHora } from '@/lib/formato'
 import { Boton } from '@/components/Boton'
 import { FormConError } from '@/components/FormConError'
+import { BuscadorAutoLimpia } from '@/components/BuscadorAutoLimpia'
 import { crearDocente, renombrarDocente, alternarActivoDocente, fusionarDocentes } from './actions'
 
 export const metadata = { title: 'Docentes' }
 
 export const dynamic = 'force-dynamic'
 
-export default async function Docentes() {
+export default async function Docentes({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
   const s = await exigirSesion()
   if (!puedeAdministrar(s)) redirect('/panel?error=sin-permiso')
+
+  const { q = '' } = await searchParams
 
   const [docentes, cambios] = await Promise.all([
     prisma.docente.findMany({
@@ -27,6 +35,11 @@ export default async function Docentes() {
       take: 10,
     }),
   ])
+
+  // Filtro en JS, no en la consulta: un LIKE insensible a mayúsculas de la
+  // base sólo existe en PostgreSQL, y local/tests corren sobre SQLite.
+  const busqueda = normalizarNombre(q)
+  const visibles = busqueda ? docentes.filter((d) => normalizarNombre(d.nombre).includes(busqueda)) : docentes
 
   return (
     <main>
@@ -51,6 +64,13 @@ export default async function Docentes() {
       </FormConError>
 
       <h2>Catálogo ({docentes.filter((d) => d.activo).length} activos de {docentes.length})</h2>
+      <form className="filtros-seguimiento">
+        <label htmlFor="q">
+          Buscar
+          <BuscadorAutoLimpia id="q" name="q" defaultValue={q} placeholder="Nombre" />
+        </label>
+      </form>
+      {busqueda && <p className="sub">{visibles.length} de {docentes.length}</p>}
       <table>
         <thead>
           <tr>
@@ -58,7 +78,7 @@ export default async function Docentes() {
           </tr>
         </thead>
         <tbody>
-          {docentes.map((d) => (
+          {visibles.map((d) => (
             <tr key={d.id} className={d.activo ? undefined : 'fila-inactiva'}>
               <td>{d.nombre}</td>
               <td>
