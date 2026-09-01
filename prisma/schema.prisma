@@ -139,10 +139,28 @@ model AsignaturaDocente {
   id               Int        @id @default(autoincrement())
   asignaturaCodigo String
   asignatura       Asignatura @relation(fields: [asignaturaCodigo], references: [codigo], onDelete: Cascade)
-  nombre           String
+  docenteId        Int
+  docente          Docente    @relation(fields: [docenteId], references: [id])
   orden            Int        @default(0)
 
-  @@unique([asignaturaCodigo, nombre])
+  @@unique([asignaturaCodigo, docenteId])
+}
+
+/// Catálogo único de personas que pueden ser docentes tutores o contenidistas.
+/// AperturaDocente y AsignaturaDocente apuntan acá en vez de guardar el nombre
+/// suelto: así "Juan Pérez" es siempre la misma persona sin importar cómo se
+/// haya escrito la primera vez.
+model Docente {
+  id               Int                 @id @default(autoincrement())
+  nombre           String              @unique
+  /// Minúsculas y sin espacios repetidos ni extremos — la clave real de
+  /// unicidad al cargar. Comparar así funciona igual en SQLite y en
+  /// PostgreSQL (un filtro "insensible a mayúsculas" de Prisma sólo existe
+  /// para Postgres, y local/tests corren sobre SQLite).
+  claveNormalizada String              @unique
+  activo           Boolean             @default(true)
+  tutorias         AperturaDocente[]
+  contenidos       AsignaturaDocente[]
 }
 
 model PlanItem {
@@ -231,10 +249,11 @@ model AperturaDocente {
   id         Int      @id @default(autoincrement())
   aperturaId Int
   apertura   Apertura @relation(fields: [aperturaId], references: [id], onDelete: Cascade)
-  nombre     String
+  docenteId  Int
+  docente    Docente  @relation(fields: [docenteId], references: [id])
   orden      Int      @default(0)
 
-  @@unique([aperturaId, nombre])
+  @@unique([aperturaId, docenteId])
 }
 
 model AperturaCohorte {

@@ -41,19 +41,28 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
   const numero = idNumerico(id)
   if (numero === null) notFound()
 
-  const periodo = await prisma.periodo.findUnique({
-    where: { id: numero },
-    include: {
-      aperturas: {
-        include: {
-          asignatura: { include: { planItems: { include: { carrera: true } }, docentes: { orderBy: { orden: 'asc' } } } },
-          cohortes: { include: { cohorte: { include: { carrera: true } } } },
-          docentesTutor: { orderBy: { orden: 'asc' } },
+  const [periodo, docentesCatalogo] = await Promise.all([
+    prisma.periodo.findUnique({
+      where: { id: numero },
+      include: {
+        aperturas: {
+          include: {
+            asignatura: {
+              include: {
+                planItems: { include: { carrera: true } },
+                docentes: { orderBy: { orden: 'asc' }, include: { docente: true } },
+              },
+            },
+            cohortes: { include: { cohorte: { include: { carrera: true } } } },
+            docentesTutor: { orderBy: { orden: 'asc' }, include: { docente: true } },
+          },
         },
       },
-    },
-  })
+    }),
+    prisma.docente.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' }, select: { nombre: true } }),
+  ])
   if (!periodo) notFound()
+  const catalogoDocentes = docentesCatalogo.map((d) => d.nombre)
 
   const visibles = carrerasVisibles(s)
   const editable = puedeEditarProduccion(s)
@@ -145,26 +154,27 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                       {ap.asignatura.planItems.length > 1 && <small> · transversal</small>}
                     </td>
                     <td><EstadoBadge estado={ap.asignatura.estado} /></td>
-                    <td>{joinDocentes(ap.asignatura.docentes.map((d) => d.nombre)) || '—'}</td>
+                    <td>{joinDocentes(ap.asignatura.docentes.map((d) => d.docente.nombre)) || '—'}</td>
                     <td>
                       {editable ? (
                         <details className="editar-docente-tutor">
                           <summary>
-                            {joinDocentes(ap.docentesTutor.map((d) => d.nombre)) || 'Asignar'}
+                            {joinDocentes(ap.docentesTutor.map((d) => d.docente.nombre)) || 'Asignar'}
                             {ap.docenteTutorValidado && <MarcaValidado />}
                           </summary>
                           <FormConError action={editarDocentesApertura.bind(null, ap.id)} className="fila-campos">
                             <EditorDocentes
                               name="docentesTutor"
-                              iniciales={ap.docentesTutor.map((d) => d.nombre)}
+                              iniciales={ap.docentesTutor.map((d) => d.docente.nombre)}
                               etiqueta="docente tutor de esta apertura"
+                              catalogo={catalogoDocentes}
                             />
                             <Boton enCurso="Guardando">Guardar</Boton>
                           </FormConError>
                         </details>
                       ) : (
                         <>
-                          {joinDocentes(ap.docentesTutor.map((d) => d.nombre)) || '—'}
+                          {joinDocentes(ap.docentesTutor.map((d) => d.docente.nombre)) || '—'}
                           {ap.docenteTutorValidado && <MarcaValidado />}
                         </>
                       )}

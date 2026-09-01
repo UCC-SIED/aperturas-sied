@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
-import { parseDocentes, joinDocentes, mismoGrupoDeDocentes } from '@/lib/docentes'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { prisma } from '@/lib/db'
+import { parseDocentes, joinDocentes, mismoGrupoDeDocentes, normalizarNombre, resolverDocentes } from '@/lib/docentes'
 
 describe('parseDocentes', () => {
   it('separa por barra', () => {
@@ -63,5 +64,48 @@ describe('mismoGrupoDeDocentes', () => {
 
   it('dos listas vacías son el mismo grupo (nadie)', () => {
     expect(mismoGrupoDeDocentes([], [])).toBe(true)
+  })
+})
+
+describe('normalizarNombre', () => {
+  it('baja a minúsculas', () => {
+    expect(normalizarNombre('Juan Pérez')).toBe('juan pérez')
+  })
+
+  it('saca espacios de los extremos', () => {
+    expect(normalizarNombre('  Juan Pérez  ')).toBe('juan pérez')
+  })
+
+  it('junta espacios repetidos', () => {
+    expect(normalizarNombre('Juan   Pérez')).toBe('juan pérez')
+  })
+})
+
+describe('resolverDocentes', () => {
+  async function limpiar() {
+    await prisma.docente.deleteMany({})
+  }
+  beforeAll(limpiar)
+  afterAll(async () => { await limpiar(); await prisma.$disconnect() })
+
+  it('crea un docente nuevo y devuelve su id', async () => {
+    const [id] = await resolverDocentes(prisma, ['Ana Paz'])
+    const d = await prisma.docente.findUnique({ where: { id } })
+    expect(d?.nombre).toBe('Ana Paz')
+    expect(d?.claveNormalizada).toBe('ana paz')
+  })
+
+  it('un nombre con distinto casing/espacios resuelve a la misma persona', async () => {
+    const [primero] = await resolverDocentes(prisma, ['Juan Ruiz'])
+    const [segundo] = await resolverDocentes(prisma, ['  juan   ruiz  '])
+    expect(segundo).toBe(primero)
+    expect(await prisma.docente.count({ where: { claveNormalizada: 'juan ruiz' } })).toBe(1)
+  })
+
+  it('devuelve los ids en el mismo orden que los nombres pedidos', async () => {
+    const [idPaz] = await resolverDocentes(prisma, ['Ana Paz'])
+    const [idRuiz] = await resolverDocentes(prisma, ['Juan Ruiz'])
+    const ids = await resolverDocentes(prisma, ['Juan Ruiz', 'Ana Paz'])
+    expect(ids).toEqual([idRuiz, idPaz])
   })
 })

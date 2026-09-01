@@ -15,6 +15,7 @@
  * Uso: npx tsx migracion/corregir-docentes.ts
  */
 import { prisma } from '../src/lib/db'
+import { resolverDocentes } from '../src/lib/docentes'
 
 const CODIGOS_AFECTADOS = [
   'EP01396', 'EP00971', 'EP00582', 'EP00436',
@@ -27,6 +28,7 @@ async function main() {
     const actuales = await prisma.asignaturaDocente.findMany({
       where: { asignaturaCodigo: codigo },
       orderBy: { orden: 'asc' },
+      include: { docente: true },
     })
     if (actuales.length < 2) {
       console.log(`${codigo}: sólo ${actuales.length} registro(s), no hay nada que juntar — se salta`)
@@ -34,15 +36,16 @@ async function main() {
     }
 
     const [primero, segundo, ...resto] = actuales
-    const nombreJunto = `${primero.nombre}, ${segundo.nombre}`
+    const nombreJunto = `${primero.docente.nombre}, ${segundo.docente.nombre}`
+    const nombresFinales = [nombreJunto, ...resto.map((r) => r.docente.nombre)]
+    const idsFinales = await resolverDocentes(prisma, nombresFinales)
 
     await prisma.asignaturaDocente.deleteMany({ where: { asignaturaCodigo: codigo } })
-    await prisma.asignaturaDocente.create({ data: { asignaturaCodigo: codigo, nombre: nombreJunto, orden: 0 } })
-    for (const [i, r] of resto.entries()) {
-      await prisma.asignaturaDocente.create({ data: { asignaturaCodigo: codigo, nombre: r.nombre, orden: i + 1 } })
-    }
+    await prisma.asignaturaDocente.createMany({
+      data: idsFinales.map((docenteId, orden) => ({ asignaturaCodigo: codigo, docenteId, orden })),
+    })
 
-    console.log(`${codigo}: [${actuales.map((a) => a.nombre).join(' / ')}] -> [${[nombreJunto, ...resto.map((r) => r.nombre)].join(' / ')}]`)
+    console.log(`${codigo}: [${actuales.map((a) => a.docente.nombre).join(' / ')}] -> [${nombresFinales.join(' / ')}]`)
     corregidos++
   }
 

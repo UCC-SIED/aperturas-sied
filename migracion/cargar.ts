@@ -1,6 +1,6 @@
 import type { PrismaClient } from '@prisma/client'
 import { mapEstado } from '../src/lib/normalizar'
-import { parseDocentes } from '../src/lib/docentes'
+import { parseDocentes, resolverDocentes } from '../src/lib/docentes'
 import { inferirPeriodo } from '../src/lib/inferir-periodo'
 import { validarFechas } from '../src/lib/validar'
 import { ESTADOS, type Estado } from '../src/lib/estados'
@@ -269,8 +269,9 @@ export async function cargar(
     })
     if (t.docente) {
       await db.asignaturaDocente.deleteMany({ where: { asignaturaCodigo: t.codigo } })
-      for (const [i, nombre] of parseDocentes(t.docente).entries()) {
-        await db.asignaturaDocente.create({ data: { asignaturaCodigo: t.codigo, nombre, orden: i } })
+      const ids = await resolverDocentes(db, parseDocentes(t.docente))
+      for (const [i, docenteId] of ids.entries()) {
+        await db.asignaturaDocente.create({ data: { asignaturaCodigo: t.codigo, docenteId, orden: i } })
       }
     }
   }

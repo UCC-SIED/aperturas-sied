@@ -39,17 +39,21 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
   const buscado = textoDeRuta(codigo)
   if (buscado === null) notFound()
 
-  const a = await prisma.asignatura.findUnique({
-    where: { codigo: buscado },
-    include: {
-      planItems: { include: { carrera: { include: { unidad: true } } }, orderBy: { orden: 'asc' } },
-      aperturas: { include: { periodo: true, cohortes: { include: { cohorte: { include: { carrera: true } } } } }, orderBy: { inicioCursado: 'asc' } },
-      docentes: { orderBy: { orden: 'asc' } },
-      variantes: { orderBy: { codigo: 'asc' } },
-      principal: true,
-    },
-  })
+  const [a, docentesCatalogo] = await Promise.all([
+    prisma.asignatura.findUnique({
+      where: { codigo: buscado },
+      include: {
+        planItems: { include: { carrera: { include: { unidad: true } } }, orderBy: { orden: 'asc' } },
+        aperturas: { include: { periodo: true, cohortes: { include: { cohorte: { include: { carrera: true } } } } }, orderBy: { inicioCursado: 'asc' } },
+        docentes: { orderBy: { orden: 'asc' }, include: { docente: true } },
+        variantes: { orderBy: { codigo: 'asc' } },
+        principal: true,
+      },
+    }),
+    prisma.docente.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' }, select: { nombre: true } }),
+  ])
   if (!a) notFound()
+  const catalogoDocentes = docentesCatalogo.map((d) => d.nombre)
 
   const editable = puedeEditarProduccion(s)
   const puedeValidar = puedeValidarDocentes(s)
@@ -100,7 +104,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
             </select>
           </label>
           <label>
-            Docente <EditorDocentes name="docente" iniciales={a.docentes.map((d) => d.nombre)} etiqueta={a.nombre} />
+            Docente <EditorDocentes name="docente" iniciales={a.docentes.map((d) => d.docente.nombre)} etiqueta={a.nombre} catalogo={catalogoDocentes} />
             {!puedeValidar && a.contenidistasValidados && <MarcaValidado />}
           </label>
           <label>Asesor <input name="asesor" defaultValue={a.asesor ?? ''} /></label>
@@ -113,7 +117,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
             <tr>
               <td><strong>Docente</strong></td>
               <td>
-                {joinDocentes(a.docentes.map((d) => d.nombre)) || '—'}
+                {joinDocentes(a.docentes.map((d) => d.docente.nombre)) || '—'}
                 {!puedeValidar && a.contenidistasValidados && <MarcaValidado />}
               </td>
             </tr>

@@ -47,29 +47,33 @@ export default async function Produccion({
 
   const carrera = carreras.find((c) => String(c.id) === carreraParam) ?? carreras[0]
 
-  const plan = await prisma.planItem.findMany({
-    where: { carreraId: carrera.id },
-    include: {
-      asignatura: {
-        include: {
-          planItems: true,
-          aperturas: { include: { periodo: true } },
-          docentes: { orderBy: { orden: 'asc' } },
-          // Los seminarios optativos no tienen PlanItem propio: cuelgan de su
-          // principal, así que se traen desde acá o no aparecerían nunca.
-          variantes: {
-            include: {
-              planItems: true,
-              aperturas: { include: { periodo: true } },
-              docentes: { orderBy: { orden: 'asc' } },
+  const [plan, docentesCatalogo] = await Promise.all([
+    prisma.planItem.findMany({
+      where: { carreraId: carrera.id },
+      include: {
+        asignatura: {
+          include: {
+            planItems: true,
+            aperturas: { include: { periodo: true } },
+            docentes: { orderBy: { orden: 'asc' }, include: { docente: true } },
+            // Los seminarios optativos no tienen PlanItem propio: cuelgan de su
+            // principal, así que se traen desde acá o no aparecerían nunca.
+            variantes: {
+              include: {
+                planItems: true,
+                aperturas: { include: { periodo: true } },
+                docentes: { orderBy: { orden: 'asc' }, include: { docente: true } },
+              },
+              orderBy: { codigo: 'asc' },
             },
-            orderBy: { codigo: 'asc' },
           },
         },
       },
-    },
-    orderBy: [{ orden: 'asc' }, { asignaturaCodigo: 'asc' }],
-  })
+      orderBy: [{ orden: 'asc' }, { asignaturaCodigo: 'asc' }],
+    }),
+    prisma.docente.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' }, select: { nombre: true } }),
+  ])
+  const catalogoDocentes = docentesCatalogo.map((d) => d.nombre)
 
   const avance = resumirAvance(
     plan.flatMap((p) => [p.asignatura, ...p.asignatura.variantes]),
@@ -94,7 +98,7 @@ export default async function Produccion({
       !busqueda ||
       normalizarBusqueda(a.nombre).includes(busqueda) ||
       normalizarBusqueda(a.codigo).includes(busqueda) ||
-      a.docentes.some((d) => normalizarBusqueda(d.nombre).includes(busqueda)) ||
+      a.docentes.some((d) => normalizarBusqueda(d.docente.nombre).includes(busqueda)) ||
       normalizarBusqueda(a.asesor ?? '').includes(busqueda)
     const delEstado = !filtroEstado || a.estado === filtroEstado
     return coincide && delEstado
@@ -223,8 +227,9 @@ export default async function Produccion({
                     <td>
                       <EditorDocentes
                         name={`docente_${a.codigo}`}
-                        iniciales={a.docentes.map((d) => d.nombre)}
+                        iniciales={a.docentes.map((d) => d.docente.nombre)}
                         etiqueta={a.nombre}
+                        catalogo={catalogoDocentes}
                       />
                     </td>
                     <td>

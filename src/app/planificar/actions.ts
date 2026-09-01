@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db'
 import { exigirSesionActiva } from '@/lib/sesion'
 import { agregar, quitar, mover, exigirPertenencia } from '@/lib/planificacion'
 import { puedeEditarCarrera, puedeValidarDocentes } from '@/lib/permisos'
-import { parseDocentes, mismoGrupoDeDocentes } from '@/lib/docentes'
+import { parseDocentes, mismoGrupoDeDocentes, resolverDocentes } from '@/lib/docentes'
 import { comoResultado } from '@/lib/accion'
 import type { EstadoAccion } from '@/lib/estado-accion'
 
@@ -72,7 +72,7 @@ export async function editarDocentesTutorApertura(
       include: {
         asignatura: { include: { planItems: true } },
         cohortes: { include: { cohorte: true } },
-        docentesTutor: true,
+        docentesTutor: { include: { docente: true } },
       },
     })
     if (!apertura) throw new Error('Apertura inexistente')
@@ -82,15 +82,16 @@ export async function editarDocentesTutorApertura(
 
     // Si el grupo cambió, lo que se había validado ya no aplica: era sobre
     // esas personas puntuales.
-    const anteriores = apertura.docentesTutor.map((d) => d.nombre)
+    const anteriores = apertura.docentesTutor.map((d) => d.docente.nombre)
     if (!mismoGrupoDeDocentes(anteriores, docentes)) {
       await prisma.apertura.update({ where: { id: aperturaId }, data: { docenteTutorValidado: false } })
     }
 
     await prisma.aperturaDocente.deleteMany({ where: { aperturaId } })
     if (docentes.length) {
+      const ids = await resolverDocentes(prisma, docentes)
       await prisma.aperturaDocente.createMany({
-        data: docentes.map((nombre, orden) => ({ aperturaId, nombre, orden })),
+        data: ids.map((docenteId, orden) => ({ aperturaId, docenteId, orden })),
       })
     }
     await prisma.cambio.create({

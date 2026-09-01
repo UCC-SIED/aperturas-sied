@@ -35,7 +35,7 @@ export default async function Asignaturas({ searchParams }: { searchParams: Prom
     include: {
       planItems: { include: { carrera: true } },
       aperturas: true,
-      docentes: { orderBy: { orden: 'asc' } },
+      docentes: { orderBy: { orden: 'asc' }, include: { docente: true } },
       principal: true,
     },
     orderBy: { nombre: 'asc' },
@@ -87,7 +87,7 @@ export default async function Asignaturas({ searchParams }: { searchParams: Prom
                     {a.principal && <small> · seminario optativo</small>}
                   </td>
                   <td><EstadoBadge estado={a.estado} /></td>
-                  <td>{joinDocentes(a.docentes.map((d) => d.nombre)) || '—'}</td>
+                  <td>{joinDocentes(a.docentes.map((d) => d.docente.nombre)) || '—'}</td>
                   <td>{a.asesor ?? '—'}</td>
                   <td>
                     <small>

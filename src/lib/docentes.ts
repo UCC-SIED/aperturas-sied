@@ -1,3 +1,5 @@
+import type { PrismaClient } from '@prisma/client'
+
 /**
  * Separa un texto libre de docentes ("Ana Paz / Juan Ruiz" o un solo
  * nombre) en nombres individuales, sin vacíos ni duplicados.
@@ -33,4 +35,33 @@ export function mismoGrupoDeDocentes(a: string[], b: string[]): boolean {
   const ordenadosA = [...a].sort()
   const ordenadosB = [...b].sort()
   return ordenadosA.every((nombre, i) => nombre === ordenadosB[i])
+}
+
+/**
+ * La clave real para saber si dos nombres son "la misma persona": sin
+ * espacios de sobra ni diferencia de mayúsculas. Se compara así (no con un
+ * filtro insensible a mayúsculas de la base) porque eso sólo lo soporta
+ * PostgreSQL, y local/tests corren sobre SQLite.
+ */
+export function normalizarNombre(nombre: string): string {
+  return nombre.trim().replace(/\s+/g, ' ').toLowerCase()
+}
+
+/**
+ * Da de alta en el catálogo (si hace falta) y devuelve los ids de Docente
+ * para esta lista de nombres, en el mismo orden. Es el único lugar que
+ * decide "esto es la misma persona que ya existe" — todo lo que carga un
+ * docente tutor o contenidista pasa por acá antes de guardar la relación.
+ */
+export async function resolverDocentes(prisma: PrismaClient, nombres: string[]): Promise<number[]> {
+  const ids: number[] = []
+  for (const nombre of nombres) {
+    const docente = await prisma.docente.upsert({
+      where: { claveNormalizada: normalizarNombre(nombre) },
+      update: {},
+      create: { nombre, claveNormalizada: normalizarNombre(nombre) },
+    })
+    ids.push(docente.id)
+  }
+  return ids
 }

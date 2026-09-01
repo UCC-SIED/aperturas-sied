@@ -47,6 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     <EnlaceNav href="/preparar">Aulas a preparar</EnlaceNav>
                   </>
                 )}
+                {puedeAdministrar(s) && <EnlaceNav href="/docentes">Docentes</EnlaceNav>}
                 {puedeAdministrar(s) && <EnlaceNav href="/admin">Administración</EnlaceNav>}
               </nav>
             )}

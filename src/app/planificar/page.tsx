@@ -57,7 +57,7 @@ export default async function Planificar({
   const mostrarTodos = todosParam === '1'
   const hoy = new Date()
 
-  const [plan, cohortes, periodosTodos] = await Promise.all([
+  const [plan, cohortes, periodosTodos, docentesCatalogo] = await Promise.all([
     prisma.planItem.findMany({
       where: { carreraId: carrera.id },
       include: { asignatura: { include: { variantes: { orderBy: { codigo: 'asc' } } } } },
@@ -68,7 +68,9 @@ export default async function Planificar({
       where: { unidadId: carrera.unidadId },
       orderBy: { inicioCursado: 'asc' },
     }),
+    prisma.docente.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' }, select: { nombre: true } }),
   ])
+  const catalogoDocentes = docentesCatalogo.map((d) => d.nombre)
 
   // Lo que se puede abrir como aula: cada lugar del plan y, colgando de él, sus
   // seminarios optativos. Lo que se monta es el seminario concreto, no el
@@ -105,7 +107,7 @@ export default async function Planificar({
     include: {
       asignatura: true,
       cohortes: { include: { cohorte: { include: { carrera: true } } } },
-      docentesTutor: { orderBy: { orden: 'asc' } },
+      docentesTutor: { orderBy: { orden: 'asc' }, include: { docente: true } },
     },
   })
   const aperturas: AperturaGrilla[] = aperturasBase.map((a) => ({
@@ -116,7 +118,7 @@ export default async function Planificar({
     carrerasCompartidas: [...new Set(
       a.cohortes.filter((c) => c.cohorte.carreraId !== carrera.id).map((c) => c.cohorte.carrera.nombre),
     )],
-    docentesTutor: a.docentesTutor.map((d) => d.nombre),
+    docentesTutor: a.docentesTutor.map((d) => d.docente.nombre),
     docenteTutorValidado: a.docenteTutorValidado,
     asignatura: { codigo: a.asignatura.codigo, nombre: a.asignatura.nombre, estado: a.asignatura.estado },
     aperturaInscripcion: a.aperturaInscripcion,
@@ -319,6 +321,7 @@ export default async function Planificar({
                                       name="docentesTutor"
                                       iniciales={ap.docentesTutor}
                                       etiqueta={`docente tutor de ${ap.asignatura.nombre}`}
+                                      catalogo={catalogoDocentes}
                                     />
                                     <Boton enCurso="Guardando">Guardar</Boton>
                                   </FormConError>

@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db'
 import { exigirSesionActiva } from '@/lib/sesion'
 import { puedeEditarProduccion, puedeValidarDocentes } from '@/lib/permisos'
 import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
-import { parseDocentes, mismoGrupoDeDocentes } from '@/lib/docentes'
+import { parseDocentes, mismoGrupoDeDocentes, resolverDocentes } from '@/lib/docentes'
 import { comoResultado } from '@/lib/accion'
 import type { EstadoAccion } from '@/lib/estado-accion'
 
@@ -25,14 +25,14 @@ export async function actualizarAsignatura(
 
     const previa = await prisma.asignatura.findUnique({
       where: { codigo },
-      include: { docentes: true },
+      include: { docentes: { include: { docente: true } } },
     })
     if (!previa) throw new Error('Asignatura inexistente')
 
     const docentes = parseDocentes(String(formData.get('docente') ?? ''))
     const asesor = String(formData.get('asesor') ?? '').trim() || null
 
-    const anteriores = previa.docentes.map((d) => d.nombre)
+    const anteriores = previa.docentes.map((d) => d.docente.nombre)
     await prisma.asignatura.update({
       where: { codigo },
       data: {
@@ -43,8 +43,9 @@ export async function actualizarAsignatura(
     })
     await prisma.asignaturaDocente.deleteMany({ where: { asignaturaCodigo: codigo } })
     if (docentes.length) {
+      const ids = await resolverDocentes(prisma, docentes)
       await prisma.asignaturaDocente.createMany({
-        data: docentes.map((nombre, orden) => ({ asignaturaCodigo: codigo, nombre, orden })),
+        data: ids.map((docenteId, orden) => ({ asignaturaCodigo: codigo, docenteId, orden })),
       })
     }
 

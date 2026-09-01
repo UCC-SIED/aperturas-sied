@@ -14,7 +14,7 @@ import { prisma } from '../src/lib/db'
 import { PLANES_OFICIALES, todasLasFilas } from './planes-oficiales'
 import { PLANES_POSGRADO } from './planes-posgrado'
 import { mapEstado } from '../src/lib/normalizar'
-import { parseDocentes } from '../src/lib/docentes'
+import { parseDocentes, resolverDocentes } from '../src/lib/docentes'
 
 /** Estado, docente y asesor del tablero, por código de asignatura. */
 function datosDelTablero() {
@@ -65,11 +65,12 @@ async function main() {
           asesor: t?.asesor ?? null,
         },
       })
-      for (const [i, nombre] of parseDocentes(t?.docente ?? '').entries()) {
+      const docentesIds = await resolverDocentes(prisma, parseDocentes(t?.docente ?? ''))
+      for (const [i, docenteId] of docentesIds.entries()) {
         await prisma.asignaturaDocente.upsert({
-          where: { asignaturaCodigo_nombre: { asignaturaCodigo: a.codigo, nombre } },
+          where: { asignaturaCodigo_docenteId: { asignaturaCodigo: a.codigo, docenteId } },
           update: {},
-          create: { asignaturaCodigo: a.codigo, nombre, orden: i },
+          create: { asignaturaCodigo: a.codigo, docenteId, orden: i },
         })
       }
       await prisma.planItem.upsert({

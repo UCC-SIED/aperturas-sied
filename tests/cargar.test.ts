@@ -21,6 +21,7 @@ async function limpiar() {
   await prisma.periodo.deleteMany({})
   await prisma.asignatura.deleteMany({})
   await prisma.carrera.deleteMany({})
+  await prisma.docente.deleteMany({})
 }
 
 describe('cargar', () => {
@@ -36,8 +37,8 @@ describe('cargar', () => {
     expect(reporte.asignaturas).toBe(1)
     expect(reporte.aperturas).toBe(1)
     expect(reporte.sinCodigo).toEqual(['HUERFANA (TEST CARRERA)'])
-    const a = await prisma.asignatura.findUnique({ where: { codigo: 'TST001' }, include: { docentes: true } })
-    expect(a?.docentes.map((d) => d.nombre)).toEqual(['Doc Test'])
+    const a = await prisma.asignatura.findUnique({ where: { codigo: 'TST001' }, include: { docentes: { include: { docente: true } } } })
+    expect(a?.docentes.map((d) => d.docente.nombre)).toEqual(['Doc Test'])
     expect(a?.estado).toBe('finalizacion') // la planilla dice finalizada; el tablero no pisa
     const ap = await prisma.apertura.findFirst({ where: { asignaturaCodigo: 'TST001' }, include: { periodo: true, cohortes: { include: { cohorte: true } } } })
     expect(ap?.periodo.nombre).toBe('Mensual_Test_2026')

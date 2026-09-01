@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { exigirSesionActiva } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { calcularCambios } from '@/lib/seguimiento'
+import { resolverDocentes } from '@/lib/docentes'
 import { comoResultado } from '@/lib/accion'
 import type { EstadoAccion } from '@/lib/estado-accion'
 
@@ -28,10 +29,10 @@ export async function guardarSeguimiento(
     include: {
       asignatura: {
         include: {
-          docentes: { orderBy: { orden: 'asc' } },
+          docentes: { orderBy: { orden: 'asc' }, include: { docente: true } },
           // Los seminarios optativos se editan en la misma tabla pero no
           // tienen PlanItem propio: sin esto, sus filas no se guardarían.
-          variantes: { include: { docentes: { orderBy: { orden: 'asc' } } } },
+          variantes: { include: { docentes: { orderBy: { orden: 'asc' }, include: { docente: true } } } },
         },
       },
     },
@@ -43,7 +44,7 @@ export async function guardarSeguimiento(
     asignaturas.map((a) => ({
       codigo: a.codigo,
       estado: a.estado,
-      docentes: a.docentes.map((d) => d.nombre),
+      docentes: a.docentes.map((d) => d.docente.nombre),
       asesor: a.asesor,
       observaciones: a.observaciones,
     })),
@@ -65,8 +66,9 @@ export async function guardarSeguimiento(
     if (docentes !== undefined) {
       await prisma.asignaturaDocente.deleteMany({ where: { asignaturaCodigo: c.codigo } })
       if (docentes.length) {
+        const ids = await resolverDocentes(prisma, docentes)
         await prisma.asignaturaDocente.createMany({
-          data: docentes.map((nombre, orden) => ({ asignaturaCodigo: c.codigo, nombre, orden })),
+          data: ids.map((docenteId, orden) => ({ asignaturaCodigo: c.codigo, docenteId, orden })),
         })
       }
       await prisma.asignatura.update({
