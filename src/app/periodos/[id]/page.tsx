@@ -51,6 +51,7 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
               include: {
                 planItems: { include: { carrera: true } },
                 docentes: { orderBy: { orden: 'asc' }, include: { docente: true } },
+                asesor: true,
               },
             },
             cohortes: { include: { cohorte: { include: { carrera: true } } } },
@@ -179,7 +180,7 @@ export default async function Periodo({ params }: { params: Promise<{ id: string
                         </>
                       )}
                     </td>
-                    <td>{ap.asignatura.asesor ?? '—'}</td>
+                    <td>{ap.asignatura.asesor?.nombre ?? '—'}</td>
                     <td>{cohortesDeEsta.join(', ') || '—'}</td>
                     {editable && (
                       <td>

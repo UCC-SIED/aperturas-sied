@@ -6,6 +6,7 @@ import { exigirSesionActiva } from '@/lib/sesion'
 import { puedeEditarProduccion, puedeValidarDocentes } from '@/lib/permisos'
 import { ESTADOS, ESTADO_LABELS, type Estado } from '@/lib/estados'
 import { parseDocentes, mismoGrupoDeDocentes, resolverDocentes } from '@/lib/docentes'
+import { resolverAsesor } from '@/lib/asesores'
 import { comoResultado } from '@/lib/accion'
 import type { EstadoAccion } from '@/lib/estado-accion'
 
@@ -30,14 +31,14 @@ export async function actualizarAsignatura(
     if (!previa) throw new Error('Asignatura inexistente')
 
     const docentes = parseDocentes(String(formData.get('docente') ?? ''))
-    const asesor = String(formData.get('asesor') ?? '').trim() || null
+    const asesorId = await resolverAsesor(prisma, String(formData.get('asesor') ?? ''))
 
     const anteriores = previa.docentes.map((d) => d.docente.nombre)
     await prisma.asignatura.update({
       where: { codigo },
       data: {
         estado,
-        asesor,
+        asesorId,
         ...(mismoGrupoDeDocentes(anteriores, docentes) ? {} : { contenidistasValidados: false }),
       },
     })

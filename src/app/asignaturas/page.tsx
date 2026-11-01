@@ -37,6 +37,7 @@ export default async function Asignaturas({ searchParams }: { searchParams: Prom
       aperturas: true,
       docentes: { orderBy: { orden: 'asc' }, include: { docente: true } },
       principal: true,
+      asesor: true,
     },
     orderBy: { nombre: 'asc' },
     take: 300,
@@ -88,7 +89,7 @@ export default async function Asignaturas({ searchParams }: { searchParams: Prom
                   </td>
                   <td><EstadoBadge estado={a.estado} /></td>
                   <td>{joinDocentes(a.docentes.map((d) => d.docente.nombre)) || '—'}</td>
-                  <td>{a.asesor ?? '—'}</td>
+                  <td>{a.asesor?.nombre ?? '—'}</td>
                   <td>
                     <small>
                       {a.principal

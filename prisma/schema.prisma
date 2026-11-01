@@ -105,7 +105,8 @@ model Asignatura {
   nombre              String
   catedra             String?
   cargaHoraria        Int?
-  asesor              String?
+  asesorId            Int?
+  asesor              Asesor?   @relation(fields: [asesorId], references: [id], onDelete: SetNull)
   estado              String    @default("sin_novedad")
   /// Notas del seguimiento: por qué está trabada, qué falta, con quién se habló.
   observaciones       String?
@@ -161,6 +162,18 @@ model Docente {
   activo           Boolean             @default(true)
   tutorias         AperturaDocente[]
   contenidos       AsignaturaDocente[]
+}
+
+/// Catálogo de asesores pedagógicos. Mismo mecanismo que Docente (clave
+/// normalizada para no duplicar a la misma persona), pero es un campo único
+/// por asignatura y no una lista: acá alcanza una relación directa, sin una
+/// tabla intermedia como AsignaturaDocente.
+model Asesor {
+  id               Int          @id @default(autoincrement())
+  nombre           String       @unique
+  claveNormalizada String       @unique
+  activo           Boolean      @default(true)
+  asignaturas      Asignatura[]
 }
 
 model PlanItem {

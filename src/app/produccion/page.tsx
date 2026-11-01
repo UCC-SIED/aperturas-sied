@@ -56,6 +56,7 @@ export default async function Produccion({
             planItems: true,
             aperturas: { include: { periodo: true } },
             docentes: { orderBy: { orden: 'asc' }, include: { docente: true } },
+            asesor: true,
             // Los seminarios optativos no tienen PlanItem propio: cuelgan de su
             // principal, así que se traen desde acá o no aparecerían nunca.
             variantes: {
@@ -63,6 +64,7 @@ export default async function Produccion({
                 planItems: true,
                 aperturas: { include: { periodo: true } },
                 docentes: { orderBy: { orden: 'asc' }, include: { docente: true } },
+                asesor: true,
               },
               orderBy: { codigo: 'asc' },
             },
@@ -74,6 +76,7 @@ export default async function Produccion({
     prisma.docente.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' }, select: { nombre: true } }),
   ])
   const catalogoDocentes = docentesCatalogo.map((d) => d.nombre)
+  const asesoresCatalogo = await prisma.asesor.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' }, select: { nombre: true } })
 
   const avance = resumirAvance(
     plan.flatMap((p) => [p.asignatura, ...p.asignatura.variantes]),
@@ -99,7 +102,7 @@ export default async function Produccion({
       normalizarBusqueda(a.nombre).includes(busqueda) ||
       normalizarBusqueda(a.codigo).includes(busqueda) ||
       a.docentes.some((d) => normalizarBusqueda(d.docente.nombre).includes(busqueda)) ||
-      normalizarBusqueda(a.asesor ?? '').includes(busqueda)
+      normalizarBusqueda(a.asesor?.nombre ?? '').includes(busqueda)
     const delEstado = !filtroEstado || a.estado === filtroEstado
     return coincide && delEstado
   })
@@ -235,9 +238,10 @@ export default async function Produccion({
                     <td>
                       <input
                         name={`asesor_${a.codigo}`}
-                        defaultValue={a.asesor ?? ''}
+                        defaultValue={a.asesor?.nombre ?? ''}
                         placeholder="—"
                         aria-label={`Asesor de ${a.nombre}`}
+                        list="asesores-datalist"
                       />
                     </td>
                     <td>
@@ -273,6 +277,11 @@ export default async function Produccion({
             </tbody>
           </table>
         </div>
+        {asesoresCatalogo.length > 0 && (
+          <datalist id="asesores-datalist">
+            {asesoresCatalogo.map((e) => <option key={e.nombre} value={e.nombre} />)}
+          </datalist>
+        )}
 
         <BarraGuardar nota={`Se guardan todas las filas de ${carrera.nombre} que hayas modificado.`} />
       </FormConError>

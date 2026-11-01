@@ -21,6 +21,8 @@ En cada celda se elige la asignatura de un desplegable con el plan completo, num
 
 **Asignaturas** (`/asignaturas` y `/asignaturas/[codigo]`) — catálogo con búsqueda y la ficha de cada una: estado de producción, planes donde figura con su orden, todas sus aperturas con el ciclo de fechas, e historial de cambios.
 
+**Catálogos de docentes y asesores** — ambos se eligen de una lista (con sugerencias al escribir) en la ficha de la asignatura y en Seguimiento de producción. Un nombre nuevo se agrega solo al catálogo; escrito con otras mayúsculas o espacios, se reconoce como el mismo, así los filtros y búsquedas por persona no se parten.
+
 **Producción** (`/produccion`) — el pipeline agrupado por estado con la próxima apertura de cada asignatura. Sólo para el equipo SIED.
 
 ### Quién ve qué
@@ -105,7 +107,7 @@ npx prisma migrate dev
 npm run dev
 ```
 
-Datos de prueba: `npx tsx migracion/demo.ts` seguido de `npx tsx migracion/usuarios.ts`. Tests: `npm test`.
+Datos de prueba: `npm run base` (planes de estudio oficiales y usuarios). Tests: `npm test`.
 
 Las transversales son el caso delicado del sistema (una asignatura, un código, varias carreras, una sola apertura). Esa lógica vive en `src/lib/planificacion.ts` y está cubierta por `tests/planificacion.test.ts` — conviene correr los tests antes de tocarla.
 
@@ -193,7 +195,7 @@ Las dos cuentas son gratuitas y se entra con GitHub.
 npm run db:nube && npx prisma migrate deploy
 ```
 
-Después, los datos: `npm run migrar` si tenés las planillas en `migracion/input/`, o `npm run demo` para cargar los planes de estudio oficiales y los usuarios.
+Después, los datos: `npm run migrar` si tenés las planillas en `migracion/input/`, o `npm run base` para cargar los planes de estudio oficiales y los usuarios.
 
 **3. Publicar.** Importar el repositorio en [vercel.com](https://vercel.com) y cargar cuatro variables de entorno: `DATABASE_URL`, `DIRECT_URL`, `ACCESO_USUARIO` y `ACCESO_CLAVE` (las dos últimas son la clave de acceso al sitio mientras no esté el ingreso con Google).
 

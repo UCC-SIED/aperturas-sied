@@ -6,6 +6,7 @@ import { exigirSesionActiva } from '@/lib/sesion'
 import { puedeEditarProduccion } from '@/lib/permisos'
 import { calcularCambios } from '@/lib/seguimiento'
 import { resolverDocentes } from '@/lib/docentes'
+import { resolverAsesor } from '@/lib/asesores'
 import { comoResultado } from '@/lib/accion'
 import type { EstadoAccion } from '@/lib/estado-accion'
 
@@ -30,9 +31,10 @@ export async function guardarSeguimiento(
       asignatura: {
         include: {
           docentes: { orderBy: { orden: 'asc' }, include: { docente: true } },
+          asesor: true,
           // Los seminarios optativos se editan en la misma tabla pero no
           // tienen PlanItem propio: sin esto, sus filas no se guardarían.
-          variantes: { include: { docentes: { orderBy: { orden: 'asc' }, include: { docente: true } } } },
+          variantes: { include: { docentes: { orderBy: { orden: 'asc' }, include: { docente: true } }, asesor: true } },
         },
       },
     },
@@ -45,7 +47,7 @@ export async function guardarSeguimiento(
       codigo: a.codigo,
       estado: a.estado,
       docentes: a.docentes.map((d) => d.docente.nombre),
-      asesor: a.asesor,
+      asesor: a.asesor?.nombre ?? null,
       observaciones: a.observaciones,
     })),
     formData,
@@ -53,12 +55,14 @@ export async function guardarSeguimiento(
 
   const ahora = new Date()
   for (const c of cambios) {
-    const { docentes, ...camposEscalares } = c.campos
-    if (Object.keys(camposEscalares).length) {
+    const { docentes, asesor, ...camposEscalares } = c.campos
+    const asesorId = asesor !== undefined ? await resolverAsesor(prisma, asesor) : undefined
+    if (Object.keys(camposEscalares).length || asesorId !== undefined) {
       await prisma.asignatura.update({
         where: { codigo: c.codigo },
         data: {
           ...camposEscalares,
+          ...(asesorId !== undefined ? { asesorId } : {}),
           ...(camposEscalares.estado ? { estadoDesde: ahora } : {}),
         },
       })

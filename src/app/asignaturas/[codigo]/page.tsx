@@ -39,7 +39,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
   const buscado = textoDeRuta(codigo)
   if (buscado === null) notFound()
 
-  const [a, docentesCatalogo] = await Promise.all([
+  const [a, docentesCatalogo, asesoresCatalogo] = await Promise.all([
     prisma.asignatura.findUnique({
       where: { codigo: buscado },
       include: {
@@ -48,9 +48,11 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
         docentes: { orderBy: { orden: 'asc' }, include: { docente: true } },
         variantes: { orderBy: { codigo: 'asc' } },
         principal: true,
+        asesor: true,
       },
     }),
     prisma.docente.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' }, select: { nombre: true } }),
+    prisma.asesor.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' }, select: { nombre: true } }),
   ])
   if (!a) notFound()
   const catalogoDocentes = docentesCatalogo.map((d) => d.nombre)
@@ -107,7 +109,14 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
             Docente <EditorDocentes name="docente" iniciales={a.docentes.map((d) => d.docente.nombre)} etiqueta={a.nombre} catalogo={catalogoDocentes} />
             {!puedeValidar && a.contenidistasValidados && <MarcaValidado />}
           </label>
-          <label>Asesor <input name="asesor" defaultValue={a.asesor ?? ''} /></label>
+          <label>
+            Asesor <input name="asesor" defaultValue={a.asesor?.nombre ?? ''} list="asesores-datalist" />
+          </label>
+          {asesoresCatalogo.length > 0 && (
+            <datalist id="asesores-datalist">
+              {asesoresCatalogo.map((e) => <option key={e.nombre} value={e.nombre} />)}
+            </datalist>
+          )}
           <Boton>Guardar</Boton>
         </FormConError>
       ) : (
@@ -121,7 +130,7 @@ export default async function Asignatura({ params }: { params: Promise<{ codigo:
                 {!puedeValidar && a.contenidistasValidados && <MarcaValidado />}
               </td>
             </tr>
-            <tr><td><strong>Asesor</strong></td><td>{a.asesor ?? '—'}</td></tr>
+            <tr><td><strong>Asesor</strong></td><td>{a.asesor?.nombre ?? '—'}</td></tr>
           </tbody>
         </table>
       )}

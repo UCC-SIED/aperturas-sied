@@ -18,7 +18,7 @@ export async function GET() {
   const aperturas = await prisma.apertura.findMany({
     include: {
       periodo: { include: { unidad: true } },
-      asignatura: { include: { planItems: { include: { carrera: true } }, docentes: { orderBy: { orden: 'asc' }, include: { docente: true } } } },
+      asignatura: { include: { planItems: { include: { carrera: true } }, docentes: { orderBy: { orden: 'asc' }, include: { docente: true } }, asesor: true } },
       cohortes: { include: { cohorte: { include: { carrera: true } } } },
     },
     orderBy: [{ periodoId: 'asc' }, { asignaturaCodigo: 'asc' }],
@@ -45,7 +45,7 @@ export async function GET() {
         Estado: ESTADO_LABELS[ap.asignatura.estado as Estado] ?? ap.asignatura.estado,
         Catedra: ap.asignatura.catedra ?? '',
         Docente: joinDocentes(ap.asignatura.docentes.map((d) => d.docente.nombre)),
-        Asesor: ap.asignatura.asesor ?? '',
+        Asesor: ap.asignatura.asesor?.nombre ?? '',
         Observaciones: ap.asignatura.observaciones ?? '',
         Transversal: ap.asignatura.planItems.length > 1 ? 'Sí' : 'No',
         'Apertura inscripción': fmtFecha(ap.aperturaInscripcion),

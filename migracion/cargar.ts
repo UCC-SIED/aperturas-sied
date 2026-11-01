@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client'
 import { mapEstado } from '../src/lib/normalizar'
 import { parseDocentes, resolverDocentes } from '../src/lib/docentes'
+import { resolverAsesor } from '../src/lib/asesores'
 import { inferirPeriodo } from '../src/lib/inferir-periodo'
 import { validarFechas } from '../src/lib/validar'
 import { ESTADOS, type Estado } from '../src/lib/estados'
@@ -260,10 +261,11 @@ export async function cargar(
   for (const t of tablero) {
     const a = await db.asignatura.findUnique({ where: { codigo: t.codigo } })
     if (!a) continue
+    const asesorId = t.asesor ? await resolverAsesor(db, t.asesor) : a.asesorId
     await db.asignatura.update({
       where: { codigo: t.codigo },
       data: {
-        asesor: t.asesor ?? a.asesor,
+        asesorId,
         estado: a.estado === 'sin_novedad' ? t.estado : a.estado,
       },
     })
