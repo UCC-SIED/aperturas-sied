@@ -10,7 +10,14 @@ export async function entrarConCredenciales(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
   const contrasena = String(formData.get('contrasena') ?? '')
 
-  const u = await prisma.usuario.findUnique({ where: { email } })
+  // Si la base no responde (p. ej. Supabase pausado), sin esto el error llega
+  // al navegador como una excepción de React incomprensible.
+  let u
+  try {
+    u = await prisma.usuario.findUnique({ where: { email } })
+  } catch {
+    redirect('/ingresar?error=servicio')
+  }
 
   if (!u || !u.activo) redirect('/ingresar?error=credenciales')
   if (!u.passwordHash) redirect('/ingresar?error=sin-contrasena')
